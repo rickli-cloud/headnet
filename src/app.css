@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 0 0% 3.9%;
+
+		--muted: 0 0% 96.1%;
+		--muted-foreground: 0 0% 45.1%;
+
+		--popover: 0 0% 100%;
+		--popover-foreground: 0 0% 3.9%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 0 0% 3.9%;
+
+		--border: 0 0% 89.8%;
+		--input: 0 0% 89.8%;
+
+		--primary: 0 0% 9%;
+		--primary-foreground: 0 0% 98%;
+
+		--secondary: 0 0% 96.1%;
+		--secondary-foreground: 0 0% 9%;
+
+		--accent: 0 0% 96.1%;
+		--accent-foreground: 0 0% 9%;
+
+		--destructive: 0 72.2% 50.6%;
+		--destructive-foreground: 0 0% 98%;
+
+		--ring: 0 0% 3.9%;
+
+		--radius: 0.5rem;
+	}
+
+	.dark {
+		--background: 0 0% 3.9%;
+		--foreground: 0 0% 98%;
+
+		--muted: 0 0% 14.9%;
+		--muted-foreground: 0 0% 63.9%;
+
+		--popover: 0 0% 3.9%;
+		--popover-foreground: 0 0% 98%;
+
+		--card: 0 0% 3.9%;
+		--card-foreground: 0 0% 98%;
+
+		--border: 0 0% 14.9%;
+		--input: 0 0% 14.9%;
+
+		--primary: 0 0% 98%;
+		--primary-foreground: 0 0% 9%;
+
+		--secondary: 0 0% 14.9%;
+		--secondary-foreground: 0 0% 98%;
+
+		--accent: 0 0% 14.9%;
+		--accent-foreground: 0 0% 98%;
+
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 0 0% 98%;
+
+		--ring: 0 0% 83.1%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+
+	html,
+	body,
+	body > div {
+		@apply h-full overflow-hidden;
+	}
+}
+
+@layer components {
+	.star-note {
+		@apply hidden;
+	}
+
+	.data-form {
+		@apply space-y-6 [&>div]:space-y-2;
+		& label:has(+ *[required])::after,
+		& label:has(+ *[aria-required='true'])::after,
+		& label:has(+ *.required)::after,
+		& .required > label::after,
+		& .star-note::before {
+			@apply mx-0.5 text-muted-foreground;
+			content: '*';
+		}
+		.data-form:has(*[required]),
+		.data-form:has(*[aria-required='true']),
+		.data-form:has(*.required) {
+			& .star-note {
+				@apply block text-xs text-muted-foreground;
+			}
+		}
+	}
+
+	table.basic-table {
+		@apply table;
+		& th {
+			@apply pr-4 !text-left;
+		}
+		& th,
+		& td {
+			@apply whitespace-nowrap py-2;
+		}
+		& tr {
+			@apply border-t first:border-t-0;
+		}
+	}
+
+	ul.menu {
+		@apply p-1 text-sm;
+
+		& > div {
+			@apply px-2 py-1.5 font-bold;
+		}
+
+		& > hr {
+			@apply -mx-1 my-1 w-[calc(100%+8px)] border-b;
+		}
+
+		& > li {
+			& a,
+			& button {
+				@apply grid w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted disabled:text-muted-foreground;
+				grid-template-columns: 16px 1fr auto;
+
+				& svg {
+					@apply h-4 w-4;
+				}
+			}
+		}
+
+		& > li.destructive {
+			@apply hover:!text-red-600;
+
+			& > * {
+				@apply disabled:hover:!text-red-600/40;
+			}
+		}
+	}
+}
+
+@layer utilities {
+	.link {
+		@apply cursor-pointer hover:!text-blue-600;
+	}
+
+	.scrolltrack-hidden {
+		scrollbar-color: #2a2a2b transparent;
+		scrollbar-width: thin;
+	}
+	.scrolltrack-hidden::-webkit-scrollbar-track {
+		@apply border bg-transparent;
+	}
+	.overflow-x-scroll,
+	.overflow-y-scroll {
+		@apply scrolltrack-hidden;
+	}
+}

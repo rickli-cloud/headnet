@@ -1,0 +1,33 @@
+# Headnet
+
+A web-ui for [Headscale](https://github.com/juanfont/headscale) with a focus on easy ACL management thru 3D network visualization.
+
+## Developing
+
+Once you've installed dependencies with `deno install`, start a development server:
+
+```sh
+deno task dev
+```
+
+## Building
+
+To create a production version of your app:
+
+```sh
+deno task build
+```
+
+You can preview the production build with `deno task preview`.
+
+## Stack
+
+Some of the major project used:
+
+- [Deno 2](https://deno.com/)
+- [Svelte 5](https://svelte.dev/)
+- [Shadcn](https://www.shadcn-svelte.com/)
+- [3d-force-graph](https://github.com/vasturiano/3d-force-graph)
+- [json-ast-comments](https://github.com/2betop/json-ast-comments)
+- [openapi-typescript](https://openapi-ts.dev/)
+- [mock service worker](https://mswjs.io/)
