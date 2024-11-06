@@ -303,6 +303,10 @@ export class Route implements V1Route {
 	public readonly deletedAt?: string | undefined;
 	public readonly node?: V1Node | undefined;
 
+	public get isExit(): boolean {
+		return (this.prefix && ['0.0.0.0/0', '::/0'].includes(this.prefix)) || false;
+	}
+
 	public constructor(data: V1Route) {
 		Object.assign(this, data);
 	}
@@ -448,18 +452,6 @@ export class Machine implements V1Node, NetworkGraphAttributes {
 		if (data.online) this.color = 'green';
 		this.nodeId = data.id ? machineIdLevel + Number(data.id) : undefined;
 		this.nodeName = data.givenName || data.name;
-	}
-
-	public isExitNode(routes: Route[] | undefined): { v4: boolean; v6: boolean } {
-		const nodeRoutes = routes?.filter((route) => route.node?.id === this.id);
-
-		const v4Route = nodeRoutes?.find((route) => route.prefix === '0.0.0.0/0');
-		const v6Route = nodeRoutes?.find((route) => route.prefix === '::/0');
-
-		return {
-			v4: (v4Route?.advertised && v4Route?.enabled) || false,
-			v6: (v6Route?.advertised && v6Route?.enabled) || false
-		};
 	}
 
 	public async delete(headscale = new Headscale()) {

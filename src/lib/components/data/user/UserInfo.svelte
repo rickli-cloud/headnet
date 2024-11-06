@@ -1,15 +1,60 @@
 <script lang="ts">
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
 
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import * as Sheet from '$lib/components/ui/sheet';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 
 	import Secret from '$lib/components/utils/Secret.svelte';
 
 	import { formatDuration, isExpired } from '$lib/utils/time';
-	import type { PreAuthKey } from '$lib/api';
+	import type { Acl, PreAuthKey, User } from '$lib/api';
 
-	export let keys: PreAuthKey[] | undefined;
+	export let user: User;
+	export let acl: Acl | undefined;
+	export let preAuthKeys: PreAuthKey[] | undefined;
+
+	$: groups = acl?.groups
+		.filter((i) => user.name && i.members.includes(user.name))
+		.map((group) => group.name);
+
+	$: keys = preAuthKeys?.filter((key) => key.user === user.name) || [];
 </script>
+
+<Sheet.Header>
+	<Sheet.Title class="flex items-center gap-1.5">
+		<Button variant="ghost" class="h-7 w-7 p-1.5">
+			<EllipsisVertical class="h-4 w-4" />
+		</Button>
+
+		<span>
+			{user.name}
+		</span>
+
+		{#if user.id}
+			<span class="text-muted-foreground">
+				#{user.id}
+			</span>
+		{/if}
+	</Sheet.Title>
+
+	<Sheet.Description>
+		Created on
+		{user.createdAt ? new Date(user.createdAt).toLocaleString() : undefined}
+	</Sheet.Description>
+
+	{#if groups?.length}
+		<div class="flex flex-wrap items-center gap-1.5">
+			{#each groups as group}
+				<Badge>{group}</Badge>
+			{/each}
+		</div>
+	{/if}
+</Sheet.Header>
+
+<Sheet.Header>
+	<Sheet.Title>PreAuth keys</Sheet.Title>
+</Sheet.Header>
 
 <div>
 	{#each keys || [] as key}

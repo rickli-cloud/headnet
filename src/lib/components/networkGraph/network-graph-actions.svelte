@@ -3,10 +3,8 @@
 
 	export let isOpen: boolean = false;
 	export const offset = writable({ x: 0, y: 0 });
-	export const selected = writable<object | undefined>(undefined);
 
-	export const open = (data: object, ev: MouseEvent) => {
-		selected.set(data);
+	export const open = (ev: MouseEvent) => {
 		offset.set({ x: ev.pageX, y: ev.pageY });
 		isOpen = true;
 	};
@@ -29,6 +27,6 @@
 			left: {$offset.x > window.innerWidth / 2 ? 'auto' : $offset.x + 'px'};
 			right: {$offset.x > window.innerWidth / 2 ? window.innerWidth - $offset.x + 'px' : 'auto'};"
 	>
-		<slot selected={$selected} />
+		<slot />
 	</ul>
 {/if}

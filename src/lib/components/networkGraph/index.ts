@@ -13,9 +13,9 @@ interface BasicGraphDataNode extends GraphDataBaseNode {
 	color?: string;
 }
 
-type GraphDataNode = BasicGraphDataNode | Machine | User;
+export type GraphDataNode = BasicGraphDataNode | Machine | User;
 
-interface GraphDataLink extends GraphDataBaseLink {}
+export interface GraphDataLink extends GraphDataBaseLink {}
 
 export interface GraphData extends GraphDataBase {
 	nodes: GraphDataNode[];

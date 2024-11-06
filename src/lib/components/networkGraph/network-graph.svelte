@@ -3,14 +3,23 @@
 	import type { ClassValue } from 'clsx';
 	import { onMount } from 'svelte';
 
-	import { page } from '$app/stores';
+	import * as Sheet from '$lib/components/ui/sheet';
 
-	import NodeInfo from './node-info.svelte';
 	import NetworkGraphActions from './network-graph-actions.svelte';
 	import type { GraphData } from '.';
 
+	import { page } from '$app/stores';
+	import { get, writable, type Writable } from 'svelte/store';
+
+	interface $$Props extends Partial<HTMLDivElement> {
+		class?: ClassValue;
+		graphData: Writable<GraphData>;
+	}
+
+	export let graphData: $$Props['graphData'];
+
 	let target: HTMLElement;
-	let nodeInfo: NodeInfo;
+	let nodeInfo: Sheet.Root;
 	let nodeActions: NetworkGraphActions;
 	let pageActions: NetworkGraphActions;
 
@@ -29,34 +38,32 @@
 	// - Dark & light mode
 	// - Resize on window size change
 
-	interface $$Props extends Partial<HTMLDivElement> {
-		class?: ClassValue;
-		graphData: GraphData;
-	}
-
-	export let graphData: $$Props['graphData'];
-
 	page.subscribe((state) => graph.graphData(state.data.graphData));
-	graph.graphData(graphData);
+
+	graphData.subscribe(graph.graphData);
+	graph.graphData(get(graphData));
 
 	function closeEveryPopup(): void {
 		nodeActions.close();
 		pageActions.close();
+		selected.set(undefined);
 	}
 
 	graph.onNodeClick((node, ev) => {
 		closeEveryPopup();
-		nodeInfo.open(node);
+		selected.set(node);
+		nodeInfo.open();
 	});
 
 	graph.onNodeRightClick((node, ev) => {
 		closeEveryPopup();
-		nodeActions.open(node, ev);
+		selected.set(node);
+		nodeActions.open(ev);
 	});
 
 	graph.onBackgroundRightClick((ev) => {
 		closeEveryPopup();
-		pageActions.open({}, ev);
+		pageActions.open(ev);
 	});
 
 	graph.onBackgroundClick(closeEveryPopup);
@@ -68,18 +75,22 @@
 		graph(target);
 		return graph._destructor;
 	});
+
+	const selected = writable<object | undefined>(undefined);
 </script>
 
-<main {...$$restProps} bind:this={target}></main>
+<div {...$$restProps} bind:this={target}></div>
 
 <slot />
 
-<NodeInfo bind:this={nodeInfo} let:selected>
-	<slot name="node-info" {nodeInfo} {selected} />
-</NodeInfo>
+<Sheet.Root bind:this={nodeInfo}>
+	<Sheet.Content>
+		<slot name="node-info" {nodeInfo} selected={$selected} />
+	</Sheet.Content>
+</Sheet.Root>
 
-<NetworkGraphActions bind:this={nodeActions} let:selected>
-	<slot name="node-actions" {nodeActions} {selected} />
+<NetworkGraphActions bind:this={nodeActions}>
+	<slot name="node-actions" {nodeActions} selected={$selected} />
 </NetworkGraphActions>
 
 <NetworkGraphActions bind:this={pageActions}>

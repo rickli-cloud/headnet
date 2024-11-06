@@ -32,7 +32,7 @@ You can preview the production build with `deno task preview`.
 
 ## Stack
 
-Some of the major project used:
+Some of the major projects used:
 
 - [Deno 2](https://deno.com/)
 - [Svelte 5](https://svelte.dev/)

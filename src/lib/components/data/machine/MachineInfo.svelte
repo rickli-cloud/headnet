@@ -1,92 +1,81 @@
 <script lang="ts">
-	import { defaults, superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
-	import { z } from 'zod';
-
-	import ClipboardCopy from 'lucide-svelte/icons/clipboard-copy';
-
-	import * as Select from '$lib/components/ui/select';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-
-	import * as Form from '$lib/components/form';
-
-	import type { Machine, Route } from '$lib/api';
-	import Secret from '$lib/components/utils/Secret.svelte';
 	import { isV6Format, isV4Format } from 'ip';
 
+	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
+
+	import * as Sheet from '$lib/components/ui/sheet';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+
+	import Secret from '$lib/components/utils/Secret.svelte';
+
+	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
+	import type { Machine, Route } from '$lib/api';
+
+	import MachineStatus from './MachineStatus.svelte';
+
 	export let machine: Machine;
-
-	/* const schema = z.object({
-		name: z.string()
-	});
-
-	const form = superForm(defaults(zod(schema)), {
-		SPA: true,
-		dataType: 'json',
-		invalidateAll: true,
-		validators: zod(schema),
-		onUpdate(ev) {
-			if (ev.form.valid) {
-				console.debug('Form is valid', ev);
-			}
-		}
-	});
-
-	const { constraints, form: formData } = form;
-
-	formData.set({ name: machine.givenName || '' });
-
-	function reset() {} */
+	export let routes: Route[] | undefined;
 </script>
 
-<!-- <Form.Root {form} {reset} submitText="Save">
-	<Form.Field {form} name="name">
-		<Form.Control let:attrs>
-			<Form.Label for={attrs.id}>Given name</Form.Label>
-			<Input {...attrs} {...$constraints.name || {}} bind:value={$formData.name} />
-		</Form.Control>
-	</Form.Field>
+<Sheet.Header>
+	<Sheet.Title class="flex items-center gap-1.5">
+		<Button variant="ghost" class="h-7 w-7 p-1.5">
+			<EllipsisVertical class="h-4 w-4" />
+		</Button>
 
-	<div>
-		<Label for="user.id">Name</Label>
-		<Input id="user.id" readonly value={machine.name} />
+		<span>
+			{machine.givenName}
+		</span>
+
+		{#if machine.id}
+			<span class="text-muted-foreground">
+				#{machine.id}
+			</span>
+		{/if}
+
+		<MachineStatus online={machine.online} lastSeen={machine.lastSeen} />
+	</Sheet.Title>
+
+	<Sheet.Description class="flex items-center justify-between gap-2">
+		<span>
+			Created on
+			{machine.createdAt ? new Date(machine.createdAt).toLocaleString() : undefined}
+		</span>
+	</Sheet.Description>
+
+	<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2 pt-1">
+		{#if machine.expiry}
+			{#if isExpired(machine.expiry)}
+				<Badge variant="destructive">
+					Session expired {new Date(machine.expiry).toDateString()}
+				</Badge>
+			{:else}
+				<Badge variant="positive">
+					Session expires {neverExpires(machine.expiry)
+						? 'never'
+						: formatDuration(Date.now() - new Date(machine.expiry).getTime())}
+				</Badge>
+			{/if}
+		{/if}
+
+		{#if machine.registerMethod}
+			<Badge variant="outline">
+				{machine.registerMethod}
+			</Badge>
+		{/if}
+
+		{#each [...(machine.validTags || []), ...(machine.forcedTags || [])] as tag}
+			<Badge>{tag}</Badge>
+		{/each}
+
+		{#each machine.invalidTags || [] as tag}
+			<Badge variant="destructive">{tag}</Badge>
+		{/each}
 	</div>
+</Sheet.Header>
 
-	<div>
-		<Label for="user.id">ID</Label>
-		<Input id="user.id" readonly value={machine.id} />
-	</div>
-
-	<div>
-		<Label for="user.id">Node key</Label>
-		<Input id="user.id" type="password" readonly value={machine.nodeKey} />
-	</div>
-
-	<div>
-		<Label for="user.id">Machine key</Label>
-		<Input id="user.id" type="password" readonly value={machine.machineKey} />
-	</div>
-
-	<div>
-		<Label for="user.id">Disco key</Label>
-		<Input id="user.id" type="password" readonly value={machine.discoKey} />
-	</div>
-</Form.Root> -->
-
-<!-- <table class="basic-table w-full">
-	<tbody>
-		<tr>
-			<th>Name</th>
-			<td>{machine.name}</td>
-		</tr>
-
-		<tr>
-			<th>Machine key</th>
-			<td><Secret secret={machine.machineKey} /></td>
-		</tr>
-	</tbody>
-</table> -->
+<div style="height: 1px;"></div>
 
 <div class="space-y-2">
 	<div class="text-sm font-medium">Disco Key</div>
@@ -124,38 +113,32 @@
 	</ul>
 </div>
 
-<!-- <form class="data-form">
-	<div>
-		<Label for="user.id">Machine key</Label>
-		<Input id="user.id" type="password" readonly value={machine.machineKey} />
-	</div>
+<Sheet.Header>
+	<Sheet.Title>Routes</Sheet.Title>
+</Sheet.Header>
 
-	<div>
-		<Label for="user.id">Node key</Label>
-		<Input id="user.id" type="password" readonly value={machine.nodeKey} />
-	</div>
+<div>
+	{#each routes?.filter((route) => route.node?.id === machine.id) || [] as route}
+		<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
+			<div class="flex flex-wrap items-center gap-1.5">
+				<button class="rounded p-2 hover:bg-muted">
+					<EllipsisVertical class="h-4 w-4" />
+				</button>
 
-	<div>
-		<Label for="user.id">Disco key</Label>
-		<Input id="user.id" type="password" readonly value={machine.discoKey} />
-	</div>
-</form> -->
+				<span class="mr-1.5 font-medium">{route.prefix}</span>
 
-<!-- <table class="basic-table w-full overflow-x-scroll">
-	<tbody>
-		<tr>
-			<th>Name</th>
-			<td>{machine.name}</td>
-		</tr>
+				{#if route.advertised}
+					<Badge variant="outline">Advertised</Badge>
+				{/if}
 
-		<tr>
-			<th>ID</th>
-			<td>{machine.id}</td>
-		</tr>
+				{#if route.isPrimary}
+					<Badge variant="outline">Primary</Badge>
+				{/if}
 
-		<tr>
-			<th>Created</th>
-			<td>{machine.createdAt}</td>
-		</tr>
-	</tbody>
-</table> -->
+				{#if !route.enabled}
+					<Badge variant="destructive">Disabled</Badge>
+				{/if}
+			</div>
+		</div>
+	{/each}
+</div>
