@@ -4,6 +4,16 @@ A web-ui for [Headscale](https://github.com/juanfont/headscale) with a focus on 
 
 ## Developing
 
+To circumvent CORS issues vite provides a dev proxy leading to your headscale instance. To enable this you have to define your headscale host as a environment variable.
+
+```sh
+# linux
+export HEADSCALE_HOST="https://headscale.example.com"
+
+# windows
+$env:HEADSCALE_HOST="https://headscale.example.com"
+```
+
 Once you've installed dependencies with `deno install`, start a development server:
 
 ```sh
@@ -31,3 +41,6 @@ Some of the major project used:
 - [json-ast-comments](https://github.com/2betop/json-ast-comments)
 - [openapi-typescript](https://openapi-ts.dev/)
 - [mock service worker](https://mswjs.io/)
+
+> [!NOTE]  
+> Deno provides additional functionality such as automatic types for third party modules. NodeJS does not support this and will not work with this project during development / building.
