@@ -16,7 +16,9 @@ interface BasicGraphDataNode extends GraphDataBaseNode {
 
 export type GraphDataNode = BasicGraphDataNode | Machine | User;
 
-export interface GraphDataLink extends GraphDataBaseLink {}
+export interface GraphDataLink extends GraphDataBaseLink {
+	cidr: string;
+}
 
 export interface GraphData extends GraphDataBase {
 	nodes: GraphDataNode[];

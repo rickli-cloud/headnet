@@ -15,7 +15,7 @@
 	import { NetworkGraph, type GraphData } from '$lib/components/networkGraph';
 
 	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
-	import { formatGraphData } from '$lib/utils/networkGraph.js';
+	import { focusOnNode, formatGraphData } from '$lib/utils/networkGraph.js';
 	import { NetworkGraphActions } from '$lib/components/networkGraph';
 
 	export let data;
@@ -44,11 +44,12 @@
 
 	graph.onNodeClick((node, ev) => {
 		closeEveryPopup();
+		focusOnNode(graph, node);
 		selected.set(node);
 		nodeInfo.open();
 	});
 
-	graph.onNodeRightClick((node, ev) => {
+	graph.onNodeRightClick(async (node, ev) => {
 		closeEveryPopup();
 		selected.set(node);
 		nodeActions.open(ev);

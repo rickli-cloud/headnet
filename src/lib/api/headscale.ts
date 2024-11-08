@@ -454,6 +454,13 @@ export class Machine implements V1Node, NetworkGraphAttributes {
 	public readonly validTags?: string[];
 	public readonly forcedTags?: string[];
 
+	public get supportsIpV4(): boolean {
+		return !!this.ipAddresses?.find((ip) => Address4.isValid(ip))?.length;
+	}
+	public get supportsIpV6(): boolean {
+		return !!this.ipAddresses?.find((ip) => Address6.isValid(ip))?.length;
+	}
+
 	// Network graph attributes
 	public readonly nodeId?: number;
 	public readonly nodeName?: string;
