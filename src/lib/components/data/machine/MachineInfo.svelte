@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isV6Format, isV4Format } from 'ip';
+	import { Address4, Address6 } from 'ip-address';
 
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
 	import Trash from 'lucide-svelte/icons/trash-2';
@@ -21,6 +21,7 @@
 	import DeleteMachine from './DeleteMachine.svelte';
 	import EditMachine from './EditMachine.svelte';
 	import ToggleRoute from '../routes/ToggleRoute.svelte';
+	import { isValid } from 'zod';
 
 	export let machine: Machine;
 	export let routes: Route[] | undefined;
@@ -140,7 +141,7 @@
 					on:click={() => navigator.clipboard.writeText(ip)}
 					on:dblclick={() =>
 						open(
-							isV4Format(ip) ? 'http://' + ip : isV6Format(ip) ? `http://[${ip}]` : ip,
+							Address4.isValid(ip) ? `http://${ip}` : Address6.isValid(ip) ? `http://[${ip}]` : ip,
 							'_blank'
 						)}
 				>

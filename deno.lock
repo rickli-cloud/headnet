@@ -20,7 +20,7 @@
     "npm:eslint@^9.7.0": "9.13.0",
     "npm:formsnap@^1.0.1": "1.0.1_svelte@5.1.2__acorn@8.13.0_sveltekit-superforms@2.20.0__@effect+schema@0.75.5___effect@3.10.6__@sveltejs+kit@2.7.3___@sveltejs+vite-plugin-svelte@4.0.0____svelte@5.1.2_____acorn@8.13.0____vite@5.4.10___svelte@5.1.2____acorn@8.13.0___vite@5.4.10__svelte@5.1.2___acorn@8.13.0__zod@3.23.8__@sveltejs+vite-plugin-svelte@4.0.0___svelte@5.1.2____acorn@8.13.0___vite@5.4.10__vite@5.4.10_@effect+schema@0.75.5__effect@3.10.6_@sveltejs+kit@2.7.3__@sveltejs+vite-plugin-svelte@4.0.0___svelte@5.1.2____acorn@8.13.0___vite@5.4.10__svelte@5.1.2___acorn@8.13.0__vite@5.4.10_zod@3.23.8_@sveltejs+vite-plugin-svelte@4.0.0__svelte@5.1.2___acorn@8.13.0__vite@5.4.10_vite@5.4.10",
     "npm:globals@15": "15.11.0",
-    "npm:ip@^2.0.1": "2.0.1",
+    "npm:ip-address@^10.0.1": "10.0.1",
     "npm:json-ast-comments@^1.1.1": "1.1.1",
     "npm:lucide-svelte@0.453": "0.453.0_svelte@5.1.2__acorn@8.13.0",
     "npm:mode-watcher@~0.4.1": "0.4.1_svelte@5.1.2__acorn@8.13.0",
@@ -1450,8 +1450,8 @@
     "internmap@2.0.3": {
       "integrity": "sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg=="
     },
-    "ip@2.0.1": {
-      "integrity": "sha512-lJUL9imLTNi1ZfXT+DU6rBBdbiKGBuay9B6xGSPVjUeQwaH1RIGqef8RZkUtHioLmSNpPR5M4HVKJGm1j8FWVQ=="
+    "ip-address@10.0.1": {
+      "integrity": "sha512-NWv9YLW4PoW2B7xtzaS3NCot75m6nK7Icdv0o3lfMceJVRfSoQwqD4wEH5rLwoKJwUiZ/rfpiVBhnaF0FK4HoA=="
     },
     "is-binary-path@2.1.0": {
       "integrity": "sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==",
@@ -2540,7 +2540,6 @@
         "npm:formsnap@^1.0.1",
         "npm:globals@15",
         "npm:ip-address@^10.0.1",
-        "npm:ip@^2.0.1",
         "npm:json-ast-comments@^1.1.1",
         "npm:lucide-svelte@0.453",
         "npm:mode-watcher@~0.4.1",

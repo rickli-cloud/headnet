@@ -193,17 +193,14 @@ function getRouteTargets(addr: Address4 | Address6, routes: Route[] | undefined)
 
 	for (const route of routes || []) {
 		if (
-			route.prefix &&
-			!exitRoutes.includes(route.prefix) &&
 			route.addr &&
+			!exitRoutes.includes(route.addr.address) && // Exclude exit nodes as they are handled separately
 			ipVersionMatches(addr, route.addr) &&
 			addr.isInSubnet(route.addr) &&
-			(route.enabled || includeDisabledRoutes)
+			(route.enabled || includeDisabledRoutes) &&
+			route.node?.nodeId
 		) {
-			if (route.node?.nodeId) {
-				console.debug(route.node.name, route.addr.address, addr.address);
-				ids.add(route.node?.nodeId);
-			}
+			ids.add(route.node.nodeId);
 		}
 	}
 

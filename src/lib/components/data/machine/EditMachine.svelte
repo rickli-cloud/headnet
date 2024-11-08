@@ -3,18 +3,12 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 
-	import ClipboardCopy from 'lucide-svelte/icons/clipboard-copy';
-
-	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 
 	import * as Form from '$lib/components/form';
 
-	import type { Machine, Route } from '$lib/api';
-	import Secret from '$lib/components/utils/Secret.svelte';
-	import { isV6Format, isV4Format } from 'ip';
+	import type { Machine } from '$lib/api';
 
 	export let machine: Machine;
 
