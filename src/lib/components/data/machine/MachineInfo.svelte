@@ -2,7 +2,12 @@
 	import { isV6Format, isV4Format } from 'ip';
 
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
+	import Trash from 'lucide-svelte/icons/trash-2';
+	import MonitorCog from 'lucide-svelte/icons/monitor-cog';
+	import ToggleLeft from 'lucide-svelte/icons/toggle-left';
+	import ToggleRight from 'lucide-svelte/icons/toggle-right';
 
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -13,18 +18,51 @@
 	import type { Machine, Route } from '$lib/api';
 
 	import MachineStatus from './MachineStatus.svelte';
+	import DeleteMachine from './DeleteMachine.svelte';
+	import EditMachine from './EditMachine.svelte';
+	import ToggleRoute from '../routes/ToggleRoute.svelte';
 
 	export let machine: Machine;
 	export let routes: Route[] | undefined;
 </script>
 
 <Sheet.Header>
-	<Sheet.Title class="flex items-center gap-1.5">
-		<Button variant="ghost" class="h-7 w-7 p-1.5">
-			<EllipsisVertical class="h-4 w-4" />
-		</Button>
+	<Sheet.Title class="flex items-center gap-1.5 font-normal">
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger asChild let:builder>
+				<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
+					<EllipsisVertical class="h-4 w-4" />
+				</Button>
+			</DropdownMenu.Trigger>
 
-		<span>
+			<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
+				<DropdownMenu.Group>
+					<DropdownMenu.Item asChild>
+						<EditMachine {machine}>
+							<svelte:fragment slot="trigger" let:builder>
+								<button class="menu-button" {...builder} use:builder.action>
+									<MonitorCog class="mr-2 h-4 w-4" />
+									<span>Edit</span>
+								</button>
+							</svelte:fragment>
+						</EditMachine>
+					</DropdownMenu.Item>
+
+					<DropdownMenu.Item asChild>
+						<DeleteMachine {machine}>
+							<svelte:fragment slot="trigger" let:builder>
+								<button class="menu-button destructive" {...builder} use:builder.action>
+									<Trash class="mr-2 h-4 w-4" />
+									<span>Delete</span>
+								</button>
+							</svelte:fragment>
+						</DeleteMachine>
+					</DropdownMenu.Item>
+				</DropdownMenu.Group>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+
+		<span class="font-semibold">
 			{machine.givenName}
 		</span>
 
@@ -121,9 +159,38 @@
 	{#each routes?.filter((route) => route.node?.id === machine.id) || [] as route}
 		<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
 			<div class="flex flex-wrap items-center gap-1.5">
-				<button class="rounded p-2 hover:bg-muted">
-					<EllipsisVertical class="h-4 w-4" />
-				</button>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
+							<EllipsisVertical class="h-4 w-4" />
+						</Button>
+					</DropdownMenu.Trigger>
+
+					<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
+						<DropdownMenu.Group>
+							<DropdownMenu.Item asChild>
+								<ToggleRoute {route}>
+									<svelte:fragment slot="trigger" let:builder>
+										<button
+											class="menu-button"
+											class:destructive={route.enabled}
+											{...builder}
+											use:builder.action
+										>
+											{#if route.enabled}
+												<ToggleLeft class="mr-2 h-4 w-4" />
+												<span>Disable</span>
+											{:else}
+												<ToggleRight class="mr-2 h-4 w-4" />
+												<span>Enable</span>
+											{/if}
+										</button>
+									</svelte:fragment>
+								</ToggleRoute>
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 
 				<span class="mr-1.5 font-medium">{route.prefix}</span>
 

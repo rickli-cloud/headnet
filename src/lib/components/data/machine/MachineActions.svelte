@@ -9,10 +9,12 @@
 
 	import MachineStatus from './MachineStatus.svelte';
 	import { createEventDispatcher } from 'svelte';
+	import DeleteMachine from './DeleteMachine.svelte';
+	import EditMachine from './EditMachine.svelte';
 
 	export let machine: Machine;
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
 
 <div class="grid items-center gap-2" style="grid-template-columns: auto 1fr auto;">
@@ -42,10 +44,14 @@
 </li>
 
 <li>
-	<button disabled>
-		<MonitorCog />
-		<span>Edit</span>
-	</button>
+	<EditMachine {machine}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<MonitorCog />
+				<span>Edit</span>
+			</button>
+		</svelte:fragment>
+	</EditMachine>
 </li>
 
 <li class="destructive">
@@ -56,8 +62,12 @@
 </li>
 
 <li class="destructive">
-	<button disabled>
-		<Trash />
-		<span>Delete</span>
-	</button>
+	<DeleteMachine {machine}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Trash />
+				<span>Delete</span>
+			</button>
+		</svelte:fragment>
+	</DeleteMachine>
 </li>

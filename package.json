@@ -35,6 +35,7 @@
     "formsnap": "^1.0.1",
     "globals": "^15.0.0",
     "ip": "^2.0.1",
+    "ip-address": "^10.0.1",
     "json-ast-comments": "^1.1.1",
     "lucide-svelte": "^0.453.0",
     "mode-watcher": "^0.4.1",

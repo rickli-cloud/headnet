@@ -1,6 +1,10 @@
+import { Address4, Address6 } from 'ip-address';
+
 import { type User, type Machine, type Route, type Acl, groupRegex, tagRegex } from '$lib/api';
 
 import type { GraphData, GraphDataLink, GraphDataNode } from '$lib/components/networkGraph';
+
+const exitRoutes = ['0.0.0.0/0', '::/0'];
 
 export interface FormatGraphData {
 	users: User[] | undefined;
@@ -9,92 +13,99 @@ export interface FormatGraphData {
 	acl: Acl | undefined;
 }
 
+// TODO: change settings to svelte store with persistent storage
 let includeDisabledRoutes: boolean = false;
 
 export function formatGraphData(data: FormatGraphData): GraphData {
-	const nodes = new Set<GraphDataNode>();
-	const links = new Set<GraphDataLink>();
+	try {
+		console.time('formatGraphData');
 
-	const exitNodes = new Set<number>();
+		const nodes = new Set<GraphDataNode>();
+		const links = new Set<GraphDataLink>();
 
-	// Internet node (Exit nodes link to it)
-	nodes.add({
-		nodeId: 1,
-		nodeName: 'internet',
-		color: 'gray'
-	});
+		const exitNodes = new Set<number>();
 
-	// Basic users
-	for (const user of data.users || []) nodes.add(user);
+		// Internet node (Exit nodes link to it)
+		nodes.add({
+			nodeId: 1,
+			nodeName: 'internet',
+			color: 'gray'
+		});
 
-	// Basic machines
-	for (const machine of data.machines || []) {
-		nodes.add(machine);
+		// Basic users
+		for (const user of data.users || []) nodes.add(user);
 
-		// Link users to machine
-		if (machine.user?.id) {
-			const user = data.users?.find((user) => user.id === machine.user?.id);
+		// Basic machines
+		for (const machine of data.machines || []) {
+			nodes.add(machine);
 
-			if (user?.nodeId) {
-				links.add({
-					source: user.nodeId,
-					target: machine.nodeId
-				});
+			// Link users to machine
+			if (machine.user?.id) {
+				const user = data.users?.find((user) => user.id === machine.user?.id);
+
+				if (user?.nodeId) {
+					links.add({
+						source: user.nodeId,
+						target: machine.nodeId
+					});
+				}
 			}
 		}
-	}
 
-	// Routes
-	for (const route of data.routes || []) {
-		// Exit nodes
-		if (route.isExit && route.node?.id && (route.enabled || includeDisabledRoutes)) {
-			const machine = data.machines?.find((machine) => machine.id === route.node?.id);
-			if (machine?.nodeId) {
-				exitNodes.add(machine.nodeId);
-				links.add({
-					source: machine.nodeId,
-					target: 1
-				});
+		// Routes
+		for (const route of data.routes || []) {
+			// Exit nodes
+			if (route.isExit && route.node?.id && (route.enabled || includeDisabledRoutes)) {
+				const machine = data.machines?.find((machine) => machine.id === route.node?.id);
+				if (machine?.nodeId) {
+					exitNodes.add(machine.nodeId);
+					links.add({
+						source: machine.nodeId,
+						target: 1
+					});
+				}
 			}
 		}
-	}
 
-	if (data.acl) {
-		// Main ACL rules
-		for (const rule of data.acl.acls) {
-			for (const dst of rule.dst) {
-				if (dst.host === 'autogroup:internet') {
-					// Exit nodes (autogroup:internet)
-					for (const src of rule.src) {
-						for (const target of getTargets(data, src)) {
-							for (const exitNode of exitNodes) {
-								links.add({
-									source: target,
-									target: exitNode
-								});
+		if (data.acl) {
+			// Main ACL rules
+			for (const rule of data.acl.acls) {
+				for (const dst of rule.dst) {
+					if (dst.host === 'autogroup:internet') {
+						// Exit nodes (autogroup:internet)
+						for (const src of rule.src) {
+							for (const target of getTargets(data, src)) {
+								for (const exitNode of exitNodes) {
+									links.add({
+										source: target,
+										target: exitNode
+									});
+								}
 							}
 						}
-					}
-				} else {
-					// Basic targets
-					const targets = getTargets(data, dst.host);
+					} else {
+						// Basic targets
+						const targets = getTargets(data, dst.host);
 
-					for (const src of rule.src) {
-						for (const source of getTargets(data, src)) {
-							for (const target of targets) {
-								links.add({ source, target });
+						for (const src of rule.src) {
+							for (const source of getTargets(data, src)) {
+								for (const target of targets) {
+									links.add({ source, target });
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-	}
 
-	return {
-		nodes: [...nodes],
-		links: [...links]
-	};
+		return {
+			nodes: [...nodes],
+			links: [...links]
+		};
+	} finally {
+		console.timeEnd('formatGraphData');
+	}
 }
 
 /**
@@ -106,9 +117,9 @@ export function formatGraphData(data: FormatGraphData): GraphData {
  * - [X] group name -> members -> machines
  * - [X] autogroup:internet -> exit nodes
  * - [X] tag -> machines
- * - [ ] tailnet IP -> machine
- * - [ ] subnet CIDR -> machines
- * - [ ] hosts -> machines
+ * - [X] hosts -> machines
+ * - [X] subnet CIDR -> machines
+ * - [X] tailnet IP -> machine
  */
 function getTargets(data: FormatGraphData, query: string): number[] {
 	const ids = new Set<number>();
@@ -144,22 +155,71 @@ function getTargets(data: FormatGraphData, query: string): number[] {
 		return [...ids]; // Makes no sense to go further as there should be no more matches
 	}
 
-	// Hosts -> machines
-	// TODO
-
-	// CIDR -> machines
-	// TODO
-
-	// Tailnet IP -> machines
-	// TODO
-
 	// Users -> machines
 	const user = data.users?.find((user) => user.name === query);
-	if (user?.id) {
+	if (user) {
 		for (const machine of data.machines?.filter((machine) => machine.user?.id === user.id) || []) {
 			if (machine.nodeId) ids.add(machine.nodeId);
 		}
 	}
 
+	// Hosts -> machines
+	const host = data.acl?.hosts.find((host) => host.name === query);
+	if (host) {
+		const addr = parseAddress(host.cidr);
+		if (addr) for (const id of getRouteTargets(addr, data.routes)) ids.add(id);
+	}
+
+	// CIDR -> machines
+	const addr = parseAddress(query);
+	if (addr) {
+		for (const id of getRouteTargets(addr, data.routes)) ids.add(id);
+	}
+
+	// Tailnet IP -> machines
+	if (addr) {
+		for (const machine of data.machines || []) {
+			if (machine.ipAddresses?.includes(addr.address) && typeof machine.nodeId === 'number') {
+				ids.add(machine.nodeId);
+			}
+		}
+	}
+
 	return [...ids];
+}
+
+function getRouteTargets(addr: Address4 | Address6, routes: Route[] | undefined): number[] {
+	const ids = new Set<number>();
+
+	for (const route of routes || []) {
+		if (
+			route.prefix &&
+			!exitRoutes.includes(route.prefix) &&
+			route.addr &&
+			ipVersionMatches(addr, route.addr) &&
+			addr.isInSubnet(route.addr) &&
+			(route.enabled || includeDisabledRoutes)
+		) {
+			if (route.node?.nodeId) {
+				console.debug(route.node.name, route.addr.address, addr.address);
+				ids.add(route.node?.nodeId);
+			}
+		}
+	}
+
+	return [...ids];
+}
+
+function ipVersionMatches(addr1: Address4 | Address6, addr2: Address4 | Address6): boolean {
+	if (addr1 instanceof Address4 && addr2 instanceof Address4) return true;
+	if (addr1 instanceof Address6 && addr2 instanceof Address6) return true;
+	return false;
+}
+
+function parseAddress(addr: string): Address4 | Address6 | undefined {
+	return Address4.isValid(addr)
+		? new Address4(addr)
+		: Address6.isValid(addr)
+			? new Address6(addr)
+			: undefined;
 }

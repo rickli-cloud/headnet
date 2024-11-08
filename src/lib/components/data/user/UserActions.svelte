@@ -6,11 +6,14 @@
 	import Trash from 'lucide-svelte/icons/trash-2';
 	import X from 'lucide-svelte/icons/x';
 
-	import type { User } from '$lib/api';
+	import type { Acl, User } from '$lib/api';
+	import EditUser from './EditUser.svelte';
+	import DeleteUser from './DeleteUser.svelte';
 
 	export let user: User;
+	export let acl: Acl | undefined;
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
 
 <div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
@@ -38,15 +41,23 @@
 </li>
 
 <li>
-	<button disabled>
-		<UserRoundPen />
-		<span>Edit</span>
-	</button>
+	<EditUser {user} {acl}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<UserRoundPen />
+				<span>Edit</span>
+			</button>
+		</svelte:fragment>
+	</EditUser>
 </li>
 
 <li class="destructive">
-	<button disabled>
-		<Trash />
-		<span>Delete</span>
-	</button>
+	<DeleteUser {user}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Trash />
+				<span>Delete</span>
+			</button>
+		</svelte:fragment>
+	</DeleteUser>
 </li>

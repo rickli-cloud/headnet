@@ -1,5 +1,6 @@
 import createClient, { type Client, type ClientOptions } from 'openapi-fetch';
 import { stringify, parse } from 'json-ast-comments';
+import { Address4, Address6 } from 'ip-address';
 import { get } from 'svelte/store';
 
 import type { NetworkGraphAttributes } from '$lib/components/networkGraph';
@@ -145,13 +146,13 @@ export class User implements V1User, NetworkGraphAttributes {
 		};
 	}
 
-	public readonly name?: string | undefined;
-	public readonly id?: string | undefined;
-	public readonly createdAt?: string | undefined;
+	public readonly name?: string;
+	public readonly id?: string;
+	public readonly createdAt?: string;
 
 	// Network graph attributes
-	public readonly nodeId: number | undefined;
-	public readonly nodeName: string | undefined;
+	public readonly nodeId?: number;
+	public readonly nodeName?: string;
 	public color: string = 'blue';
 
 	public constructor(data: V1User) {
@@ -251,15 +252,15 @@ export class PreAuthKey implements V1PreAuthKey {
 		};
 	}
 
-	public readonly id?: string | undefined;
-	public readonly key?: string | undefined;
-	public readonly aclTags?: string[] | undefined;
-	public readonly user?: string | undefined;
-	public readonly createdAt?: string | undefined;
-	public readonly expiration?: string | undefined;
-	public readonly used?: boolean | undefined;
-	public readonly reusable?: boolean | undefined;
-	public readonly ephemeral?: boolean | undefined;
+	public readonly id?: string;
+	public readonly key?: string;
+	public readonly aclTags?: string[];
+	public readonly user?: string;
+	public readonly createdAt?: string;
+	public readonly expiration?: string;
+	public readonly used?: boolean;
+	public readonly reusable?: boolean;
+	public readonly ephemeral?: boolean;
 
 	public constructor(data: V1PreAuthKey) {
 		Object.assign(this, data);
@@ -293,15 +294,17 @@ export class Route implements V1Route {
 		};
 	}
 
-	public readonly id?: string | undefined;
-	public readonly prefix?: string | undefined;
-	public readonly advertised?: boolean | undefined;
-	public readonly enabled?: boolean | undefined;
-	public readonly isPrimary?: boolean | undefined;
-	public readonly createdAt?: string | undefined;
-	public readonly updatedAt?: string | undefined;
-	public readonly deletedAt?: string | undefined;
-	public readonly node?: V1Node | undefined;
+	public readonly id?: string;
+	public readonly prefix?: string;
+	public readonly advertised?: boolean;
+	public readonly enabled?: boolean;
+	public readonly isPrimary?: boolean;
+	public readonly createdAt?: string;
+	public readonly updatedAt?: string;
+	public readonly deletedAt?: string;
+	public readonly node?: Machine;
+
+	public readonly addr?: Address4 | Address6;
 
 	public get isExit(): boolean {
 		return (this.prefix && ['0.0.0.0/0', '::/0'].includes(this.prefix)) || false;
@@ -309,6 +312,16 @@ export class Route implements V1Route {
 
 	public constructor(data: V1Route) {
 		Object.assign(this, data);
+
+		if (data.node) this.node = new Machine(data.node);
+
+		if (data.prefix) {
+			this.addr = Address4.isValid(data.prefix)
+				? new Address4(data.prefix)
+				: Address6.isValid(data.prefix)
+					? new Address6(data.prefix)
+					: undefined;
+		}
 	}
 
 	public async delete(headscale = new Headscale()) {
@@ -422,28 +435,28 @@ export class Machine implements V1Node, NetworkGraphAttributes {
 		};
 	}
 
-	public readonly id?: string | undefined;
-	public readonly name?: string | undefined;
-	public readonly givenName?: string | undefined;
-	public readonly discoKey?: string | undefined;
-	public readonly nodeKey?: string | undefined;
-	public readonly preAuthKey?: V1PreAuthKey | undefined;
-	public readonly machineKey?: string | undefined;
-	public readonly user?: V1User | undefined;
-	public readonly createdAt?: string | undefined;
-	public readonly lastSuccessfulUpdate?: string | undefined;
-	public readonly lastSeen?: string | undefined;
-	public readonly expiry?: string | undefined;
-	public readonly ipAddresses?: string[] | undefined;
-	public readonly registerMethod?: components['schemas']['v1RegisterMethod'] | undefined;
-	public readonly online?: boolean | undefined;
-	public readonly invalidTags?: string[] | undefined;
-	public readonly validTags?: string[] | undefined;
-	public readonly forcedTags?: string[] | undefined;
+	public readonly id?: string;
+	public readonly name?: string;
+	public readonly givenName?: string;
+	public readonly discoKey?: string;
+	public readonly nodeKey?: string;
+	public readonly preAuthKey?: V1PreAuthKey;
+	public readonly machineKey?: string;
+	public readonly user?: V1User;
+	public readonly createdAt?: string;
+	public readonly lastSuccessfulUpdate?: string;
+	public readonly lastSeen?: string;
+	public readonly expiry?: string;
+	public readonly ipAddresses?: string[];
+	public readonly registerMethod?: components['schemas']['v1RegisterMethod'];
+	public readonly online?: boolean;
+	public readonly invalidTags?: string[];
+	public readonly validTags?: string[];
+	public readonly forcedTags?: string[];
 
 	// Network graph attributes
-	public readonly nodeId: number | undefined;
-	public readonly nodeName: string | undefined;
+	public readonly nodeId?: number;
+	public readonly nodeName?: string;
 	public color: string = 'red';
 
 	public constructor(data: V1Node) {
@@ -608,11 +621,11 @@ export class ApiKey implements V1ApiKey {
 		};
 	}
 
-	public readonly id?: string | undefined;
-	public readonly prefix?: string | undefined;
-	public readonly createdAt?: string | undefined;
-	public readonly expiration?: string | undefined;
-	public readonly lastSeen?: string | undefined;
+	public readonly id?: string;
+	public readonly prefix?: string;
+	public readonly createdAt?: string;
+	public readonly expiration?: string;
+	public readonly lastSeen?: string;
 
 	public constructor(data: V1ApiKey) {
 		Object.assign(this, data);

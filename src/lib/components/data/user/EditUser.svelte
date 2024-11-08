@@ -4,6 +4,7 @@
 	import { writable } from 'svelte/store';
 	import { z } from 'zod';
 
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -11,9 +12,14 @@
 	import * as Form from '$lib/components/form';
 
 	import { groupRegex, type Acl, type User } from '$lib/api';
+	import { createEventDispatcher } from 'svelte';
 
 	export let user: User;
 	export let acl: Acl | undefined;
+
+	const dispatch = createEventDispatcher<{ submit: undefined }>();
+
+	let open: boolean;
 
 	const schema = z.object({
 		name: z.string(),
@@ -28,6 +34,8 @@
 		onUpdate(ev) {
 			if (ev.form.valid) {
 				console.debug('Form is valid', ev);
+				dispatch('submit');
+				open = false;
 			}
 		}
 	});
@@ -58,47 +66,44 @@
 	formData.subscribe(console.debug);
 </script>
 
-<Form.Root {form} {reset} submitText="Save">
-	<Form.Field {form} name="name">
-		<Form.Control let:attrs>
-			<Form.Label for={attrs.id}>Name</Form.Label>
-			<Input {...attrs} {...$constraints.name || {}} bind:value={$formData.name} />
-		</Form.Control>
-	</Form.Field>
+<Dialog.Root bind:open>
+	<Dialog.Trigger asChild let:builder>
+		<slot name="trigger" {builder} />
+	</Dialog.Trigger>
 
-	<div>
-		<Label for="user.id">ID</Label>
-		<Input id="user.id" readonly value={user.id} />
-	</div>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Edit user</Dialog.Title>
+		</Dialog.Header>
 
-	<div>
-		<Label for="user.created">Created</Label>
-		<Input
-			id="user.created"
-			readonly
-			type="datetime-local"
-			value={user.createdAt ? new Date(user.createdAt).toISOString().replace(/z$/i, '') : ''}
-		/>
-	</div>
+		<Form.Root {form} {reset} submitText="Save">
+			<Form.Field {form} name="name">
+				<Form.Control let:attrs>
+					<Form.Label for={attrs.id}>Name</Form.Label>
+					<Input {...attrs} {...$constraints.name || {}} bind:value={$formData.name} />
+				</Form.Control>
+			</Form.Field>
 
-	<div>
-		<Label for="user.groups">Groups</Label>
-		<Select.Root multiple bind:selected={$selectedGroups}>
-			<Select.Trigger>
-				<Select.Value id="user.groups" />
-			</Select.Trigger>
+			<div>
+				<Label for="user.groups">Groups</Label>
+				<Select.Root multiple bind:selected={$selectedGroups}>
+					<Select.Trigger>
+						<Select.Value id="user.groups" />
+					</Select.Trigger>
 
-			<Select.Content>
-				<Select.Group>
-					<Select.Label>Groups</Select.Label>
+					<Select.Content>
+						<Select.Group>
+							<Select.Label>Groups</Select.Label>
 
-					{#each acl?.groups || [] as group}
-						<Select.Item value={group.name} label={group.name.replace(groupRegex, '')}>
-							{group.name.replace(groupRegex, '')}
-						</Select.Item>
-					{/each}
-				</Select.Group>
-			</Select.Content>
-		</Select.Root>
-	</div>
-</Form.Root>
+							{#each acl?.groups || [] as group}
+								<Select.Item value={group.name} label={group.name.replace(groupRegex, '')}>
+									{group.name.replace(groupRegex, '')}
+								</Select.Item>
+							{/each}
+						</Select.Group>
+					</Select.Content>
+				</Select.Root>
+			</div>
+		</Form.Root>
+	</Dialog.Content>
+</Dialog.Root>

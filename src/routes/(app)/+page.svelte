@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
+	import ForceGraph3D from '3d-force-graph';
 	import { onMount } from 'svelte';
 
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -15,16 +16,53 @@
 
 	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
 	import { formatGraphData } from '$lib/utils/networkGraph.js';
+	import { NetworkGraphActions } from '$lib/components/networkGraph';
 
 	export let data;
 
-	const graphData = writable<GraphData>(formatGraphData(data));
+	let nodeInfo: Sheet.Root;
+	let nodeActions: NetworkGraphActions;
+	let pageActions: NetworkGraphActions;
 
-	graphData.subscribe((d) => console.debug({ nodes: d.nodes.length, links: d.links.length }));
+	const graph = ForceGraph3D({});
+
+	const graphData = writable<GraphData>(formatGraphData(data));
+	graphData.subscribe((d) => console.debug({ nodes: d?.nodes.length, links: d?.links.length }));
+	graphData.subscribe(graph.graphData);
 
 	const preAuthKeys = writable<PreAuthKey[]>([]);
-
 	preAuthKeys.subscribe(console.debug);
+
+	const selected = writable<object | undefined>(undefined);
+	selected.subscribe(console.debug);
+
+	function closeEveryPopup(): void {
+		nodeActions.close();
+		pageActions.close();
+		selected.set(undefined);
+	}
+
+	graph.onNodeClick((node, ev) => {
+		closeEveryPopup();
+		selected.set(node);
+		nodeInfo.open();
+	});
+
+	graph.onNodeRightClick((node, ev) => {
+		closeEveryPopup();
+		selected.set(node);
+		nodeActions.open(ev);
+	});
+
+	graph.onBackgroundRightClick((ev) => {
+		closeEveryPopup();
+		pageActions.open(ev);
+	});
+
+	graph.onBackgroundClick(closeEveryPopup);
+	graph.onNodeDrag(closeEveryPopup);
+	graph.onLinkClick(closeEveryPopup);
+	graph.onLinkRightClick(closeEveryPopup);
 
 	onMount(async () => {
 		preAuthKeys.set(await PreAuthKey.list(data.users || []));
@@ -32,35 +70,41 @@
 </script>
 
 <main class="relative overflow-x-hidden overflow-y-hidden">
-	<NetworkGraph {graphData}>
-		<svelte:fragment slot="node-info" let:selected>
-			{#if selected instanceof Machine}
-				<MachineInfo machine={selected} routes={data.routes} />
-			{:else if selected instanceof User}
-				<UserInfo user={selected} acl={data.acl} preAuthKeys={$preAuthKeys} />
-			{:else if selected && 'nodeId' in selected && selected.nodeId === 1}
+	<NetworkGraph {graph} />
+
+	<Sheet.Root bind:this={nodeInfo}>
+		<Sheet.Content>
+			{#if $selected instanceof User}
+				<UserInfo user={$selected} acl={data.acl} preAuthKeys={$preAuthKeys} />
+			{:else if $selected instanceof Machine}
+				<MachineInfo machine={$selected} routes={data.routes} />
+			{:else if $selected && 'nodeId' in $selected && $selected.nodeId === 1}
 				<Sheet.Header>
 					<Sheet.Title>Internet</Sheet.Title>
 				</Sheet.Header>
 			{:else}
-				<div class="text-red-600">Not found</div>
+				<div class="text-red-600">Node not found</div>
 			{/if}
-		</svelte:fragment>
+		</Sheet.Content>
+	</Sheet.Root>
 
-		<svelte:fragment slot="node-actions" let:nodeActions let:selected>
-			{#if selected instanceof User}
-				<UserActions user={selected} on:close={nodeActions.close} />
-			{:else if selected instanceof Machine}
-				<MachineActions machine={selected} on:close={nodeActions.close} />
-			{:else if selected && 'nodeId' in selected && selected.nodeId === 1}
-				<InternetActions on:close={nodeActions.close} />
-			{:else}
-				<div class="text-red-600">Not found</div>
-			{/if}
-		</svelte:fragment>
+	<NetworkGraphActions bind:this={nodeActions}>
+		{#if $selected instanceof User}
+			{#key $selected}
+				<UserActions user={$selected} acl={data.acl} on:close={nodeActions.close} />
+			{/key}
+		{:else if $selected instanceof Machine}
+			{#key $selected}
+				<MachineActions machine={$selected} on:close={nodeActions.close} />
+			{/key}
+		{:else if $selected && 'nodeId' in $selected && $selected.nodeId === 1}
+			<InternetActions on:close={nodeActions.close} />
+		{:else}
+			<div class="text-red-600">Node not found</div>
+		{/if}
+	</NetworkGraphActions>
 
-		<svelte:fragment slot="page-actions" let:pageActions>
-			<PageActions on:close={pageActions.close} />
-		</svelte:fragment>
-	</NetworkGraph>
+	<NetworkGraphActions bind:this={pageActions}>
+		<PageActions on:close={pageActions.close} />
+	</NetworkGraphActions>
 </main>

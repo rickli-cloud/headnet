@@ -95,15 +95,18 @@
 		& label:has(+ *.required)::after,
 		& .required > label::after,
 		& .star-note::before {
-			@apply mx-0.5 text-muted-foreground;
+			@apply mx-0.5 text-current opacity-60;
 			content: '*';
 		}
 		.data-form:has(*[required]),
 		.data-form:has(*[aria-required='true']),
-		.data-form:has(*.required) {
+		.data-form:has(.required) {
 			& .star-note {
 				@apply block text-xs text-muted-foreground;
 			}
+		}
+		.star-note.required {
+			@apply block text-xs text-muted-foreground;
 		}
 	}
 
@@ -121,6 +124,19 @@
 		}
 	}
 
+	.menu-button {
+		@apply grid w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted disabled:text-muted-foreground;
+		grid-template-columns: 16px 1fr auto;
+
+		& svg {
+			@apply h-4 w-4;
+		}
+	}
+
+	.menu-button.destructive {
+		@apply hover:!text-red-600 disabled:hover:!text-red-600/40;
+	}
+
 	ul.menu {
 		@apply p-1 text-sm;
 
@@ -135,7 +151,7 @@
 		& > li {
 			& a,
 			& button {
-				@apply grid w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted disabled:text-muted-foreground;
+				@apply grid w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted disabled:text-muted-foreground;
 				grid-template-columns: 16px 1fr auto;
 
 				& svg {
@@ -145,10 +161,9 @@
 		}
 
 		& > li.destructive {
-			@apply hover:!text-red-600;
-
-			& > * {
-				@apply disabled:hover:!text-red-600/40;
+			& > button,
+			& > a {
+				@apply hover:!text-red-600 disabled:hover:!text-red-600/40;
 			}
 		}
 	}

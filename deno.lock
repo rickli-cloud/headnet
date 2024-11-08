@@ -2539,6 +2539,7 @@
         "npm:eslint@^9.7.0",
         "npm:formsnap@^1.0.1",
         "npm:globals@15",
+        "npm:ip-address@^10.0.1",
         "npm:ip@^2.0.1",
         "npm:json-ast-comments@^1.1.1",
         "npm:lucide-svelte@0.453",
