@@ -90,80 +90,82 @@
 	{/if}
 </Sheet.Header>
 
-<Sheet.Header>
-	<Sheet.Title>PreAuth keys</Sheet.Title>
-</Sheet.Header>
+{#if keys.length}
+	<Sheet.Header>
+		<Sheet.Title>PreAuth keys</Sheet.Title>
+	</Sheet.Header>
 
-<div>
-	{#each keys || [] as key}
-		<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
-			<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
-							<EllipsisVertical class="h-4 w-4" />
-						</Button>
-					</DropdownMenu.Trigger>
+	<div>
+		{#each keys || [] as key}
+			<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
+				<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
+								<EllipsisVertical class="h-4 w-4" />
+							</Button>
+						</DropdownMenu.Trigger>
 
-					<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
-						<DropdownMenu.Group>
-							<DropdownMenu.Item asChild>
-								<ExpirePreAuthKey {key}>
-									<svelte:fragment slot="trigger" let:builder>
-										<button
-											class="menu-button destructive"
-											{...builder}
-											use:builder.action
-											disabled={!key.expiration || isExpired(key.expiration)}
-										>
-											<TimerOff class="mr-2 h-4 w-4" />
-											<span>Expire</span>
-										</button>
-									</svelte:fragment>
-								</ExpirePreAuthKey>
-							</DropdownMenu.Item>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+						<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
+							<DropdownMenu.Group>
+								<DropdownMenu.Item asChild>
+									<ExpirePreAuthKey {key}>
+										<svelte:fragment slot="trigger" let:builder>
+											<button
+												class="menu-button destructive"
+												{...builder}
+												use:builder.action
+												disabled={!key.expiration || isExpired(key.expiration)}
+											>
+												<TimerOff class="mr-2 h-4 w-4" />
+												<span>Expire</span>
+											</button>
+										</svelte:fragment>
+									</ExpirePreAuthKey>
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 
-				<Secret class="font-semibold" secret={key.key} />
+					<Secret class="font-semibold" secret={key.key} />
+				</div>
+
+				<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+					{#if key.expiration && isExpired(key.expiration)}
+						<Badge variant="destructive">
+							Expired {new Date(key.expiration).toDateString()}
+						</Badge>
+					{:else if key.expiration}
+						<Badge variant="positive">
+							Valid for {formatDuration(Date.now() - new Date(key.expiration).getTime())}
+						</Badge>
+					{/if}
+
+					{#if key.createdAt}
+						<Badge variant="outline">
+							Created on {new Date(key.createdAt).toLocaleDateString()}
+						</Badge>
+					{/if}
+
+					{#if key.used}
+						<Badge variant="outline">Used</Badge>
+					{/if}
+
+					{#if key.reusable}
+						<Badge variant="outline">Reusable</Badge>
+					{/if}
+
+					{#if key.ephemeral}
+						<Badge variant="outline">Ephemeral</Badge>
+					{/if}
+
+					{#if key.aclTags?.length}
+						{#each key.aclTags as tag}
+							<Badge>{tag}</Badge>
+						{/each}
+					{/if}
+				</div>
 			</div>
-
-			<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-				{#if key.expiration && isExpired(key.expiration)}
-					<Badge variant="destructive">
-						Expired {new Date(key.expiration).toDateString()}
-					</Badge>
-				{:else if key.expiration}
-					<Badge variant="positive">
-						Valid for {formatDuration(Date.now() - new Date(key.expiration).getTime())}
-					</Badge>
-				{/if}
-
-				{#if key.createdAt}
-					<Badge variant="outline">
-						Created on {new Date(key.createdAt).toLocaleDateString()}
-					</Badge>
-				{/if}
-
-				{#if key.used}
-					<Badge variant="outline">Used</Badge>
-				{/if}
-
-				{#if key.reusable}
-					<Badge variant="outline">Reusable</Badge>
-				{/if}
-
-				{#if key.ephemeral}
-					<Badge variant="outline">Ephemeral</Badge>
-				{/if}
-
-				{#if key.aclTags?.length}
-					{#each key.aclTags as tag}
-						<Badge>{tag}</Badge>
-					{/each}
-				{/if}
-			</div>
-		</div>
-	{/each}
-</div>
+		{/each}
+	</div>
+{/if}

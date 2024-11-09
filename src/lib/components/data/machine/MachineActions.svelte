@@ -2,6 +2,7 @@
 	import MonitorCog from 'lucide-svelte/icons/monitor-cog';
 	import EyeClosed from 'lucide-svelte/icons/eye-closed';
 	import ShieldOff from 'lucide-svelte/icons/shield-off';
+	import Telescope from 'lucide-svelte/icons/telescope';
 	import Trash from 'lucide-svelte/icons/trash-2';
 	import X from 'lucide-svelte/icons/x';
 
@@ -14,7 +15,7 @@
 
 	export let machine: Machine;
 
-	const dispatch = createEventDispatcher<{ close: undefined }>();
+	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 </script>
 
 <div class="grid items-center gap-2" style="grid-template-columns: auto 1fr auto;">
@@ -33,6 +34,15 @@
 	</button>
 </div>
 <hr />
+
+<li>
+	<button on:click={() => dispatch('focus')}>
+		<span>
+			<Telescope />
+		</span>
+		<span> Focus </span>
+	</button>
+</li>
 
 <li>
 	<button disabled>

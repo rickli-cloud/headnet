@@ -10,7 +10,9 @@
 
 	const navItems: { href: string; title: string }[] = [
 		{ href: base + '/settings', title: 'General' },
-		{ href: base + '/settings/appearance', title: 'Appearance' }
+		{ href: base + '/settings/filters', title: 'Filters' },
+		{ href: base + '/settings/appearance', title: 'Appearance' },
+		{ href: base + '/settings/backup', title: 'Backup & restore' }
 	];
 
 	const [send, receive] = crossfade({

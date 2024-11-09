@@ -5,7 +5,7 @@
 	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 
-	import type { GraphDataLink } from '.';
+	import type { GraphDataLink } from '$lib/utils/networkGraph';
 
 	interface $$Props extends Partial<HTMLDivElement> {
 		class?: ClassValue;
@@ -34,8 +34,10 @@
 
 	graph.linkThreeObjectExtend(true);
 	graph.linkThreeObject((link: GraphDataLink) => {
-		if (link.cidr?.length) {
-			const sprite = new SpriteText(link.cidr);
+		if (link.routes?.length) {
+			const sprite = new SpriteText(
+				link.routes.map((route) => `${route.host}:${route.port}`).join(', ')
+			);
 			sprite.color = 'lightgrey';
 			sprite.textHeight = 1.5;
 			return sprite;

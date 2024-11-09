@@ -1,37 +1,85 @@
+import type { ForceGraph3DGenericInstance } from '3d-force-graph';
 import { Address4, Address6 } from 'ip-address';
 
-import { type User, type Machine, type Route, type Acl, groupRegex, tagRegex } from '$lib/api';
-
-import type { GraphData, GraphDataLink, GraphDataNode } from '$lib/components/networkGraph';
-import type { ForceGraph3DGenericInstance } from '3d-force-graph';
+import {
+	type Route,
+	type Acl,
+	groupRegex,
+	Machine,
+	tagRegex,
+	User,
+	type V1User,
+	type V1Node
+} from '$lib/api';
 
 const exitRoutes = ['0.0.0.0/0', '::/0'];
 
-export function focusOnNode(
-	graph: ForceGraph3DGenericInstance<any>,
-	node: unknown,
-	distance: number = 200
-) {
-	const coords = node as { x: number; y: number; z: number };
-	const distRatio = 1 + distance / Math.hypot(coords.x, coords.y, coords.z);
+const steppedId = (id: number, level: number = 1) => level * 100000 + id;
+export const userGraphId = (id: string | number): number => steppedId(Number(id));
+export const machineGraphId = (id: string | number): number => steppedId(Number(id), 2);
 
-	const newPos =
-		coords.x || coords.y || coords.z
-			? { x: coords.x * distRatio, y: coords.y * distRatio, z: coords.z * distRatio }
-			: { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-	graph.cameraPosition(
-		newPos, // new position
-		coords, // lookAt ({ x, y, z })
-		3000 // ms transition duration
-	);
+export interface GraphDataNodeAttributes {
+	/** Node ID inside of network graph */
+	nodeId?: number;
+	/** Node name inside of network graph */
+	nodeName?: string;
+	/** Color of network graph node */
+	color: string;
 }
 
-export interface FormatGraphData {
-	users: User[] | undefined;
-	machines: Machine[] | undefined;
-	routes: Route[] | undefined;
-	acl: Acl | undefined;
+export class GraphUser extends User implements GraphDataNodeAttributes {
+	public nodeId: number;
+	public nodeName: string;
+	public color: string;
+
+	constructor(data: V1User) {
+		super(data);
+		this.nodeId = data.id ? userGraphId(data.id) : 0;
+		this.nodeName = String(data.name);
+		this.color = 'blue'; // TODO: change to setting
+	}
+}
+
+export class GraphMachine extends Machine implements GraphDataNodeAttributes {
+	public nodeId: number;
+	public nodeName: string;
+	public color: string;
+
+	constructor(data: V1Node) {
+		super(data);
+		this.nodeId = data.id ? machineGraphId(data.id) : 0;
+		this.nodeName = String(data.givenName || data.name);
+		this.color = data.online ? 'green' : 'red'; // TODO: change to setting
+	}
+}
+
+export interface GraphDataLinkAttributes {
+	/** Node ID of source */
+	source: number | GraphMachine | GraphUser;
+	/** Node ID of target */
+	target: number | GraphMachine | GraphUser;
+	/** Displayed as text */
+	routes: { host: string; port: string; source: string }[];
+	/** idk */
+	index?: string;
+}
+
+export class GraphDataLink implements GraphDataLinkAttributes {
+	public source: GraphDataLinkAttributes['source'] = 0;
+	public target: GraphDataLinkAttributes['target'] = 0;
+	public routes: GraphDataLinkAttributes['routes'] = [];
+	public index?: GraphDataLinkAttributes['index'];
+
+	constructor(data: GraphDataLinkAttributes) {
+		Object.assign(this, data);
+	}
+}
+
+export type GraphDataNode = GraphUser | GraphMachine | GraphDataNodeAttributes;
+
+export interface GraphData {
+	nodes: GraphDataNode[];
+	links: GraphDataLink[];
 }
 
 export interface FormatGraphDataOptions {
@@ -43,12 +91,17 @@ export interface FormatGraphDataResult extends GraphData {
 }
 
 export function formatGraphData(
-	data: FormatGraphData,
+	data: {
+		users: User[] | undefined;
+		machines: Machine[] | undefined;
+		routes: Route[] | undefined;
+		acl: Acl | undefined;
+	},
 	opt: FormatGraphDataOptions = {}
 ): FormatGraphDataResult {
-	try {
-		console.time('formatGraphData');
+	console.time('formatGraphData');
 
+	try {
 		const nodes = new Set<GraphDataNode>();
 		const links = new Set<GraphDataLink>();
 
@@ -62,22 +115,26 @@ export function formatGraphData(
 		});
 
 		// Basic users
-		for (const user of data.users || []) nodes.add(user);
+		for (const user of data.users || []) {
+			nodes.add(new GraphUser(user));
+		}
 
 		// Basic machines
 		for (const machine of data.machines || []) {
-			nodes.add(machine);
+			nodes.add(new GraphMachine(machine));
 
 			// Link users to machine
 			if (machine.user?.id) {
 				const user = data.users?.find((user) => user.id === machine.user?.id);
 
-				if (user?.nodeId) {
-					links.add({
-						source: user.nodeId,
-						target: machine.nodeId,
-						cidr: ''
-					});
+				if (user?.id && machine.id) {
+					links.add(
+						new GraphDataLink({
+							source: userGraphId(user.id),
+							target: machineGraphId(machine.id),
+							routes: []
+						})
+					);
 				}
 			}
 		}
@@ -87,19 +144,20 @@ export function formatGraphData(
 			// Exit nodes -> internet
 			if (route.isExit && route.node?.id && (route.enabled || opt.includeDisabledRoutes)) {
 				const machine = data.machines?.find((machine) => machine.id === route.node?.id);
-				if (machine?.nodeId) {
+				if (machine?.id) {
 					exitNodes.add(machine);
 					links.add({
-						source: machine.nodeId,
+						source: machineGraphId(machine.id),
 						target: 1,
-						cidr:
-							machine.supportsIpV4 && machine.supportsIpV6
-								? `0.0.0.0/0:*, ::/0:*`
-								: machine.supportsIpV4
-									? `0.0.0.0/0:*`
-									: machine.supportsIpV6
-										? `::/0:*`
-										: ``
+						routes: ([] as GraphDataLink['routes'])
+							.concat(
+								machine.supportsIpV4
+									? [{ host: '0.0.0.0/0', port: '*', source: 'auto:advertised' }]
+									: []
+							)
+							.concat(
+								machine.supportsIpV6 ? [{ host: '::/0', port: '*', source: 'auto:advertised' }] : []
+							)
 					});
 				}
 			}
@@ -116,15 +174,24 @@ export function formatGraphData(
 								for (const exitNode of exitNodes) {
 									links.add({
 										source: target,
-										target: exitNode.nodeId,
-										cidr:
-											exitNode.supportsIpV4 && exitNode.supportsIpV6
-												? `0.0.0.0/0:${dst.port}, ::/0:${dst.port}`
-												: exitNode.supportsIpV4
-													? `0.0.0.0/0:${dst.port}`
-													: exitNode.supportsIpV6
-														? `::/0:${dst.port}`
-														: ``
+										target: machineGraphId(exitNode.id as string),
+										routes: ([] as GraphDataLink['routes'])
+											.concat(
+												exitNode.supportsIpV4
+													? [
+															{
+																host: '0.0.0.0/0',
+																port: dst.port,
+																source: `${dst.host}:${dst.port}`
+															}
+														]
+													: []
+											)
+											.concat(
+												exitNode.supportsIpV6
+													? [{ host: '::/0', port: dst.port, source: `${dst.host}:${dst.port}` }]
+													: []
+											)
 									});
 								}
 							}
@@ -136,7 +203,12 @@ export function formatGraphData(
 						for (const src of rule.src) {
 							for (const source of getSrc(src, data, opt)) {
 								for (const target of targets) {
-									if (target) links.add({ source: source, target: target.id, cidr: target.cidr });
+									if (target)
+										links.add({
+											source: source,
+											target: target.id,
+											routes: target.routes
+										});
 								}
 							}
 						}
@@ -164,13 +236,17 @@ export function formatGraphData(
  * - [x] Subnet CIDR
  * - [x] Tag
  */
-function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions): number[] {
+function getSrc(
+	src: string,
+	data: Parameters<typeof formatGraphData>[0],
+	opt: FormatGraphDataOptions
+): number[] {
 	const ids = new Set<number>();
 
 	// Any (*)
 	if (src === '*') {
 		for (const machine of data.machines || []) {
-			if (machine.nodeId) ids.add(machine.nodeId);
+			if (machine.id) ids.add(machineGraphId(machine.id));
 		}
 		return [...ids]; // Makes no sense to go further as there should be no more matches
 	}
@@ -193,7 +269,7 @@ function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions)
 				(machine) => machine.validTags?.includes(src) || machine.forcedTags?.includes(src)
 			) || [];
 		for (const machine of machines) {
-			if (machine.nodeId) ids.add(machine.nodeId);
+			if (machine.id) ids.add(machineGraphId(machine.id));
 		}
 		return [...ids]; // Makes no sense to go further as there should be no more matches
 	}
@@ -202,16 +278,16 @@ function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions)
 	const user = data.users?.find((user) => user.name === src);
 	if (user) {
 		for (const machine of data.machines?.filter((machine) => machine.user?.id === user.id) || []) {
-			if (machine.nodeId) ids.add(machine.nodeId);
+			if (machine.id) ids.add(machineGraphId(machine.id));
 		}
 	}
 
 	// Hosts
-	// const host = data.acl?.hosts.find((host) => host.name === src);
-	// if (host) {
-	// 	const addr = parseAddress(host.cidr);
-	// 	if (addr) for (const id of getRouteTargets(addr, data.routes, opt)) ids.add(id);
-	// }
+	const host = data.acl?.hosts.find((host) => host.name === src);
+	if (host) {
+		const addr = parseAddress(host.cidr);
+		if (addr) for (const id of getRouteTargets(addr, data.routes, opt)) ids.add(id);
+	}
 
 	// CIDR
 	const addr = parseAddress(src);
@@ -222,8 +298,8 @@ function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions)
 	// Tailnet IP
 	if (addr) {
 		for (const machine of data.machines || []) {
-			if (machine.ipAddresses?.includes(addr.address) && typeof machine.nodeId === 'number') {
-				ids.add(machine.nodeId);
+			if (machine.ipAddresses?.includes(addr.address) && machine.id) {
+				ids.add(machineGraphId(machine.id));
 			}
 		}
 	}
@@ -243,18 +319,24 @@ function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions)
  */
 function getTarget(
 	target: { host: string; port: string },
-	data: FormatGraphData,
+	data: Parameters<typeof formatGraphData>[0],
 	opt: FormatGraphDataOptions
-): { id: number; cidr: string }[] {
-	const result = new Set<{ id: number; cidr: string }>();
+): { id: number; routes: GraphDataLinkAttributes['routes'] }[] {
+	const result = new Set<{ id: number; routes: GraphDataLinkAttributes['routes'] }>();
 
 	// Any (*)
 	if (target.host === '*') {
 		for (const machine of data.machines || []) {
-			if (machine.nodeId) {
+			if (machine.id) {
 				result.add({
-					id: machine.nodeId,
-					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					id: machineGraphId(machine.id),
+					routes:
+						machine.ipAddresses?.map((ip) => ({
+							host: ip,
+							port: target.port,
+							source: `${target.host}:${target.port}`
+						})) || []
+					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
@@ -282,10 +364,16 @@ function getTarget(
 					machine.validTags?.includes(target.host) || machine.forcedTags?.includes(target.host)
 			) || [];
 		for (const machine of machines) {
-			if (machine.nodeId) {
+			if (machine.id) {
 				result.add({
-					id: machine.nodeId,
-					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					id: machineGraphId(machine.id),
+					routes:
+						machine.ipAddresses?.map((ip) => ({
+							host: ip,
+							port: target.port,
+							source: `${target.host}:${target.port}`
+						})) || []
+					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
@@ -296,16 +384,22 @@ function getTarget(
 	const user = data.users?.find((user) => user.name === target.host);
 	if (user) {
 		for (const machine of data.machines?.filter((machine) => machine.user?.id === user.id) || []) {
-			if (machine.nodeId) {
+			if (machine.id) {
 				result.add({
-					id: machine.nodeId,
-					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					id: machineGraphId(machine.id),
+					routes:
+						machine.ipAddresses?.map((ip) => ({
+							host: ip,
+							port: target.port,
+							source: `${target.host}:${target.port}`
+						})) || []
+					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
 	}
 
-	// Hosts -> machines
+	// Hosts
 	const host = data.acl?.hosts.find((host) => host.name === target.host);
 	if (host) {
 		const addr = parseAddress(host.cidr);
@@ -313,7 +407,8 @@ function getTarget(
 			for (const id of getRouteTargets(addr, data.routes, opt)) {
 				result.add({
 					id,
-					cidr: `${host.cidr}:${target.port}`
+					routes: [{ host: host.cidr, port: target.port, source: `${target.host}:${target.port}` }]
+					// cidr: `${host.cidr}:${target.port}`
 				});
 			}
 	}
@@ -335,9 +430,9 @@ function getRouteTargets(
 			ipVersionMatches(addr, route.addr) &&
 			addr.isInSubnet(route.addr) &&
 			(route.enabled || opt.includeDisabledRoutes) &&
-			route.node?.nodeId
+			route.node?.id
 		) {
-			ids.add(route.node.nodeId);
+			ids.add(machineGraphId(route.node.id));
 		}
 	}
 
@@ -360,7 +455,7 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 
 /** Eliminates duplicates and combines cidr */
 function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
-	const temp: { [x: number]: { [y: number]: string } } = {};
+	const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
 
 	for (const link of links) {
 		if (
@@ -372,16 +467,26 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 				temp[link.source] = {};
 			}
 
-			if (typeof temp[link.source][link.target] === 'string') {
-				if (temp[link.source][link.target] !== link.cidr) {
-					temp[link.source][link.target] = temp[link.source][link.target] + ', ' + link.cidr;
+			if (temp[link.source][link.target] instanceof Set) {
+				for (const route of link.routes) {
+					temp[link.source][link.target].add(route);
 				}
-			} else if (typeof temp[link.target]?.[link.source] === 'string') {
-				if (temp[link.target][link.source] !== link.cidr) {
-					temp[link.target][link.source] = temp[link.target][link.source] + ', ' + link.cidr;
+				// if (temp[link.source][link.target] !== link.cidr) {
+				// 	temp[link.source][link.target] = temp[link.source][link.target] + ', ' + link.cidr;
+				// }
+			} else if (temp[link.target]?.[link.source] instanceof Set) {
+				for (const route of link.routes) {
+					temp[link.target][link.source].add(route);
 				}
+				// if (temp[link.target][link.source] !== link.cidr) {
+				// 	temp[link.target][link.source] = temp[link.target][link.source] + ', ' + link.cidr;
+				// }
 			} else {
-				temp[link.source][link.target] = link.cidr;
+				temp[link.source][link.target] = new Set();
+				for (const route of link.routes) {
+					temp[link.source][link.target].add(route);
+				}
+				// temp[link.source][link.target] = link.cidr;
 			}
 		}
 	}
@@ -389,12 +494,32 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 	const formattedLinks = new Set<GraphDataLink>();
 
 	for (const [source, targets] of Object.entries(temp)) {
-		for (const [target, cidr] of Object.entries(targets)) {
-			formattedLinks.add({ source: Number(source), target: Number(target), cidr });
+		for (const [target, routes] of Object.entries(targets)) {
+			formattedLinks.add({ source: Number(source), target: Number(target), routes: [...routes] });
 		}
 	}
 
 	// console.debug('Removed ' + (links.length - formattedLinks.size) + ' links');
 
 	return [...formattedLinks];
+}
+
+export function focusOnNode(
+	graph: ForceGraph3DGenericInstance<any>,
+	node: unknown,
+	distance: number = 200
+) {
+	const coords = node as { x: number; y: number; z: number };
+	const distRatio = 1 + distance / Math.hypot(coords.x, coords.y, coords.z);
+
+	const newPos =
+		coords.x || coords.y || coords.z
+			? { x: coords.x * distRatio, y: coords.y * distRatio, z: coords.z * distRatio }
+			: { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+	graph.cameraPosition(
+		newPos, // new position
+		coords, // lookAt ({ x, y, z })
+		3000 // ms transition duration
+	);
 }

@@ -12,14 +12,21 @@
 	import UserActions from '$lib/components/data/user/UserActions.svelte';
 	import UserInfo from '$lib/components/data/user/UserInfo.svelte';
 
-	import { NetworkGraph, NetworkGraphActions, type GraphData } from '$lib/components/networkGraph';
+	import { NetworkGraph, NetworkGraphActions } from '$lib/components/networkGraph';
 
-	import { focusOnNode, formatGraphData } from '$lib/utils/networkGraph.js';
 	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
+	import {
+		focusOnNode,
+		formatGraphData,
+		GraphDataLink,
+		type GraphData
+	} from '$lib/utils/networkGraph.js';
+	import LinkInfo from '$lib/components/data/link/LinkInfo.svelte';
 
 	export let data;
 
 	let nodeInfo: Sheet.Root;
+	let linkInfo: Sheet.Root;
 	let nodeActions: NetworkGraphActions;
 	let pageActions: NetworkGraphActions;
 
@@ -32,37 +39,41 @@
 	const preAuthKeys = writable<PreAuthKey[]>([]);
 	preAuthKeys.subscribe(console.debug);
 
-	const selected = writable<object | undefined>(undefined);
-	selected.subscribe(console.debug);
+	const selectedNode = writable<object | undefined>(undefined);
+	const selectedLink = writable<GraphDataLink | undefined>(undefined);
+	selectedNode.subscribe(console.debug);
 
 	function closeEveryPopup(): void {
 		nodeActions.close();
 		pageActions.close();
-		selected.set(undefined);
+		selectedLink.set(undefined);
+		selectedNode.set(undefined);
 	}
 
-	graph.onNodeClick((node, ev) => {
-		closeEveryPopup();
-		focusOnNode(graph, node);
-		selected.set(node);
-		nodeInfo.open();
-	});
-
-	graph.onNodeRightClick(async (node, ev) => {
-		closeEveryPopup();
-		selected.set(node);
-		nodeActions.open(ev);
-	});
-
+	graph.onBackgroundClick(closeEveryPopup);
 	graph.onBackgroundRightClick((ev) => {
 		closeEveryPopup();
 		pageActions.open(ev);
 	});
 
-	graph.onBackgroundClick(closeEveryPopup);
 	graph.onNodeDrag(closeEveryPopup);
-	graph.onLinkClick(closeEveryPopup);
-	graph.onLinkRightClick(closeEveryPopup);
+	graph.onNodeClick((node, ev) => {
+		closeEveryPopup();
+		selectedNode.set(node);
+		nodeInfo.open();
+	});
+	graph.onNodeRightClick(async (node, ev) => {
+		closeEveryPopup();
+		selectedNode.set(node);
+		nodeActions.open(ev);
+	});
+
+	graph.onLinkClick((link, ev) => {
+		closeEveryPopup();
+		selectedLink.set(link as GraphDataLink);
+		linkInfo.open();
+	});
+	graph.onLinkRightClick(closeEveryPopup); // TODO: some actions
 
 	onMount(async () => {
 		preAuthKeys.set(await PreAuthKey.list(data.users || []));
@@ -74,13 +85,13 @@
 
 	<Sheet.Root bind:this={nodeInfo}>
 		<Sheet.Content>
-			{#if $selected instanceof User}
-				<UserInfo user={$selected} acl={data.acl} preAuthKeys={$preAuthKeys} />
-			{:else if $selected instanceof Machine}
+			{#if $selectedNode instanceof User}
+				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} />
+			{:else if $selectedNode instanceof Machine}
 				{#key $graphData.links}
-					<MachineInfo machine={$selected} routes={data.routes} graphDataLinks={$graphData.links} />
+					<MachineInfo machine={$selectedNode} routes={data.routes} />
 				{/key}
-			{:else if $selected && 'nodeId' in $selected && $selected.nodeId === 1}
+			{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
 				<Sheet.Header>
 					<Sheet.Title>Internet</Sheet.Title>
 				</Sheet.Header>
@@ -91,15 +102,30 @@
 	</Sheet.Root>
 
 	<NetworkGraphActions bind:this={nodeActions}>
-		{#if $selected instanceof User}
-			{#key $selected}
-				<UserActions user={$selected} acl={data.acl} on:close={nodeActions.close} />
+		{#if $selectedNode instanceof User}
+			{#key $selectedNode}
+				<UserActions
+					user={$selectedNode}
+					acl={data.acl}
+					on:close={nodeActions.close}
+					on:focus={() => {
+						focusOnNode(graph, $selectedNode);
+						nodeActions.close();
+					}}
+				/>
 			{/key}
-		{:else if $selected instanceof Machine}
-			{#key $selected}
-				<MachineActions machine={$selected} on:close={nodeActions.close} />
+		{:else if $selectedNode instanceof Machine}
+			{#key $selectedNode}
+				<MachineActions
+					machine={$selectedNode}
+					on:close={nodeActions.close}
+					on:focus={() => {
+						focusOnNode(graph, $selectedNode);
+						nodeActions.close();
+					}}
+				/>
 			{/key}
-		{:else if $selected && 'nodeId' in $selected && $selected.nodeId === 1}
+		{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
 			<InternetActions on:close={nodeActions.close} />
 		{:else}
 			<div class="text-red-600">Node not found</div>
@@ -109,4 +135,10 @@
 	<NetworkGraphActions bind:this={pageActions}>
 		<PageActions on:close={pageActions.close} acl={data.acl} />
 	</NetworkGraphActions>
+
+	<Sheet.Root bind:this={linkInfo}>
+		<Sheet.Content>
+			<LinkInfo link={$selectedLink} />
+		</Sheet.Content>
+	</Sheet.Root>
 </main>

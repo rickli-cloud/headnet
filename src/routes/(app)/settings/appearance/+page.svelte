@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { z } from 'zod';
-	import { defaults, superForm } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zod } from 'sveltekit-superforms/adapters';
 
 	export const schema = z.object({

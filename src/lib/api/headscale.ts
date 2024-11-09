@@ -3,7 +3,6 @@ import { stringify, parse } from 'json-ast-comments';
 import { Address4, Address6 } from 'ip-address';
 import { get } from 'svelte/store';
 
-import type { NetworkGraphAttributes } from '$lib/components/networkGraph';
 import { stripJsonTrailingCommas } from '$lib/utils/json';
 import { Session } from '$lib/store/session';
 
@@ -102,7 +101,7 @@ export interface JsonComments {
 	[x: string]: string[][];
 }
 
-export class User implements V1User, NetworkGraphAttributes {
+export class User implements V1User {
 	public static async list(headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/user');
 		return {
@@ -150,17 +149,9 @@ export class User implements V1User, NetworkGraphAttributes {
 	public readonly id?: string;
 	public readonly createdAt?: string;
 
-	// Network graph attributes
-	public readonly nodeId?: number;
-	public readonly nodeName?: string;
-	public color: string = 'blue';
-
 	public constructor(data: V1User) {
 		if (!data.name) throw new Error('Name is required to create a new User!');
 		Object.assign(this, data);
-
-		this.nodeId = data.id ? userIdLevel + Number(data.id) : undefined;
-		this.nodeName = data.name;
 	}
 
 	public async rename(newName: string, headscale = new Headscale()) {
@@ -379,7 +370,7 @@ export class Route implements V1Route {
 	}
 }
 
-export class Machine implements V1Node, NetworkGraphAttributes {
+export class Machine implements V1Node {
 	public static async get(nodeId: string, headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/node/{nodeId}', {
 			params: {
@@ -461,17 +452,8 @@ export class Machine implements V1Node, NetworkGraphAttributes {
 		return !!this.ipAddresses?.find((ip) => Address6.isValid(ip))?.length;
 	}
 
-	// Network graph attributes
-	public readonly nodeId?: number;
-	public readonly nodeName?: string;
-	public color: string = 'red';
-
 	public constructor(data: V1Node) {
 		Object.assign(this, data);
-
-		if (data.online) this.color = 'green';
-		this.nodeId = data.id ? machineIdLevel + Number(data.id) : undefined;
-		this.nodeName = data.givenName || data.name;
 	}
 
 	public async delete(headscale = new Headscale()) {

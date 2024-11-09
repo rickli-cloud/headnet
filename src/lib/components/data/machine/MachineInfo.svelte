@@ -15,7 +15,6 @@
 	import ToggleRoute from '$lib/components/data/routes/ToggleRoute.svelte';
 
 	import Secret from '$lib/components/utils/Secret.svelte';
-	import type { GraphData, GraphDataLink } from '$lib/components/networkGraph';
 
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
 	import { Machine, type Route } from '$lib/api';
@@ -26,18 +25,7 @@
 
 	export let machine: Machine;
 	export let routes: Route[] | undefined;
-	export let graphDataLinks: GraphDataLink[];
-
-	const isThisMachine = (query: unknown) =>
-		query instanceof Machine && query.nodeId === machine.nodeId;
-
-	$: machineLinks = graphDataLinks?.filter(
-		(link) => isThisMachine(link.source) || isThisMachine(link.target)
-	);
-
-	import { stringify } from 'yaml';
-
-	console.debug({ machineLinks, graphDataLinks });
+	export let minimal: boolean = false;
 </script>
 
 <Sheet.Header>
@@ -127,105 +115,107 @@
 	</div>
 </Sheet.Header>
 
-<div style="height: 1px;"></div>
+{#if !minimal}
+	<div style="height: 1px;"></div>
 
-<div class="space-y-2">
-	<div class="text-sm font-medium">Disco Key</div>
-	<Secret secret={machine.discoKey} />
-</div>
+	<div class="space-y-2">
+		<div class="text-sm font-medium">Disco Key</div>
+		<Secret secret={machine.discoKey} />
+	</div>
 
-<div class="space-y-2">
-	<div class="text-sm font-medium">Node Key</div>
-	<Secret secret={machine.nodeKey} />
-</div>
+	<div class="space-y-2">
+		<div class="text-sm font-medium">Node Key</div>
+		<Secret secret={machine.nodeKey} />
+	</div>
 
-<div class="space-y-2">
-	<div class="text-sm font-medium">Machine Key</div>
-	<Secret secret={machine.machineKey} />
-</div>
+	<div class="space-y-2">
+		<div class="text-sm font-medium">Machine Key</div>
+		<Secret secret={machine.machineKey} />
+	</div>
 
-<div class="space-y-2">
-	<div class="text-sm font-medium">Addresses</div>
-	<ul class="list-disc pl-6">
-		{#each machine.ipAddresses || [] as ip}
-			<li>
-				<button
-					class="hover:underline"
-					on:click={() => navigator.clipboard.writeText(ip)}
-					on:dblclick={() =>
-						open(
-							Address4.isValid(ip) ? `http://${ip}` : Address6.isValid(ip) ? `http://[${ip}]` : ip,
-							'_blank'
-						)}
-				>
-					<span>{ip}</span>
-				</button>
-			</li>
-		{/each}
-	</ul>
-</div>
+	<div class="space-y-2">
+		<div class="text-sm font-medium">Addresses</div>
+		<ul class="list-disc pl-6">
+			{#each machine.ipAddresses || [] as ip}
+				<li>
+					<button
+						class="hover:underline"
+						on:click={() => navigator.clipboard.writeText(ip)}
+						on:dblclick={() =>
+							open(
+								Address4.isValid(ip)
+									? `http://${ip}`
+									: Address6.isValid(ip)
+										? `http://[${ip}]`
+										: ip,
+								'_blank'
+							)}
+					>
+						<span>{ip}</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	</div>
+{/if}
 
-<Sheet.Header>
-	<Sheet.Title>Routes</Sheet.Title>
-</Sheet.Header>
+{#if routes?.length && !minimal}
+	<Sheet.Header>
+		<Sheet.Title>Routes</Sheet.Title>
+	</Sheet.Header>
 
-<div>
-	{#each routes?.filter((route) => route.node?.id === machine.id) || [] as route}
-		<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
-			<div class="flex flex-wrap items-center gap-1.5">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
-							<EllipsisVertical class="h-4 w-4" />
-						</Button>
-					</DropdownMenu.Trigger>
+	<div>
+		{#each routes?.filter((route) => route.node?.id === machine.id) || [] as route}
+			<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
+				<div class="flex flex-wrap items-center gap-1.5">
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
+								<EllipsisVertical class="h-4 w-4" />
+							</Button>
+						</DropdownMenu.Trigger>
 
-					<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
-						<DropdownMenu.Group>
-							<DropdownMenu.Item asChild>
-								<ToggleRoute {route}>
-									<svelte:fragment slot="trigger" let:builder>
-										<button
-											class="menu-button"
-											class:destructive={route.enabled}
-											{...builder}
-											use:builder.action
-										>
-											{#if route.enabled}
-												<ToggleLeft class="mr-2 h-4 w-4" />
-												<span>Disable</span>
-											{:else}
-												<ToggleRight class="mr-2 h-4 w-4" />
-												<span>Enable</span>
-											{/if}
-										</button>
-									</svelte:fragment>
-								</ToggleRoute>
-							</DropdownMenu.Item>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+						<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
+							<DropdownMenu.Group>
+								<DropdownMenu.Item asChild>
+									<ToggleRoute {route}>
+										<svelte:fragment slot="trigger" let:builder>
+											<button
+												class="menu-button"
+												class:destructive={route.enabled}
+												{...builder}
+												use:builder.action
+											>
+												{#if route.enabled}
+													<ToggleLeft class="mr-2 h-4 w-4" />
+													<span>Disable</span>
+												{:else}
+													<ToggleRight class="mr-2 h-4 w-4" />
+													<span>Enable</span>
+												{/if}
+											</button>
+										</svelte:fragment>
+									</ToggleRoute>
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 
-				<span class="mr-1.5 font-medium">{route.prefix}</span>
+					<span class="mr-1.5 font-medium">{route.prefix}</span>
 
-				{#if route.advertised}
-					<Badge variant="outline">Advertised</Badge>
-				{/if}
+					{#if route.advertised}
+						<Badge variant="outline">Advertised</Badge>
+					{/if}
 
-				{#if route.isPrimary}
-					<Badge variant="outline">Primary</Badge>
-				{/if}
+					{#if route.isPrimary}
+						<Badge variant="outline">Primary</Badge>
+					{/if}
 
-				{#if !route.enabled}
-					<Badge variant="destructive">Disabled</Badge>
-				{/if}
+					{#if !route.enabled}
+						<Badge variant="destructive">Disabled</Badge>
+					{/if}
+				</div>
 			</div>
-		</div>
-	{/each}
-</div>
-
-<div>
-	{#each machineLinks as link}
-		<pre><code>{stringify(link.cidr.trim().split(/,\s+/gm), null, 2)}</code></pre>
-	{/each}
-</div>
+		{/each}
+	</div>
+{/if}
