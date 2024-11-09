@@ -7,6 +7,26 @@ import type { ForceGraph3DGenericInstance } from '3d-force-graph';
 
 const exitRoutes = ['0.0.0.0/0', '::/0'];
 
+export function focusOnNode(
+	graph: ForceGraph3DGenericInstance<any>,
+	node: unknown,
+	distance: number = 200
+) {
+	const coords = node as { x: number; y: number; z: number };
+	const distRatio = 1 + distance / Math.hypot(coords.x, coords.y, coords.z);
+
+	const newPos =
+		coords.x || coords.y || coords.z
+			? { x: coords.x * distRatio, y: coords.y * distRatio, z: coords.z * distRatio }
+			: { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+	graph.cameraPosition(
+		newPos, // new position
+		coords, // lookAt ({ x, y, z })
+		3000 // ms transition duration
+	);
+}
+
 export interface FormatGraphData {
 	users: User[] | undefined;
 	machines: Machine[] | undefined;
@@ -74,12 +94,12 @@ export function formatGraphData(
 						target: 1,
 						cidr:
 							machine.supportsIpV4 && machine.supportsIpV6
-								? '0.0.0.0/0, ::/0'
+								? `0.0.0.0/0:*, ::/0:*`
 								: machine.supportsIpV4
-									? '0.0.0.0/0'
+									? `0.0.0.0/0:*`
 									: machine.supportsIpV6
-										? '::/0'
-										: ''
+										? `::/0:*`
+										: ``
 					});
 				}
 			}
@@ -89,7 +109,7 @@ export function formatGraphData(
 			// Main ACL rules
 			for (const rule of data.acl.acls) {
 				for (const dst of rule.dst) {
-					if (dst.host === 'autogroup:internet') {
+					if (dst.host === `autogroup:internet`) {
 						// Exit nodes (autogroup:internet)
 						for (const src of rule.src) {
 							for (const target of getSrc(src, data, opt)) {
@@ -99,19 +119,19 @@ export function formatGraphData(
 										target: exitNode.nodeId,
 										cidr:
 											exitNode.supportsIpV4 && exitNode.supportsIpV6
-												? '0.0.0.0/0, ::/0'
+												? `0.0.0.0/0:${dst.port}, ::/0:${dst.port}`
 												: exitNode.supportsIpV4
-													? '0.0.0.0/0'
+													? `0.0.0.0/0:${dst.port}`
 													: exitNode.supportsIpV6
-														? '::/0'
-														: ''
+														? `::/0:${dst.port}`
+														: ``
 									});
 								}
 							}
 						}
 					} else {
 						// Basic targets
-						const targets = getTarget(dst.host, data, opt);
+						const targets = getTarget(dst, data, opt);
 
 						for (const src of rule.src) {
 							for (const source of getSrc(src, data, opt)) {
@@ -222,19 +242,19 @@ function getSrc(src: string, data: FormatGraphData, opt: FormatGraphDataOptions)
  * - [x] Autogroup:internet
  */
 function getTarget(
-	target: string,
+	target: { host: string; port: string },
 	data: FormatGraphData,
 	opt: FormatGraphDataOptions
 ): { id: number; cidr: string }[] {
 	const result = new Set<{ id: number; cidr: string }>();
 
 	// Any (*)
-	if (target === '*') {
+	if (target.host === '*') {
 		for (const machine of data.machines || []) {
 			if (machine.nodeId) {
 				result.add({
 					id: machine.nodeId,
-					cidr: machine.ipAddresses?.join(', ') || ''
+					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
@@ -242,12 +262,12 @@ function getTarget(
 	}
 
 	// Groups
-	if (groupRegex.test(target)) {
-		const group = data.acl?.groups.find((group) => group.name === target);
+	if (groupRegex.test(target.host)) {
+		const group = data.acl?.groups.find((group) => group.name === target.host);
 		if (group?.members.length) {
 			for (const member of group.members) {
-				for (const target of getTarget(member, data, opt)) {
-					result.add(target);
+				for (const subTarget of getTarget({ host: member, port: target.port }, data, opt)) {
+					result.add(subTarget);
 				}
 			}
 		}
@@ -255,16 +275,17 @@ function getTarget(
 	}
 
 	// Tags
-	if (tagRegex.test(target)) {
+	if (tagRegex.test(target.host)) {
 		const machines =
 			data.machines?.filter(
-				(machine) => machine.validTags?.includes(target) || machine.forcedTags?.includes(target)
+				(machine) =>
+					machine.validTags?.includes(target.host) || machine.forcedTags?.includes(target.host)
 			) || [];
 		for (const machine of machines) {
 			if (machine.nodeId) {
 				result.add({
 					id: machine.nodeId,
-					cidr: machine.ipAddresses?.join(', ') || ''
+					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
@@ -272,27 +293,27 @@ function getTarget(
 	}
 
 	// Users
-	const user = data.users?.find((user) => user.name === target);
+	const user = data.users?.find((user) => user.name === target.host);
 	if (user) {
 		for (const machine of data.machines?.filter((machine) => machine.user?.id === user.id) || []) {
 			if (machine.nodeId) {
 				result.add({
 					id: machine.nodeId,
-					cidr: machine.ipAddresses?.join(', ') || ''
+					cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
 				});
 			}
 		}
 	}
 
 	// Hosts -> machines
-	const host = data.acl?.hosts.find((host) => host.name === target);
+	const host = data.acl?.hosts.find((host) => host.name === target.host);
 	if (host) {
 		const addr = parseAddress(host.cidr);
 		if (addr)
 			for (const id of getRouteTargets(addr, data.routes, opt)) {
 				result.add({
 					id,
-					cidr: host.cidr
+					cidr: `${host.cidr}:${target.port}`
 				});
 			}
 	}
@@ -337,6 +358,7 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 			: undefined;
 }
 
+/** Eliminates duplicates and combines cidr */
 function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 	const temp: { [x: number]: { [y: number]: string } } = {};
 
@@ -372,25 +394,7 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 		}
 	}
 
+	// console.debug('Removed ' + (links.length - formattedLinks.size) + ' links');
+
 	return [...formattedLinks];
-}
-
-export function focusOnNode(
-	graph: ForceGraph3DGenericInstance<any>,
-	node: unknown,
-	distance: number = 200
-) {
-	const coords = node as { x: number; y: number; z: number };
-	const distRatio = 1 + distance / Math.hypot(coords.x, coords.y, coords.z);
-
-	const newPos =
-		coords.x || coords.y || coords.z
-			? { x: coords.x * distRatio, y: coords.y * distRatio, z: coords.z * distRatio }
-			: { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-	graph.cameraPosition(
-		newPos, // new position
-		coords, // lookAt ({ x, y, z })
-		3000 // ms transition duration
-	);
 }
