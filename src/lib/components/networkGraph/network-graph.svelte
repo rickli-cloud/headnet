@@ -15,6 +15,11 @@
 
 	let target: HTMLElement;
 
+	const observer = new ResizeObserver(function () {
+		graph.width(window.innerWidth);
+		graph.height(window.innerHeight);
+	});
+
 	graph.nodeId('nodeId');
 	graph.nodeLabel('nodeName');
 
@@ -48,11 +53,15 @@
 
 	graph.d3Force('charge')?.strength(-360);
 
-	// TODO: Resize on window size change
-
 	onMount(() => {
 		graph(target);
-		return graph._destructor;
+
+		if (target.parentElement) observer.observe(target.parentElement);
+
+		return () => {
+			observer.disconnect();
+			graph._destructor();
+		};
 	});
 </script>
 
