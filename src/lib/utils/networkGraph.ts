@@ -96,7 +96,7 @@ export function formatGraphData(
 								for (const exitNode of exitNodes) {
 									links.add({
 										source: target,
-										target: exitNode,
+										target: exitNode.nodeId,
 										cidr:
 											exitNode.supportsIpV4 && exitNode.supportsIpV6
 												? '0.0.0.0/0, ::/0'
