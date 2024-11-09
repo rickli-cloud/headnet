@@ -22,7 +22,7 @@ deno task dev
 
 ## Building
 
-> To change the default base-url from `/admin` you have to set the environment variable `BASE_URL` with your desired path before building the app.
+> To change the default base-url from `/admin` you have to set the environment variable `BASE_PATH` with your desired path before building the app.
 
 ```sh
 deno task build

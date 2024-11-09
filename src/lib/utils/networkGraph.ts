@@ -375,10 +375,12 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 	return [...formattedLinks];
 }
 
-export function focusOnNode(graph: ForceGraph3DGenericInstance<any>, node: unknown) {
+export function focusOnNode(
+	graph: ForceGraph3DGenericInstance<any>,
+	node: unknown,
+	distance: number = 200
+) {
 	const coords = node as { x: number; y: number; z: number };
-	// Aim at node from outside it
-	const distance = 100;
 	const distRatio = 1 + distance / Math.hypot(coords.x, coords.y, coords.z);
 
 	const newPos =

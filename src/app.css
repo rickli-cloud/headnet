@@ -171,7 +171,7 @@
 
 @layer utilities {
 	.link {
-		@apply cursor-pointer hover:!text-blue-600;
+		@apply cursor-pointer hover:underline;
 	}
 
 	.scrolltrack-hidden {

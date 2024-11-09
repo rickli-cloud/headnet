@@ -24,9 +24,9 @@ export default defineConfig(({ mode }) => {
 
 	if (mode === 'development') {
 		if (PUBLIC_MOCK_ENABLED === 'true') {
-			console.debug(`[Mock] ^${BASE_PATH}/api`);
+			console.debug(`[Mock] ^/api`);
 		} else if (typeof HEADSCALE_HOST === 'string') {
-			console.debug(`[Proxy] ^${BASE_PATH}/api => ${HEADSCALE_HOST}`);
+			console.debug(`[Proxy] ^/api => ${HEADSCALE_HOST}`);
 			server.proxy = {
 				'^/api': {
 					target: HEADSCALE_HOST,
