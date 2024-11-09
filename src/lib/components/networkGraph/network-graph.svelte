@@ -34,10 +34,8 @@
 
 	graph.linkThreeObjectExtend(true);
 	graph.linkThreeObject((link: GraphDataLink) => {
-		if (link.routes?.length) {
-			const sprite = new SpriteText(
-				link.routes.map((route) => `${route.host}:${route.port}`).join(', ')
-			);
+		if (link.label) {
+			const sprite = new SpriteText([...link.label].join(', '));
 			sprite.color = 'lightgrey';
 			sprite.textHeight = 1.5;
 			return sprite;

@@ -660,7 +660,9 @@ export class Acl {
 				.map(([name, cidr]) => ({
 					name,
 					cidr,
-					comments: comments.Hosts?.$$comments?.[name]?.[0]
+					comments: comments.Hosts?.$$comments?.[name]?.[0].map((i) =>
+						i.trim().replace(commentRegex, '')
+					)
 				})),
 			groups: Object.entries(p?.groups || {})
 				.filter(([key]) => key !== '$$comments')
@@ -670,18 +672,23 @@ export class Acl {
 					ownedTags: Object.entries(p?.tagOwners || {})
 						.filter((i) => i[1].includes(name))
 						.map(([k]) => k),
-					comments: comments.groups?.$$comments?.[name]?.[0]
+					comments: comments.groups?.$$comments?.[name]?.[0].map((i) =>
+						i.trim().replace(commentRegex, '')
+					)
 				})),
 			tagOwners: Object.entries(p?.tagOwners || {})
 				.filter(([key]) => key !== '$$comments')
 				.map(([name, members]) => ({
 					name,
 					members,
-					comments: comments.tagOwners?.$$comments?.[name]?.[0]
+					comments: comments.tagOwners?.$$comments?.[name]?.[0].map((i) =>
+						i.trim().replace(commentRegex, '')
+					)
 				})),
 			acls:
 				p?.acls.map((val, index) => {
 					return {
+						id: window.crypto.randomUUID(),
 						...val,
 						dst: val.dst.map((i) => {
 							const lastIndex = i.lastIndexOf(':');
@@ -690,7 +697,9 @@ export class Acl {
 								port: i.slice(lastIndex + 1, i.length + 1)
 							};
 						}),
-						comments: comments.$$comments?.$acls?.[index]?.[0]
+						comments: comments.$$comments?.$acls?.[index]?.[0].map((i) =>
+							i.trim().replace(commentRegex, '')
+						)
 					};
 				}) || []
 		};
@@ -724,6 +733,7 @@ export class Acl {
 		comments?: string[];
 	}[];
 	public readonly acls: {
+		id: string;
 		action: 'accept';
 		src: string[];
 		dst: { host: string; port: string }[];
@@ -763,7 +773,7 @@ export class Acl {
 
 		Object.assign(policy, comments);
 
-		return stringify(policy);
+		return stringify({ ...policy });
 	}
 
 	public constructor(data: { policy?: string; updatedAt?: string } | undefined) {

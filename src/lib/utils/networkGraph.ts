@@ -2,18 +2,24 @@ import type { ForceGraph3DGenericInstance } from '3d-force-graph';
 import { Address4, Address6 } from 'ip-address';
 
 import {
-	type Route,
-	type Acl,
 	groupRegex,
 	Machine,
 	tagRegex,
 	User,
+	type Route,
+	type Acl,
 	type V1User,
 	type V1Node
 } from '$lib/api';
 
 const exitRoutes = ['0.0.0.0/0', '::/0'];
 
+type AclRule = Acl['acls'][0];
+
+// ID's:
+// 1 Internet
+// 100000 - 199999 	users
+// 200000 - 299999 	machines
 const steppedId = (id: number, level: number = 1) => level * 100000 + id;
 export const userGraphId = (id: string | number): number => steppedId(Number(id));
 export const machineGraphId = (id: string | number): number => steppedId(Number(id), 2);
@@ -59,7 +65,9 @@ export interface GraphDataLinkAttributes {
 	/** Node ID of target */
 	target: number | GraphMachine | GraphUser;
 	/** Displayed as text */
-	routes: { host: string; port: string; source: string }[];
+	routes: { host: string; port: string; rule: AclRule | undefined }[];
+	/** Selective label to prevent doubles / overlap */
+	label?: Set<string>;
 	/** idk */
 	index?: string;
 }
@@ -68,6 +76,7 @@ export class GraphDataLink implements GraphDataLinkAttributes {
 	public source: GraphDataLinkAttributes['source'] = 0;
 	public target: GraphDataLinkAttributes['target'] = 0;
 	public routes: GraphDataLinkAttributes['routes'] = [];
+	public label?: GraphDataLinkAttributes['label'];
 	public index?: GraphDataLinkAttributes['index'];
 
 	constructor(data: GraphDataLinkAttributes) {
@@ -104,7 +113,6 @@ export function formatGraphData(
 	try {
 		const nodes = new Set<GraphDataNode>();
 		const links = new Set<GraphDataLink>();
-
 		const exitNodes = new Set<Machine>();
 
 		// Internet node (Exit nodes link to it)
@@ -114,12 +122,12 @@ export function formatGraphData(
 			color: 'gray'
 		});
 
-		// Basic users
+		// Basic user nodes
 		for (const user of data.users || []) {
 			nodes.add(new GraphUser(user));
 		}
 
-		// Basic machines
+		// Basic machine nodes
 		for (const machine of data.machines || []) {
 			nodes.add(new GraphMachine(machine));
 
@@ -146,19 +154,13 @@ export function formatGraphData(
 				const machine = data.machines?.find((machine) => machine.id === route.node?.id);
 				if (machine?.id) {
 					exitNodes.add(machine);
-					links.add({
-						source: machineGraphId(machine.id),
-						target: 1,
-						routes: ([] as GraphDataLink['routes'])
-							.concat(
-								machine.supportsIpV4
-									? [{ host: '0.0.0.0/0', port: '*', source: 'auto:advertised' }]
-									: []
-							)
-							.concat(
-								machine.supportsIpV6 ? [{ host: '::/0', port: '*', source: 'auto:advertised' }] : []
-							)
-					});
+					links.add(
+						new GraphDataLink({
+							source: machineGraphId(machine.id),
+							target: 1,
+							routes: [{ host: route.addr?.address || '', port: '*', rule: undefined }]
+						})
+					);
 				}
 			}
 		}
@@ -172,43 +174,37 @@ export function formatGraphData(
 						for (const src of rule.src) {
 							for (const target of getSrc(src, data, opt)) {
 								for (const exitNode of exitNodes) {
-									links.add({
-										source: target,
-										target: machineGraphId(exitNode.id as string),
-										routes: ([] as GraphDataLink['routes'])
-											.concat(
-												exitNode.supportsIpV4
-													? [
-															{
-																host: '0.0.0.0/0',
-																port: dst.port,
-																source: `${dst.host}:${dst.port}`
-															}
-														]
-													: []
-											)
-											.concat(
-												exitNode.supportsIpV6
-													? [{ host: '::/0', port: dst.port, source: `${dst.host}:${dst.port}` }]
-													: []
-											)
-									});
+									links.add(
+										new GraphDataLink({
+											source: target,
+											target: machineGraphId(exitNode.id as string),
+											routes: ([] as GraphDataLink['routes'])
+												.concat(
+													exitNode.supportsIpV4 ? [{ host: '0.0.0.0/0', port: dst.port, rule }] : []
+												)
+												.concat(
+													exitNode.supportsIpV6 ? [{ host: '::/0', port: dst.port, rule }] : []
+												)
+										})
+									);
 								}
 							}
 						}
 					} else {
 						// Basic targets
-						const targets = getTarget(dst, data, opt);
+						const targets = getTarget(dst, data, rule, opt);
 
 						for (const src of rule.src) {
 							for (const source of getSrc(src, data, opt)) {
 								for (const target of targets) {
 									if (target)
-										links.add({
-											source: source,
-											target: target.id,
-											routes: target.routes
-										});
+										links.add(
+											new GraphDataLink({
+												source: source,
+												target: target.id,
+												routes: target.routes
+											})
+										);
 								}
 							}
 						}
@@ -320,6 +316,7 @@ function getSrc(
 function getTarget(
 	target: { host: string; port: string },
 	data: Parameters<typeof formatGraphData>[0],
+	rule: AclRule,
 	opt: FormatGraphDataOptions
 ): { id: number; routes: GraphDataLinkAttributes['routes'] }[] {
 	const result = new Set<{ id: number; routes: GraphDataLinkAttributes['routes'] }>();
@@ -330,13 +327,7 @@ function getTarget(
 			if (machine.id) {
 				result.add({
 					id: machineGraphId(machine.id),
-					routes:
-						machine.ipAddresses?.map((ip) => ({
-							host: ip,
-							port: target.port,
-							source: `${target.host}:${target.port}`
-						})) || []
-					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					routes: machine.ipAddresses?.map((ip) => ({ host: ip, port: target.port, rule })) || []
 				});
 			}
 		}
@@ -348,8 +339,14 @@ function getTarget(
 		const group = data.acl?.groups.find((group) => group.name === target.host);
 		if (group?.members.length) {
 			for (const member of group.members) {
-				for (const subTarget of getTarget({ host: member, port: target.port }, data, opt)) {
-					result.add(subTarget);
+				for (const subTarget of getTarget({ host: member, port: target.port }, data, rule, opt)) {
+					result.add({
+						...subTarget,
+						routes: subTarget.routes.map((route) => ({
+							...route,
+							source: `${target.host}:${target.port}`
+						}))
+					});
 				}
 			}
 		}
@@ -367,13 +364,7 @@ function getTarget(
 			if (machine.id) {
 				result.add({
 					id: machineGraphId(machine.id),
-					routes:
-						machine.ipAddresses?.map((ip) => ({
-							host: ip,
-							port: target.port,
-							source: `${target.host}:${target.port}`
-						})) || []
-					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					routes: machine.ipAddresses?.map((ip) => ({ host: ip, port: target.port, rule })) || []
 				});
 			}
 		}
@@ -387,13 +378,7 @@ function getTarget(
 			if (machine.id) {
 				result.add({
 					id: machineGraphId(machine.id),
-					routes:
-						machine.ipAddresses?.map((ip) => ({
-							host: ip,
-							port: target.port,
-							source: `${target.host}:${target.port}`
-						})) || []
-					// cidr: machine.ipAddresses?.map((ip) => `${ip}:${target.port}`).join(', ') || ''
+					routes: machine.ipAddresses?.map((ip) => ({ host: ip, port: target.port, rule })) || []
 				});
 			}
 		}
@@ -407,8 +392,7 @@ function getTarget(
 			for (const id of getRouteTargets(addr, data.routes, opt)) {
 				result.add({
 					id,
-					routes: [{ host: host.cidr, port: target.port, source: `${target.host}:${target.port}` }]
-					// cidr: `${host.cidr}:${target.port}`
+					routes: [{ host: host.cidr, port: target.port, rule }]
 				});
 			}
 	}
@@ -453,41 +437,23 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 			: undefined;
 }
 
-/** Eliminates duplicates and combines cidr */
+/** Eliminates duplicates */
 function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 	const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
 
 	for (const link of links) {
 		if (
-			typeof link.source === 'number' &&
-			typeof link.target === 'number' &&
+			(typeof link.source === 'number' || typeof link.source === 'string') &&
+			(typeof link.target === 'number' || typeof link.target === 'string') &&
 			link.source !== link.target
 		) {
-			if (typeof temp[link.source] !== 'object') {
-				temp[link.source] = {};
+			if (typeof temp[Number(link.source)] !== 'object') {
+				temp[Number(link.source)] = {};
 			}
-
-			if (temp[link.source][link.target] instanceof Set) {
-				for (const route of link.routes) {
-					temp[link.source][link.target].add(route);
-				}
-				// if (temp[link.source][link.target] !== link.cidr) {
-				// 	temp[link.source][link.target] = temp[link.source][link.target] + ', ' + link.cidr;
-				// }
-			} else if (temp[link.target]?.[link.source] instanceof Set) {
-				for (const route of link.routes) {
-					temp[link.target][link.source].add(route);
-				}
-				// if (temp[link.target][link.source] !== link.cidr) {
-				// 	temp[link.target][link.source] = temp[link.target][link.source] + ', ' + link.cidr;
-				// }
-			} else {
-				temp[link.source][link.target] = new Set();
-				for (const route of link.routes) {
-					temp[link.source][link.target].add(route);
-				}
-				// temp[link.source][link.target] = link.cidr;
+			if (!(temp[Number(link.source)][Number(link.target)] instanceof Set)) {
+				temp[Number(link.source)][Number(link.target)] = new Set();
 			}
+			for (const route of link.routes) temp[Number(link.source)][Number(link.target)].add(route);
 		}
 	}
 
@@ -495,13 +461,89 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 
 	for (const [source, targets] of Object.entries(temp)) {
 		for (const [target, routes] of Object.entries(targets)) {
-			formattedLinks.add({ source: Number(source), target: Number(target), routes: [...routes] });
+			formattedLinks.add(
+				new GraphDataLink({
+					source: Number(source),
+					target: Number(target),
+					routes: [...(routes || [])]
+				})
+			);
 		}
 	}
 
-	// console.debug('Removed ' + (links.length - formattedLinks.size) + ' links');
+	return [...formattedLinks].map((link, i, links) => {
+		const reverseLink = links.find((l) => l.target === link.source && l.source === link.target);
 
-	return [...formattedLinks];
+		if (reverseLink?.label instanceof Set) {
+			for (const route of link.routes) reverseLink.label.add(`${route.host}:${route.port}`);
+		} else {
+			if (!(link.label instanceof Set)) link.label = new Set();
+			for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
+		}
+
+		return link;
+	});
+
+	// const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> | [] } } = {};
+
+	// for (const link of links) {
+	// 	if (
+	// 		typeof link.source === 'number' &&
+	// 		typeof link.target === 'number' &&
+	// 		link.source !== link.target
+	// 	) {
+	// 		if (typeof temp[link.source] !== 'object') {
+	// 			temp[link.source] = {};
+	// 		}
+
+	// 		for (const route of link.routes) {
+	// 			const target = temp[link.source][link.target];
+	// 			const reverseTarget = temp[link.target]?.[link.source];
+
+	// 			if (!(target instanceof Set) && !(reverseTarget instanceof Set)) {
+	// 				temp[link.source][link.target] = new Set();
+	// 			}
+
+	// 			if (target instanceof Set) {
+	// 				target.add(route);
+	// 			} else if (reverseTarget instanceof Set) {
+	// 				temp[link.source][link.target] = [];
+	// 				reverseTarget.add(route);
+	// 			}
+	// 		}
+	// 		// if (temp[link.source][link.target] instanceof Set) {
+	// 		// 		temp[link.source][link.target].add(route);
+	// 		// 	}
+	// 		// } else if (temp[link.target]?.[link.source] instanceof Set) {
+	// 		// 	temp[link.source][link.target] = [];
+	// 		// 	for (const route of link.routes) {
+	// 		// 		temp[link.target][link.source].add(route);
+	// 		// 	}
+	// 		// } else {
+	// 		// 	temp[link.source][link.target] = new Set();
+	// 		// 	for (const route of link.routes) {
+	// 		// 		temp[link.source][link.target].add(route);
+	// 		// 	}
+	// 		// 	// temp[link.source][link.target] = link.cidr;
+	// 		// }
+	// 	}
+	// }
+
+	// const formattedLinks = new Set<GraphDataLink>();
+
+	// for (const [source, targets] of Object.entries(temp)) {
+	// 	for (const [target, routes] of Object.entries(targets)) {
+	// 		formattedLinks.add(new GraphDataLink({
+	// 			source: Number(source),
+	// 			target: Number(target),
+	// 			routes: [...(routes || [])]
+	// 		}));
+	// 	}
+	// }
+
+	// // console.debug('Removed ' + (links.length - formattedLinks.size) + ' links');
+
+	// return [...formattedLinks];
 }
 
 export function focusOnNode(
