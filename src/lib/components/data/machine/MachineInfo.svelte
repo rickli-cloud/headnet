@@ -12,19 +12,32 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 
+	import ToggleRoute from '$lib/components/data/routes/ToggleRoute.svelte';
+
 	import Secret from '$lib/components/utils/Secret.svelte';
+	import type { GraphData, GraphDataLink } from '$lib/components/networkGraph';
 
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
-	import type { Machine, Route } from '$lib/api';
+	import { Machine, type Route } from '$lib/api';
 
 	import MachineStatus from './MachineStatus.svelte';
 	import DeleteMachine from './DeleteMachine.svelte';
 	import EditMachine from './EditMachine.svelte';
-	import ToggleRoute from '../routes/ToggleRoute.svelte';
-	import { isValid } from 'zod';
 
 	export let machine: Machine;
 	export let routes: Route[] | undefined;
+	export let graphDataLinks: GraphDataLink[];
+
+	const isThisMachine = (query: unknown) =>
+		query instanceof Machine && query.nodeId === machine.nodeId;
+
+	$: machineLinks = graphDataLinks?.filter(
+		(link) => isThisMachine(link.source) || isThisMachine(link.target)
+	);
+
+	import { stringify } from 'yaml';
+
+	console.debug({ machineLinks, graphDataLinks });
 </script>
 
 <Sheet.Header>
@@ -208,5 +221,11 @@
 				{/if}
 			</div>
 		</div>
+	{/each}
+</div>
+
+<div>
+	{#each machineLinks as link}
+		<pre><code>{stringify(link.cidr.trim().split(/,\s+/gm), null, 2)}</code></pre>
 	{/each}
 </div>

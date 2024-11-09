@@ -6,4 +6,4 @@
 
 {@render children()}
 
-<ModeWatcher defaultMode="dark" />
+<ModeWatcher />

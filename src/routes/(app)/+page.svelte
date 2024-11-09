@@ -1,22 +1,21 @@
 <script lang="ts">
-	import { get, writable } from 'svelte/store';
+	import { writable } from 'svelte/store';
 	import ForceGraph3D from '3d-force-graph';
 	import { onMount } from 'svelte';
 
 	import * as Sheet from '$lib/components/ui/sheet';
 
-	import MachineInfo from '$lib/components/data/machine/MachineInfo.svelte';
-	import UserInfo from '$lib/components/data/user/UserInfo.svelte';
-	import UserActions from '$lib/components/data/user/UserActions.svelte';
-	import MachineActions from '$lib/components/data/machine/MachineActions.svelte';
 	import InternetActions from '$lib/components/data/internet/InternetActions.svelte';
+	import MachineActions from '$lib/components/data/machine/MachineActions.svelte';
+	import MachineInfo from '$lib/components/data/machine/MachineInfo.svelte';
 	import PageActions from '$lib/components/data/page/PageActions.svelte';
+	import UserActions from '$lib/components/data/user/UserActions.svelte';
+	import UserInfo from '$lib/components/data/user/UserInfo.svelte';
 
-	import { NetworkGraph, type GraphData } from '$lib/components/networkGraph';
+	import { NetworkGraph, NetworkGraphActions, type GraphData } from '$lib/components/networkGraph';
 
-	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
 	import { focusOnNode, formatGraphData } from '$lib/utils/networkGraph.js';
-	import { NetworkGraphActions } from '$lib/components/networkGraph';
+	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
 
 	export let data;
 
@@ -78,7 +77,9 @@
 			{#if $selected instanceof User}
 				<UserInfo user={$selected} acl={data.acl} preAuthKeys={$preAuthKeys} />
 			{:else if $selected instanceof Machine}
-				<MachineInfo machine={$selected} routes={data.routes} />
+				{#key $graphData.links}
+					<MachineInfo machine={$selected} routes={data.routes} graphDataLinks={$graphData.links} />
+				{/key}
 			{:else if $selected && 'nodeId' in $selected && $selected.nodeId === 1}
 				<Sheet.Header>
 					<Sheet.Title>Internet</Sheet.Title>

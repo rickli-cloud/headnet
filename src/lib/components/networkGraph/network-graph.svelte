@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { type ForceGraph3DGenericInstance } from '3d-force-graph';
+	import SpriteText from 'three-spritetext';
 	import type { ClassValue } from 'clsx';
+	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 
-	import SpriteText from 'three-spritetext';
 	import type { GraphDataLink } from '.';
 
 	interface $$Props extends Partial<HTMLDivElement> {
@@ -20,17 +21,16 @@
 		graph.height(window.innerHeight);
 	});
 
+	mode.subscribe(setTheme);
+
+	graph.showNavInfo(true); // TODO: change to setting
+
 	graph.nodeId('nodeId');
 	graph.nodeLabel('nodeName');
 
 	graph.linkDirectionalArrowLength(2);
 	graph.linkDirectionalArrowRelPos(1);
 	graph.linkCurvature(0.1);
-
-	graph.backgroundColor('#0a0a0a'); // TODO: Dark & light mode
-	graph.linkColor(() => '#fff');
-
-	graph.showNavInfo(true); // TODO: change to setting
 
 	graph.linkThreeObjectExtend(true);
 	graph.linkThreeObject((link: GraphDataLink) => {
@@ -63,6 +63,18 @@
 			graph._destructor();
 		};
 	});
+
+	function setTheme(mode: 'dark' | 'light' | undefined) {
+		if (mode === 'dark') {
+			graph.backgroundColor('#0a0a0a');
+			graph.linkColor(() => '#fff');
+		}
+
+		if (mode === 'light') {
+			graph.backgroundColor('#fff');
+			graph.linkColor(() => '#0a0a0a');
+		}
+	}
 </script>
 
 <div {...$$restProps} bind:this={target}></div>
