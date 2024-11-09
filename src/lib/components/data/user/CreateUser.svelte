@@ -14,7 +14,6 @@
 	import { groupRegex, type Acl, type User } from '$lib/api';
 	import { createEventDispatcher } from 'svelte';
 
-	export let user: User;
 	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
@@ -42,25 +41,15 @@
 
 	const { constraints, form: formData } = form;
 
-	formData.set({ name: user.name || '' });
-
-	function getGroups() {
-		return (
-			acl?.groups
-				.filter((i) => user.name && i.members.includes(user.name))
-				.map((group) => ({ value: group.name, label: group.name.replace(groupRegex, '') })) || []
-		);
-	}
-
-	const selectedGroups = writable<{ value: string; label: string }[]>(getGroups());
+	const selectedGroups = writable<{ value: string; label: string }[]>([]);
 
 	selectedGroups.subscribe((selected) => {
 		formData.update((data) => ({ ...data, groups: selected.map((i) => i.value) }));
 	});
 
 	function reset() {
-		form.reset({ data: { name: user.name, groups: [] } });
-		selectedGroups.set(getGroups());
+		form.reset({ data: { name: '', groups: [] } });
+		selectedGroups.set([]);
 	}
 
 	formData.subscribe(console.debug);
@@ -73,10 +62,10 @@
 
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Edit user</Dialog.Title>
+			<Dialog.Title>Create user</Dialog.Title>
 		</Dialog.Header>
 
-		<Form.Root {form} {reset} submitText="Save" hasRequired>
+		<Form.Root {form} {reset} submitText="Create" hasRequired>
 			<Form.Field {form} name="name">
 				<Form.Control let:attrs>
 					<Form.Label for={attrs.id}>Name</Form.Label>

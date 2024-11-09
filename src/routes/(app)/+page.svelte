@@ -106,6 +106,6 @@
 	</NetworkGraphActions>
 
 	<NetworkGraphActions bind:this={pageActions}>
-		<PageActions on:close={pageActions.close} />
+		<PageActions on:close={pageActions.close} acl={data.acl} />
 	</NetworkGraphActions>
 </main>

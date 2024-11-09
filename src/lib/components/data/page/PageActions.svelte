@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
 	import Sliders from 'lucide-svelte/icons/sliders-horizontal';
@@ -13,9 +13,14 @@
 
 	import * as Sheet from '$lib/components/ui/sheet';
 
-	import { base } from '$app/paths';
+	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
 
-	const dispatch = createEventDispatcher();
+	import { base } from '$app/paths';
+	import type { Acl } from '$lib/api';
+
+	export let acl: Acl | undefined;
+
+	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
 
 <div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
@@ -30,7 +35,15 @@
 <hr />
 
 <li>
-	<Sheet.Root onOpenChange={(open) => (open ? void 0 : dispatch('close'))}>
+	<CreateUser {acl} on:submit={() => dispatch('close')}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Plus />
+				<span> User </span>
+			</button>
+		</svelte:fragment>
+	</CreateUser>
+	<!-- <Sheet.Root onOpenChange={(open) => (open ? void 0 : dispatch('close'))}>
 		<Sheet.Trigger>
 			<Plus />
 			<span> User </span>
@@ -41,22 +54,14 @@
 				<Sheet.Title>Create user</Sheet.Title>
 			</Sheet.Header>
 		</Sheet.Content>
-	</Sheet.Root>
+	</Sheet.Root> -->
 </li>
 
 <li>
-	<Sheet.Root onOpenChange={(open) => (open ? void 0 : dispatch('close'))}>
-		<Sheet.Trigger>
-			<Plus />
-			<span> Machine </span>
-		</Sheet.Trigger>
-
-		<Sheet.Content>
-			<Sheet.Header>
-				<Sheet.Title>Register machine</Sheet.Title>
-			</Sheet.Header>
-		</Sheet.Content>
-	</Sheet.Root>
+	<button disabled>
+		<Plus />
+		<span> Machine </span>
+	</button>
 </li>
 
 <hr />
@@ -108,7 +113,7 @@
 </li>
 
 <li class="destructive">
-	<button>
+	<button disabled>
 		<LogOut />
 		<span> Log out </span>
 	</button>
