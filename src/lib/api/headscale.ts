@@ -716,23 +716,23 @@ export class Acl {
 	// }
 
 	public readonly updatedAt?: string;
-	public readonly hosts: {
+	public hosts: {
 		name: string;
 		cidr: string;
 		comments?: string[];
 	}[];
-	public readonly groups: {
+	public groups: {
 		name: string;
 		members: string[];
 		ownedTags: string[];
 		comments?: string[];
 	}[];
-	public readonly tagOwners: {
+	public tagOwners: {
 		name: string;
 		members: string[];
 		comments?: string[];
 	}[];
-	public readonly acls: {
+	public acls: {
 		id: string;
 		action: 'accept';
 		src: string[];
@@ -773,7 +773,7 @@ export class Acl {
 
 		Object.assign(policy, comments);
 
-		return stringify({ ...policy });
+		return stringify({ ...this.policy, ...policy });
 	}
 
 	public constructor(data: { policy?: string; updatedAt?: string } | undefined) {

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { writable } from 'svelte/store';
-
-	import Eye from 'lucide-svelte/icons/eye';
-	import EyeOff from 'lucide-svelte/icons/eye-off';
 	import type { ClassValue } from 'clsx';
+
+	import EyeOff from 'lucide-svelte/icons/eye-off';
+	import Eye from 'lucide-svelte/icons/eye';
+
 	import { cn } from '$lib/utils/shadcn';
 
 	interface $$Props extends Partial<HTMLDivElement> {

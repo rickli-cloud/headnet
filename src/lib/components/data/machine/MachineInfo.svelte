@@ -159,7 +159,7 @@
 	</div>
 {/if}
 
-{#if routes?.length && !minimal}
+{#if routes?.filter((route) => route.node?.id === machine.id).length && !minimal}
 	<Sheet.Header>
 		<Sheet.Title>Routes</Sheet.Title>
 	</Sheet.Header>

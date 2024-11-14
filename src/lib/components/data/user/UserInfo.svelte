@@ -98,7 +98,7 @@
 	<div>
 		{#each keys || [] as key}
 			<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
-				<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+				<div class="flex items-center gap-x-1.5 gap-y-2">
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
 							<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">

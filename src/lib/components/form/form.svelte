@@ -30,7 +30,7 @@
 	<slot />
 
 	<slot name="controls" {reset} {disabled} {submitText} {resetText}>
-		<div class="!space-y-4">
+		<div class="!mt-8 !space-y-4">
 			<div class="star-note" class:required={hasRequired}>required</div>
 
 			<slot name="buttons" {reset} {disabled} {submitText} {resetText}>

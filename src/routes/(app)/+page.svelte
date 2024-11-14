@@ -11,6 +11,7 @@
 	import PageActions from '$lib/components/data/page/PageActions.svelte';
 	import UserActions from '$lib/components/data/user/UserActions.svelte';
 	import UserInfo from '$lib/components/data/user/UserInfo.svelte';
+	import LinkInfo from '$lib/components/data/link/LinkInfo.svelte';
 
 	import { NetworkGraph, NetworkGraphActions } from '$lib/components/networkGraph';
 
@@ -19,9 +20,9 @@
 		focusOnNode,
 		formatGraphData,
 		GraphDataLink,
+		GraphMachine,
 		type GraphData
 	} from '$lib/utils/networkGraph.js';
-	import LinkInfo from '$lib/components/data/link/LinkInfo.svelte';
 
 	export let data;
 
@@ -69,9 +70,17 @@
 	});
 
 	graph.onLinkClick((link, ev) => {
-		closeEveryPopup();
-		selectedLink.set(link as GraphDataLink);
-		linkInfo.open();
+		if (
+			link &&
+			'source' in link &&
+			'target' in link &&
+			link.source instanceof GraphMachine &&
+			link.target instanceof GraphMachine
+		) {
+			closeEveryPopup();
+			selectedLink.set(link as GraphDataLink);
+			linkInfo.open();
+		}
 	});
 	graph.onLinkRightClick(closeEveryPopup); // TODO: some actions
 
@@ -136,9 +145,9 @@
 		<PageActions on:close={pageActions.close} acl={data.acl} />
 	</NetworkGraphActions>
 
-	<Sheet.Root bind:this={linkInfo}>
+	<Sheet.Root bind:this={linkInfo} let:close>
 		<Sheet.Content>
-			<LinkInfo link={$selectedLink} />
+			<LinkInfo link={$selectedLink} {graph} {close} />
 		</Sheet.Content>
 	</Sheet.Root>
 </main>

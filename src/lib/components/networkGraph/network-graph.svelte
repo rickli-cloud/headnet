@@ -5,16 +5,23 @@
 	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 
-	import type { GraphDataLink } from '$lib/utils/networkGraph';
+	import { type GraphDataLink } from '$lib/utils/networkGraph';
+	import { debounce } from '$lib/utils/misc';
 
 	interface $$Props extends Partial<HTMLDivElement> {
-		class?: ClassValue;
 		graph: ForceGraph3DGenericInstance<any>;
+		class?: ClassValue;
+		opt?: Partial<{
+			snapBack: boolean;
+		}>;
 	}
 
 	export let graph: $$Props['graph'];
+	export let opt: $$Props['opt'] = {};
 
 	let target: HTMLElement;
+
+	let hoverLink: object | undefined | null;
 
 	const observer = new ResizeObserver(function () {
 		graph.width(window.innerWidth);
@@ -51,7 +58,27 @@
 		}
 	});
 
-	graph.d3Force('charge')?.strength(-360);
+	graph.linkDirectionalParticles((link) => (hoverLink === link ? 3 : 0));
+	graph.linkDirectionalParticleWidth(1);
+	graph.onLinkHover(
+		debounce((link) => {
+			if (hoverLink === link) return;
+			hoverLink = link;
+			updateHighlight();
+		}, 500)
+	);
+
+	graph.d3Force('charge')?.strength(-500);
+
+	graph.onNodeDragEnd((node) => {
+		if (!opt?.snapBack && typeof node === 'object' && 'x' in node && 'y' in node && 'z' in node) {
+			Object.assign(node, {
+				fx: node.x,
+				fy: node.y,
+				fz: node.z
+			});
+		}
+	});
 
 	onMount(() => {
 		graph(target);
@@ -65,7 +92,7 @@
 	});
 
 	function setTheme(mode: 'dark' | 'light' | undefined) {
-		if (mode === 'dark') {
+		if (!mode || mode === 'dark') {
 			graph.backgroundColor('#0a0a0a');
 			graph.linkColor(() => '#fff');
 		}
@@ -74,6 +101,14 @@
 			graph.backgroundColor('#fff');
 			graph.linkColor(() => '#0a0a0a');
 		}
+	}
+
+	function updateHighlight() {
+		// trigger update of highlighted objects in scene
+		graph
+			.nodeColor(graph.nodeColor())
+			.linkWidth(graph.linkWidth())
+			.linkDirectionalParticles(graph.linkDirectionalParticles());
 	}
 </script>
 

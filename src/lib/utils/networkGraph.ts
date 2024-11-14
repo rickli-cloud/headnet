@@ -1,4 +1,4 @@
-import type { ForceGraph3DGenericInstance } from '3d-force-graph';
+import type { ForceGraph3DGenericInstance, ForceGraph3DInstance } from '3d-force-graph';
 import { Address4, Address6 } from 'ip-address';
 
 import {
@@ -24,7 +24,9 @@ const steppedId = (id: number, level: number = 1) => level * 100000 + id;
 export const userGraphId = (id: string | number): number => steppedId(Number(id));
 export const machineGraphId = (id: string | number): number => steppedId(Number(id), 2);
 
-export interface GraphDataNodeAttributes {
+type BaseGraphData = Parameters<ForceGraph3DGenericInstance<any>['graphData']>[0]['nodes'][0];
+
+export interface GraphDataNodeAttributes extends BaseGraphData {
 	/** Node ID inside of network graph */
 	nodeId?: number;
 	/** Node name inside of network graph */
@@ -37,6 +39,16 @@ export class GraphUser extends User implements GraphDataNodeAttributes {
 	public nodeId: number;
 	public nodeName: string;
 	public color: string;
+	index?: number | undefined;
+	x?: number | undefined;
+	y?: number | undefined;
+	z?: number | undefined;
+	vx?: number | undefined;
+	vy?: number | undefined;
+	vz?: number | undefined;
+	fx?: number | undefined;
+	fy?: number | undefined;
+	fz?: number | undefined;
 
 	constructor(data: V1User) {
 		super(data);
@@ -50,6 +62,16 @@ export class GraphMachine extends Machine implements GraphDataNodeAttributes {
 	public nodeId: number;
 	public nodeName: string;
 	public color: string;
+	index?: number | undefined;
+	x?: number | undefined;
+	y?: number | undefined;
+	z?: number | undefined;
+	vx?: number | undefined;
+	vy?: number | undefined;
+	vz?: number | undefined;
+	fx?: number | undefined;
+	fy?: number | undefined;
+	fz?: number | undefined;
 
 	constructor(data: V1Node) {
 		super(data);
@@ -437,7 +459,7 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 			: undefined;
 }
 
-/** Eliminates duplicates */
+/** Eliminates duplicates & ensures only one link gets a label to prevent overlap */
 function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 	const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
 
@@ -483,67 +505,6 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 
 		return link;
 	});
-
-	// const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> | [] } } = {};
-
-	// for (const link of links) {
-	// 	if (
-	// 		typeof link.source === 'number' &&
-	// 		typeof link.target === 'number' &&
-	// 		link.source !== link.target
-	// 	) {
-	// 		if (typeof temp[link.source] !== 'object') {
-	// 			temp[link.source] = {};
-	// 		}
-
-	// 		for (const route of link.routes) {
-	// 			const target = temp[link.source][link.target];
-	// 			const reverseTarget = temp[link.target]?.[link.source];
-
-	// 			if (!(target instanceof Set) && !(reverseTarget instanceof Set)) {
-	// 				temp[link.source][link.target] = new Set();
-	// 			}
-
-	// 			if (target instanceof Set) {
-	// 				target.add(route);
-	// 			} else if (reverseTarget instanceof Set) {
-	// 				temp[link.source][link.target] = [];
-	// 				reverseTarget.add(route);
-	// 			}
-	// 		}
-	// 		// if (temp[link.source][link.target] instanceof Set) {
-	// 		// 		temp[link.source][link.target].add(route);
-	// 		// 	}
-	// 		// } else if (temp[link.target]?.[link.source] instanceof Set) {
-	// 		// 	temp[link.source][link.target] = [];
-	// 		// 	for (const route of link.routes) {
-	// 		// 		temp[link.target][link.source].add(route);
-	// 		// 	}
-	// 		// } else {
-	// 		// 	temp[link.source][link.target] = new Set();
-	// 		// 	for (const route of link.routes) {
-	// 		// 		temp[link.source][link.target].add(route);
-	// 		// 	}
-	// 		// 	// temp[link.source][link.target] = link.cidr;
-	// 		// }
-	// 	}
-	// }
-
-	// const formattedLinks = new Set<GraphDataLink>();
-
-	// for (const [source, targets] of Object.entries(temp)) {
-	// 	for (const [target, routes] of Object.entries(targets)) {
-	// 		formattedLinks.add(new GraphDataLink({
-	// 			source: Number(source),
-	// 			target: Number(target),
-	// 			routes: [...(routes || [])]
-	// 		}));
-	// 	}
-	// }
-
-	// // console.debug('Removed ' + (links.length - formattedLinks.size) + ' links');
-
-	// return [...formattedLinks];
 }
 
 export function focusOnNode(
