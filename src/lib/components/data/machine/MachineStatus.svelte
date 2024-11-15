@@ -6,15 +6,22 @@
 	interface $$Props extends Partial<HTMLDivElement> {
 		online: boolean | undefined;
 		lastSeen: string | undefined;
+		autofocus?: boolean;
 	}
 
 	export let online: $$Props['online'];
 	export let lastSeen: $$Props['lastSeen'];
+	export let autofocus: $$Props['autofocus'] = false;
 </script>
 
 <Tooltip.Root>
 	<Tooltip.Trigger asChild let:builder>
-		<Button builders={[builder]} class="h-full cursor-default !bg-transparent !p-0" variant="ghost">
+		<Button
+			{autofocus}
+			builders={[builder]}
+			class="h-full cursor-default !bg-transparent !p-0"
+			variant="ghost"
+		>
 			<div
 				{...$$restProps}
 				class={cn('mx-auto h-2.5 w-2.5 rounded-full', $$restProps.class)}

@@ -74,7 +74,7 @@
 			</span>
 		{/if}
 
-		<MachineStatus online={machine.online} lastSeen={machine.lastSeen} />
+		<MachineStatus autofocus online={machine.online} lastSeen={machine.lastSeen} />
 	</Sheet.Title>
 
 	<Sheet.Description class="flex items-center justify-between gap-2">

@@ -14,6 +14,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 
 	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
+	import EndSession from './EndSession.svelte';
 
 	import { base } from '$app/paths';
 	import type { Acl } from '$lib/api';
@@ -101,8 +102,12 @@
 </li>
 
 <li class="destructive">
-	<button disabled>
-		<LogOut />
-		<span> Log out </span>
-	</button>
+	<EndSession>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<LogOut />
+				<span> Log out </span>
+			</button>
+		</svelte:fragment>
+	</EndSession>
 </li>
