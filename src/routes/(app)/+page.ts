@@ -3,10 +3,12 @@ import { Acl, formatApiErrors, Headscale, Machine, Route, User } from '$lib/api/
 export async function load({ data, fetch }) {
 	const headscale = new Headscale({ fetch });
 
-	const machines = await Machine.list(undefined, headscale);
-	const routes = await Route.list(headscale);
-	const users = await User.list(headscale);
-	const acl = await Acl.load(headscale);
+	const [machines, routes, users, acl] = await Promise.all([
+		Machine.list(undefined, headscale),
+		Route.list(headscale),
+		User.list(headscale),
+		Acl.load(headscale)
+	]);
 
 	return {
 		...(data || {}),

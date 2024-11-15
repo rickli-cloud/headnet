@@ -167,6 +167,13 @@
 			}
 		}
 	}
+
+	li[data-sonner-toast] > div[data-icon] {
+		@apply !m-0;
+		& > svg {
+			@apply h-full w-full;
+		}
+	}
 }
 
 @layer utilities {

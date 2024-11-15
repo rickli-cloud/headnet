@@ -21,6 +21,7 @@
 	export let user: User;
 	export let acl: Acl | undefined;
 	export let preAuthKeys: PreAuthKey[] | undefined;
+	export let close: () => void;
 
 	$: groups = acl?.groups
 		.filter((i) => user.name && i.members.includes(user.name))
@@ -41,7 +42,7 @@
 			<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
 				<DropdownMenu.Group>
 					<DropdownMenu.Item asChild>
-						<EditUser {user} {acl}>
+						<EditUser {user} {acl} on:submit={close}>
 							<svelte:fragment slot="trigger" let:builder>
 								<button class="menu-button" {...builder} use:builder.action>
 									<UserRoundPen class="mr-2 h-4 w-4" />
@@ -52,7 +53,7 @@
 					</DropdownMenu.Item>
 
 					<DropdownMenu.Item asChild>
-						<DeleteUser {user}>
+						<DeleteUser {user} {acl} on:submit={close}>
 							<svelte:fragment slot="trigger" let:builder>
 								<button class="menu-button destructive" {...builder} use:builder.action>
 									<Trash class="mr-2 h-4 w-4" />

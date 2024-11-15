@@ -5,13 +5,16 @@
 	import { z } from 'zod';
 
 	import * as Dialog from '$lib/components/ui/dialog';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 
 	import * as Form from '$lib/components/form';
 
-	import type { User } from '$lib/api';
-	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import { errorToast, successToast } from '$lib/utils/toast';
+	import { formatError } from '$lib/utils/error';
+	import type { Acl, User } from '$lib/api';
 
 	export let user: User;
+	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
@@ -30,10 +33,26 @@
 		validators: zod(schema),
 		async onUpdate(ev) {
 			if (ev.form.valid) {
-				console.debug('Form is valid', ev);
-				// const {} = await user.delete()
-				dispatch('submit');
-				open = false;
+				try {
+					const res = await user.delete();
+					if (res.error) throw res.error;
+
+					if (acl?.groups.find((group) => group.members.includes(user.name as string))) {
+						acl.groups = acl.groups.map((group) => ({
+							...group,
+							members: group.members.filter((member) => member !== user.name)
+						}));
+						const res = await acl.save();
+						if (res.error) throw res.error;
+					}
+
+					successToast(`Deleted user "${user.name}"`);
+					dispatch('submit');
+					open = false;
+				} catch (err) {
+					console.error(err);
+					errorToast(formatError(err));
+				}
 			}
 		}
 	});

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { defaults, superForm } from 'sveltekit-superforms';
 	import { zod } from 'sveltekit-superforms/adapters';
+	import { createEventDispatcher } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { z } from 'zod';
 
@@ -11,8 +12,9 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { groupRegex, type Acl, type User } from '$lib/api';
-	import { createEventDispatcher } from 'svelte';
+	import { groupRegex, User, Acl } from '$lib/api';
+	import { errorToast, successToast } from '$lib/utils/toast';
+	import { formatError } from '$lib/utils/error';
 
 	export let acl: Acl | undefined;
 
@@ -30,11 +32,29 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		onUpdate(ev) {
+		async onUpdate(ev) {
 			if (ev.form.valid) {
-				console.debug('Form is valid', ev);
-				dispatch('submit');
-				open = false;
+				try {
+					const res = await User.create(ev.form.data.name);
+					if (res.error) throw res.error;
+
+					if (ev.form.data.groups?.length && acl?.groups) {
+						acl.groups = acl.groups.map((g) =>
+							ev.form.data.groups?.includes(g.name)
+								? { ...g, members: g.members.concat([ev.form.data.name]) }
+								: g
+						);
+						const aclRes = await acl.save();
+						if (aclRes.error) throw aclRes.error;
+					}
+
+					successToast(`Created user "${res.data?.name}"`);
+					dispatch('submit');
+					open = false;
+				} catch (err) {
+					console.error(err);
+					errorToast(formatError(err));
+				}
 			}
 		}
 	});
@@ -51,8 +71,6 @@
 		form.reset({ data: { name: '', groups: [] } });
 		selectedGroups.set([]);
 	}
-
-	formData.subscribe(console.debug);
 </script>
 
 <Dialog.Root bind:open>

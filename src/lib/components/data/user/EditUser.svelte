@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { defaults, superForm } from 'sveltekit-superforms';
 	import { zod } from 'sveltekit-superforms/adapters';
+	import { createEventDispatcher } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { z } from 'zod';
 
@@ -11,8 +12,9 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { groupRegex, type Acl, type User } from '$lib/api';
-	import { createEventDispatcher } from 'svelte';
+	import { Acl, groupRegex, type User } from '$lib/api';
+	import { errorToast, successToast } from '$lib/utils/toast';
+	import { formatError } from '$lib/utils/error';
 
 	export let user: User;
 	export let acl: Acl | undefined;
@@ -31,11 +33,62 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		onUpdate(ev) {
+		async onUpdate(ev) {
 			if (ev.form.valid) {
-				console.debug('Form is valid', ev);
-				dispatch('submit');
-				open = false;
+				try {
+					// If name changed
+					if (user.name && ev.form.data.name !== user.name) {
+						const res = await user.rename(ev.form.data.name);
+						if (res.error) throw res.error;
+
+						if (acl) {
+							acl.groups = acl.groups.map((group) => {
+								if (user.name && group.members.includes(user.name)) {
+									return {
+										...group,
+										members: group.members
+											.map((member) => (member === group.name ? undefined : member))
+											.filter((member) => typeof member !== 'undefined')
+											.concat(ev.form.data.name)
+									};
+								}
+								return group;
+							});
+						}
+					}
+
+					// If groups changed
+					if (acl && JSON.stringify(ev.form.data.groups) !== JSON.stringify(getGroups())) {
+						acl.groups = acl.groups.map((group) => {
+							const isInGroup: boolean = group.members.includes(ev.form.data.name);
+							const shouldBeInGroup: boolean = ev.form.data.groups?.includes(group.name) || false;
+
+							if (isInGroup && !shouldBeInGroup) {
+								return {
+									...group,
+									members: group.members.filter((member) => member !== ev.form.data.name)
+								};
+							} else if (shouldBeInGroup && !isInGroup) {
+								return {
+									...group,
+									members: group.members.concat([ev.form.data.name])
+								};
+							}
+
+							return group;
+						});
+
+						const res = await acl.save();
+						if (res.error) throw res.error;
+					}
+
+					successToast(`Saved user "${ev.form.data.name}"`);
+					dispatch('submit');
+					open = false;
+				} catch (err) {
+					console.error(err);
+					errorToast(formatError(err));
+				}
 			}
 		}
 	});
@@ -53,7 +106,6 @@
 	}
 
 	const selectedGroups = writable<{ value: string; label: string }[]>(getGroups());
-
 	selectedGroups.subscribe((selected) => {
 		formData.update((data) => ({ ...data, groups: selected.map((i) => i.value) }));
 	});
@@ -62,8 +114,6 @@
 		form.reset({ data: { name: user.name, groups: [] } });
 		selectedGroups.set(getGroups());
 	}
-
-	formData.subscribe(console.debug);
 </script>
 
 <Dialog.Root bind:open>

@@ -51,7 +51,7 @@
 </li>
 
 <li>
-	<EditUser {user} {acl}>
+	<EditUser {user} {acl} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<UserRoundPen />
@@ -62,7 +62,7 @@
 </li>
 
 <li class="destructive">
-	<DeleteUser {user}>
+	<DeleteUser {user} {acl} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Trash />

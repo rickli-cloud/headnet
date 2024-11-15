@@ -16,6 +16,8 @@
 	} from '$lib/utils/networkGraph';
 	import type { Acl } from '$lib/api';
 	import type { ForceGraph3DGenericInstance } from '3d-force-graph';
+	import Label from '$lib/components/ui/label/label.svelte';
+	import Code from '$lib/components/utils/Code.svelte';
 
 	export let graph: ForceGraph3DGenericInstance<any>;
 	export let link: GraphDataLink | undefined;
@@ -33,121 +35,133 @@
 	}
 </script>
 
-<table class="basic-table w-full">
-	<tbody>
-		<tr>
-			<td>Source</td>
-			{#if link?.source instanceof GraphUser}
-				<td>
-					<button
-						class="link"
-						on:click={() => {
-							close();
-							focusOnNode(graph, link.source);
-						}}
-					>
-						<span class="font-semibold">
-							{link.source.name}
-						</span>
-						<span class="text-muted-foreground">
-							#{link.source.id}
-						</span>
-					</button>
-				</td>
-				<td></td>
-			{:else if link?.source instanceof GraphMachine}
-				<td>
-					<button
-						class="link"
-						on:click={() => {
-							close();
-							focusOnNode(graph, link.source);
-						}}
-					>
-						<span class="font-semibold">
-							{link.source.givenName || link.source.name}
-						</span>
-						<span class="text-muted-foreground">
-							#{link.source.id}
-						</span>
-					</button>
-				</td>
-				<td>
-					{link.source.ipAddresses?.join(', ')}
-				</td>
-			{/if}
-		</tr>
-
-		<tr>
-			<td>Target</td>
-			{#if link?.target instanceof GraphMachine}
-				<td>
-					<button
-						class="link"
-						on:click={() => {
-							close();
-							focusOnNode(graph, link.target);
-						}}
-					>
-						<span class="font-semibold">
-							{link.target.givenName || link.target.name}
-						</span>
-						<span class="text-muted-foreground">
-							#{link.target.id}
-						</span>
-					</button>
-				</td>
-				<td>{link.target.ipAddresses?.join(', ')}</td>
-			{/if}
-		</tr>
-	</tbody>
-</table>
+<div class="grid items-center gap-5" style="grid-template-columns: 1fr auto 1fr;">
+	<div class="text-right">
+		{#if link?.source instanceof GraphUser}
+			<button
+				class="link"
+				on:click={() => {
+					close();
+					focusOnNode(graph, link.source);
+				}}
+			>
+				<span class="font-semibold">
+					{link.source.name}
+				</span>
+				<span class="text-muted-foreground">
+					#{link.source.id}
+				</span>
+			</button>
+			<p></p>
+		{:else if link?.source instanceof GraphMachine}
+			<button
+				class="link"
+				on:click={() => {
+					close();
+					focusOnNode(graph, link.source);
+				}}
+			>
+				<span class="font-semibold">
+					{link.source.givenName || link.source.name}
+				</span>
+				<span class="text-muted-foreground">
+					#{link.source.id}
+				</span>
+			</button>
+			<p>
+				{link.source.ipAddresses?.join(', ')}
+			</p>
+		{/if}
+	</div>
+	<div>
+		<MoveRight />
+	</div>
+	<div>
+		{#if link?.target instanceof GraphMachine}
+			<button
+				class="link"
+				on:click={() => {
+					close();
+					focusOnNode(graph, link.target);
+				}}
+			>
+				<span class="font-semibold">
+					{link.target.givenName || link.target.name}
+				</span>
+				<span class="text-muted-foreground">
+					#{link.target.id}
+				</span>
+			</button>
+			<p>
+				{link.target.ipAddresses?.join(', ')}
+			</p>
+		{:else if link?.target && (link.target === 1 || (typeof link.target === 'object' && 'nodeId' in link.target && link.target.nodeId === 1))}
+			<button
+				class="link"
+				on:click={() => {
+					close();
+					focusOnNode(graph, link.target);
+				}}
+			>
+				<span class="font-semibold"> Internet </span>
+				<span class="text-muted-foreground"> #1 </span>
+			</button>
+			<p>0.0.0.0/0, ::/0</p>
+		{/if}
+	</div>
+</div>
 
 {#if rules.size}
 	<Sheet.Header>
 		<Sheet.Title>Rules</Sheet.Title>
 	</Sheet.Header>
 
-	<div class="space-y-3">
+	<div class="space-y-4">
 		{#each rules as rule}
-			<div class="space-y-2 border-b pb-3 last:border-b-0">
-				<div class="flex items-center gap-1.5">
-					<Button variant="ghost" class="h-7 w-7 p-1.5">
-						<EllipsisVertical class="h-4 w-4" />
-					</Button>
-
-					{#each rulePrefixes[rule.id] || [] as prefix}
-						<Badge variant="outline">{prefix}</Badge>
-					{/each}
+			<div class="space-y-3 border-b pb-4 last:border-b-0 [&>div]:space-y-2">
+				<div>
+					<div class="flex items-center justify-between">
+						<Label>Routes</Label>
+						<button class="link text-muted-foreground hover:text-current">Edit</button>
+					</div>
+					<div class="flex flex-wrap items-center gap-1.5">
+						{#each rulePrefixes[rule.id] || [] as prefix}
+							<Badge variant="outline">{prefix}</Badge>
+						{/each}
+					</div>
 				</div>
 
-				<div
-					class="grid items-center gap-1.5 whitespace-nowrap"
-					style="grid-template-columns: 1fr auto 1fr;"
-				>
-					<div class="flex flex-wrap items-center justify-end gap-1.5">
-						{#each [...rule.src] as src}
+				<div>
+					<Label>Source</Label>
+
+					<div class="flex flex-wrap items-center gap-1.5">
+						{#each rule.src as src}
 							<Badge>{src}</Badge>
 						{/each}
 					</div>
-					<div class="px-4 text-center">
-						<MoveRight class="h-4 w-4" />
-					</div>
+				</div>
+
+				<div>
+					<Label>Destination</Label>
 					<div class="flex flex-wrap items-center gap-1.5">
 						{#each rule.dst as dst}
 							<Badge>{dst.host}:{dst.port}</Badge>
 						{/each}
 					</div>
 				</div>
+
+				{#if rule.comments?.length}
+					<div class="space-y-1.5">
+						{#each rule.comments as comment}
+							<p>{comment}</p>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/each}
 	</div>
 
-	<div>
-		<pre><code
-				>{stringify(
-					[...rules].map((rule) => ({ ...rule, id: undefined, prefixes: rulePrefixes[rule.id] }))
-				)}</code
-			></pre>
-	</div>
+	<!-- <Code
+		yaml={[...rules].map((rule) => ({ ...rule, id: undefined, prefixes: rulePrefixes[rule.id] }))}
+	/> -->
 {/if}

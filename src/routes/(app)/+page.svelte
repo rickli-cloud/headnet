@@ -15,6 +15,7 @@
 
 	import { NetworkGraph, NetworkGraphActions } from '$lib/components/networkGraph';
 
+	import { page } from '$app/stores';
 	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
 	import {
 		focusOnNode,
@@ -24,7 +25,11 @@
 		type GraphData
 	} from '$lib/utils/networkGraph.js';
 
+	import type { PageData } from './$types.js';
+
 	export let data;
+
+	console.debug({ data });
 
 	let nodeInfo: Sheet.Root;
 	let linkInfo: Sheet.Root;
@@ -34,15 +39,19 @@
 	const graph = ForceGraph3D({});
 
 	const graphData = writable<GraphData>(formatGraphData(data));
-	graphData.subscribe((d) => console.debug({ nodes: d?.nodes.length, links: d?.links.length }));
 	graphData.subscribe(graph.graphData);
 
+	graphData.subscribe((d) => console.debug({ nodes: d?.nodes.length, links: d?.links.length }));
+
 	const preAuthKeys = writable<PreAuthKey[]>([]);
-	preAuthKeys.subscribe(console.debug);
+
+	page.subscribe(async ({ data }) => {
+		graphData.set(formatGraphData(data as PageData));
+		preAuthKeys.set(await PreAuthKey.list(data.users || []));
+	});
 
 	const selectedNode = writable<object | undefined>(undefined);
 	const selectedLink = writable<GraphDataLink | undefined>(undefined);
-	selectedNode.subscribe(console.debug);
 
 	function closeEveryPopup(): void {
 		nodeActions.close();
@@ -75,7 +84,11 @@
 			'source' in link &&
 			'target' in link &&
 			link.source instanceof GraphMachine &&
-			link.target instanceof GraphMachine
+			(link.target instanceof GraphMachine ||
+				(link.target &&
+					typeof link.target === 'object' &&
+					'nodeId' in link.target &&
+					link.target?.nodeId === 1))
 		) {
 			closeEveryPopup();
 			selectedLink.set(link as GraphDataLink);
@@ -92,10 +105,10 @@
 <main class="relative overflow-x-hidden overflow-y-hidden">
 	<NetworkGraph {graph} />
 
-	<Sheet.Root bind:this={nodeInfo}>
+	<Sheet.Root bind:this={nodeInfo} let:close>
 		<Sheet.Content>
 			{#if $selectedNode instanceof User}
-				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} />
+				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
 			{:else if $selectedNode instanceof Machine}
 				{#key $graphData.links}
 					<MachineInfo machine={$selectedNode} routes={data.routes} />

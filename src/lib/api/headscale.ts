@@ -4,19 +4,17 @@ import { Address4, Address6 } from 'ip-address';
 import { get } from 'svelte/store';
 
 import { stripJsonTrailingCommas } from '$lib/utils/json';
-import { Session } from '$lib/store/session';
+import { endSession, Session } from '$lib/store/session';
 
 import type { components, paths } from './headscale.d';
 import { ApiError } from './index';
+import { goto } from '$app/navigation';
+import { base } from '$app/paths';
 
 export const registerMethodRegex: RegExp = /^REGISTER_METHOD_/;
 export const commentRegex: RegExp = /^\/\/(\s+)?/;
 export const groupRegex: RegExp = /^group:/;
 export const tagRegex: RegExp = /^tag:/;
-
-export const idStepping = 100000;
-export const userIdLevel = idStepping * 1;
-export const machineIdLevel = idStepping * 2;
 
 export type ApiPath = keyof paths;
 export type ApiMethod = 'get' | 'post' | 'delete' | 'put';
@@ -44,6 +42,21 @@ export class Headscale {
 					request.headers.set('Authorization', 'Bearer ' + session.token);
 				}
 				return request;
+			},
+			async onResponse({ response }) {
+				if (response.status > 299) {
+					const res = response.clone();
+					const reader = res.body?.getReader();
+					const rawBody = await reader?.read();
+					const body = rawBody?.value ? new TextDecoder().decode(rawBody.value) : undefined;
+					reader?.releaseLock();
+
+					if (res.status === 500 && body === 'Unauthorized') {
+						endSession();
+						goto(base + '/auth');
+						return;
+					}
+				}
 			}
 		});
 	}
@@ -635,6 +648,33 @@ export class ApiKey implements V1ApiKey {
 	}
 }
 
+export interface AclData {
+	hosts: {
+		name: string;
+		cidr: string;
+		comments?: string[];
+	}[];
+	groups: {
+		name: string;
+		members: string[];
+		ownedTags: string[];
+		comments?: string[];
+	}[];
+	tagOwners: {
+		name: string;
+		members: string[];
+		comments?: string[];
+	}[];
+	acls: {
+		id: string;
+		action: 'accept';
+		src: string[];
+		dst: { host: string; port: string }[];
+		proto?: string;
+		comments?: string[];
+	}[];
+}
+
 export class Acl {
 	public static async load(headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/policy');
@@ -706,43 +746,53 @@ export class Acl {
 	}
 
 	/** Do NOT make any changes here as they will NOT be saved! */
-	public readonly policy: V1Policy;
+	protected readonly policy: V1Policy;
 
 	protected get comments(): V1PolicyComments {
-		return this.policy as unknown as V1PolicyComments;
+		const comments = this.policy as unknown as V1PolicyComments;
+
+		return {
+			$$comments: comments.$$comments || {},
+			Hosts: { $$comments: comments.Hosts.$$comments || {} },
+			groups: { $$comments: comments.groups.$$comments || {} },
+			tagOwners: { $$comments: comments.tagOwners.$$comments || {} }
+		};
 	}
-	// protected set comments(comments: V1PolicyComments) {
-	//   Object.assign(this.policy, comments)
-	// }
 
 	public readonly updatedAt?: string;
-	public hosts: {
-		name: string;
-		cidr: string;
-		comments?: string[];
-	}[];
-	public groups: {
-		name: string;
-		members: string[];
-		ownedTags: string[];
-		comments?: string[];
-	}[];
-	public tagOwners: {
-		name: string;
-		members: string[];
-		comments?: string[];
-	}[];
-	public acls: {
-		id: string;
-		action: 'accept';
-		src: string[];
-		dst: { host: string; port: string }[];
-		proto?: string;
-		comments?: string[];
-	}[];
+	public hosts: AclData['hosts'];
+	public groups: AclData['groups'];
+	public tagOwners: AclData['tagOwners'];
+	public acls: AclData['acls'];
 
-	get stringified(): string {
+	public constructor(data: { policy?: string; updatedAt?: string } | undefined) {
+		this.updatedAt = data?.updatedAt;
+
+		if (data?.policy) {
+			const acl = Acl.parsePolicy(data.policy);
+
+			this.policy = acl.policy;
+			this.hosts = acl.hosts;
+			this.groups = acl.groups;
+			this.tagOwners = acl.tagOwners;
+			this.acls = acl.acls;
+		} else {
+			this.policy = { Hosts: {}, groups: {}, tagOwners: {}, acls: [] };
+			this.hosts = [];
+			this.groups = [];
+			this.tagOwners = [];
+			this.acls = [];
+		}
+	}
+
+	public stringify(): string {
 		const comments = this.comments;
+
+		if (typeof comments.Hosts.$$comments !== 'object') comments.Hosts.$$comments = {};
+		if (typeof comments.groups.$$comments !== 'object') comments.groups.$$comments = {};
+		if (typeof comments.tagOwners.$$comments !== 'object') comments.tagOwners.$$comments = {};
+		if (typeof comments.$$comments !== 'object') comments.$$comments = { $acls: {} };
+		else if (typeof comments.$$comments.$acls !== 'object') comments.$$comments.$acls = {};
 
 		const policy: V1Policy = {
 			Hosts: Object.fromEntries(
@@ -771,34 +821,28 @@ export class Acl {
 			})
 		};
 
-		Object.assign(policy, comments);
-
-		return stringify({ ...this.policy, ...policy });
+		return stringify({
+			...this.policy,
+			...comments,
+			...policy,
+			Hosts: {
+				$$comments: comments.Hosts.$$comments,
+				...policy.Hosts
+			},
+			groups: {
+				$$comments: comments.groups.$$comments,
+				...policy.groups
+			},
+			tagOwners: {
+				$$comments: comments.tagOwners.$$comments,
+				...policy.tagOwners
+			}
+		});
 	}
 
-	public constructor(data: { policy?: string; updatedAt?: string } | undefined) {
-		this.updatedAt = data?.updatedAt;
-
-		if (data?.policy) {
-			const acl = Acl.parsePolicy(data.policy);
-
-			this.policy = acl.policy;
-			this.hosts = acl.hosts;
-			this.groups = acl.groups;
-			this.tagOwners = acl.tagOwners;
-			this.acls = acl.acls;
-		} else {
-			this.policy = { Hosts: {}, groups: {}, tagOwners: {}, acls: [] };
-			this.hosts = [];
-			this.groups = [];
-			this.tagOwners = [];
-			this.acls = [];
-		}
-	}
-
-	public async save(headscale = new Headscale()) {
+	public async save(policy = this.stringify(), headscale = new Headscale()) {
 		const response = await headscale.client.PUT('/api/v1/policy', {
-			body: { policy: this.stringified }
+			body: { policy }
 		});
 
 		return {

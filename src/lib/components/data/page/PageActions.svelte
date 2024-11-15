@@ -43,18 +43,6 @@
 			</button>
 		</svelte:fragment>
 	</CreateUser>
-	<!-- <Sheet.Root onOpenChange={(open) => (open ? void 0 : dispatch('close'))}>
-		<Sheet.Trigger>
-			<Plus />
-			<span> User </span>
-		</Sheet.Trigger>
-
-		<Sheet.Content>
-			<Sheet.Header>
-				<Sheet.Title>Create user</Sheet.Title>
-			</Sheet.Header>
-		</Sheet.Content>
-	</Sheet.Root> -->
 </li>
 
 <li>
