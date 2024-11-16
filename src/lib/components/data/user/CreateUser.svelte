@@ -54,6 +54,8 @@
 				} catch (err) {
 					console.error(err);
 					errorToast(formatError(err));
+				} finally {
+					selectedGroups.set([]);
 				}
 			}
 		}

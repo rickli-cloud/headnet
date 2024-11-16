@@ -2,10 +2,10 @@
 	import { Address4, Address6 } from 'ip-address';
 
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
-	import Trash from 'lucide-svelte/icons/trash-2';
+	import ToggleRight from 'lucide-svelte/icons/toggle-right';
 	import MonitorCog from 'lucide-svelte/icons/monitor-cog';
 	import ToggleLeft from 'lucide-svelte/icons/toggle-left';
-	import ToggleRight from 'lucide-svelte/icons/toggle-right';
+	import Trash from 'lucide-svelte/icons/trash-2';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -13,19 +13,59 @@
 	import { Badge } from '$lib/components/ui/badge';
 
 	import ToggleRoute from '$lib/components/data/routes/ToggleRoute.svelte';
+	import RuleInfo from '$lib/components/data/acl/RuleInfo.svelte';
 
 	import Secret from '$lib/components/utils/Secret.svelte';
 
+	import { GraphMachine, isLinkNode, type GraphDataLink } from '$lib/utils/networkGraph';
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
-	import { Machine, type Route } from '$lib/api';
+	import { type AclData, type Route } from '$lib/api';
 
 	import MachineStatus from './MachineStatus.svelte';
 	import DeleteMachine from './DeleteMachine.svelte';
 	import EditMachine from './EditMachine.svelte';
 
-	export let machine: Machine;
+	export let machine: GraphMachine;
 	export let routes: Route[] | undefined;
-	export let minimal: boolean = false;
+	export let links: GraphDataLink[];
+
+	const rawAclRules = new Set<AclData['acls'][0]>();
+	const rulePrefixes: { [id: string]: { in: Set<string>; out: Set<string> } } = {};
+
+	for (const link of links) {
+		if (isLinkNode(link.target, machine.nodeId)) {
+			for (const route of link.routes) {
+				if (route.rule) {
+					rawAclRules.add(route.rule);
+
+					if (typeof rulePrefixes[route.rule.id] !== 'object') {
+						rulePrefixes[route.rule.id] = { in: new Set(), out: new Set() };
+					}
+
+					rulePrefixes[route.rule.id].in.add(`${route.host}:${route.port}`);
+				}
+			}
+		}
+
+		if (isLinkNode(link.source, machine.nodeId)) {
+			for (const route of link.routes) {
+				if (route.rule) {
+					rawAclRules.add(route.rule);
+
+					if (typeof rulePrefixes[route.rule.id] !== 'object') {
+						rulePrefixes[route.rule.id] = { in: new Set(), out: new Set() };
+					}
+
+					rulePrefixes[route.rule.id].out.add(`${route.host}:${route.port}`);
+				}
+			}
+		}
+	}
+
+	const aclRules = [...rawAclRules].map((rule) => ({
+		...rule,
+		prefixes: rulePrefixes[rule.id] || []
+	}));
 </script>
 
 <Sheet.Header>
@@ -115,55 +155,49 @@
 	</div>
 </Sheet.Header>
 
-{#if !minimal}
-	<div style="height: 1px;"></div>
+<div style="height: 1px;"></div>
 
-	<div class="space-y-2">
-		<div class="text-sm font-medium">Disco Key</div>
-		<Secret secret={machine.discoKey} />
-	</div>
+<div class="space-y-2">
+	<div class="text-sm font-medium">Disco Key</div>
+	<Secret secret={machine.discoKey} />
+</div>
 
-	<div class="space-y-2">
-		<div class="text-sm font-medium">Node Key</div>
-		<Secret secret={machine.nodeKey} />
-	</div>
+<div class="space-y-2">
+	<div class="text-sm font-medium">Node Key</div>
+	<Secret secret={machine.nodeKey} />
+</div>
 
-	<div class="space-y-2">
-		<div class="text-sm font-medium">Machine Key</div>
-		<Secret secret={machine.machineKey} />
-	</div>
+<div class="space-y-2">
+	<div class="text-sm font-medium">Machine Key</div>
+	<Secret secret={machine.machineKey} />
+</div>
 
-	<div class="space-y-2">
-		<div class="text-sm font-medium">Addresses</div>
-		<ul class="list-disc pl-6">
-			{#each machine.ipAddresses || [] as ip}
-				<li>
-					<button
-						class="hover:underline"
-						on:click={() => navigator.clipboard.writeText(ip)}
-						on:dblclick={() =>
-							open(
-								Address4.isValid(ip)
-									? `http://${ip}`
-									: Address6.isValid(ip)
-										? `http://[${ip}]`
-										: ip,
-								'_blank'
-							)}
-					>
-						<span>{ip}</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
-	</div>
-{/if}
+<div class="space-y-2">
+	<div class="text-sm font-medium">Addresses</div>
+	<ul class="list-disc pl-6">
+		{#each machine.ipAddresses || [] as ip}
+			<li>
+				<button
+					class="hover:underline"
+					on:click={() => navigator.clipboard.writeText(ip)}
+					on:dblclick={() =>
+						open(
+							Address4.isValid(ip) ? `http://${ip}` : Address6.isValid(ip) ? `http://[${ip}]` : ip,
+							'_blank'
+						)}
+				>
+					<span>{ip}</span>
+				</button>
+			</li>
+		{/each}
+	</ul>
+</div>
 
-{#if routes?.filter((route) => route.node?.id === machine.id).length && !minimal}
-	<Sheet.Header>
-		<Sheet.Title>Routes</Sheet.Title>
-	</Sheet.Header>
+<Sheet.Header>
+	<Sheet.Title>Routes</Sheet.Title>
+</Sheet.Header>
 
+{#if routes?.filter((route) => route.node?.id === machine.id).length}
 	<div>
 		{#each routes?.filter((route) => route.node?.id === machine.id) || [] as route}
 			<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
@@ -217,5 +251,25 @@
 				</div>
 			</div>
 		{/each}
+	</div>
+{:else}
+	<div>
+		<p class="w-full text-center text-sm text-muted-foreground">no routes advertised</p>
+	</div>
+{/if}
+
+<Sheet.Header>
+	<Sheet.Title>Rules</Sheet.Title>
+</Sheet.Header>
+
+{#if aclRules.length}
+	<div class="space-y-4">
+		{#each aclRules as rule}
+			<RuleInfo {rule} prefixes={rulePrefixes[rule.id]} />
+		{/each}
+	</div>
+{:else}
+	<div>
+		<p class="w-full text-center text-sm text-muted-foreground">no rules found</p>
 	</div>
 {/if}

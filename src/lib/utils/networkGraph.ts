@@ -81,11 +81,21 @@ export class GraphMachine extends Machine implements GraphDataNodeAttributes {
 	}
 }
 
+export type LinkNode = number | GraphMachine | GraphUser;
+
+export function isLinkNode(node: LinkNode, nodeId: number): boolean {
+	return (
+		(typeof node === 'number' && node === nodeId) ||
+		((node instanceof GraphMachine || node instanceof GraphUser) && node.nodeId === nodeId) ||
+		false
+	);
+}
+
 export interface GraphDataLinkAttributes {
-	/** Node ID of source */
-	source: number | GraphMachine | GraphUser;
-	/** Node ID of target */
-	target: number | GraphMachine | GraphUser;
+	/** Source node */
+	source: LinkNode;
+	/** Target node */
+	target: LinkNode;
 	/** Displayed as text */
 	routes: { host: string; port: string; rule: AclRule | undefined }[];
 	/** Selective label to prevent doubles / overlap */

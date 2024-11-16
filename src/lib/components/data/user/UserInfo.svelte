@@ -91,11 +91,11 @@
 	{/if}
 </Sheet.Header>
 
-{#if keys.length}
-	<Sheet.Header>
-		<Sheet.Title>PreAuth keys</Sheet.Title>
-	</Sheet.Header>
+<Sheet.Header>
+	<Sheet.Title>Auth keys</Sheet.Title>
+</Sheet.Header>
 
+{#if keys.length}
 	<div>
 		{#each keys || [] as key}
 			<div class="space-y-1.5 border-b px-1 py-3 first:pt-0 last:border-none">
@@ -168,5 +168,9 @@
 				</div>
 			</div>
 		{/each}
+	</div>
+{:else}
+	<div>
+		<p class="w-full text-center text-sm text-muted-foreground">no auth keys found</p>
 	</div>
 {/if}

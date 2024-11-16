@@ -1,9 +1,10 @@
 <script lang="ts">
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { buttonVariants } from '$lib/components/ui/button';
+
+	import { endSession } from '$lib/store/session';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import { endSession } from '$lib/store/session';
-	import { Description } from 'formsnap';
 
 	export let isOpen: boolean = false;
 
@@ -24,6 +25,7 @@
 				Removes all session data and returns you to the login page.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
+
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
@@ -32,6 +34,7 @@
 					endSession();
 					goto(base + '/auth');
 				}}
+				class={buttonVariants({ variant: 'destructive' })}
 			>
 				Continue
 			</AlertDialog.Action>

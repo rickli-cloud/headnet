@@ -29,7 +29,7 @@
 
 	export let data;
 
-	console.debug({ data });
+	console.table({ data });
 
 	let nodeInfo: Sheet.Root;
 	let linkInfo: Sheet.Root;
@@ -109,9 +109,9 @@
 		<Sheet.Content>
 			{#if $selectedNode instanceof User}
 				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
-			{:else if $selectedNode instanceof Machine}
+			{:else if $selectedNode instanceof GraphMachine}
 				{#key $graphData.links}
-					<MachineInfo machine={$selectedNode} routes={data.routes} />
+					<MachineInfo machine={$selectedNode} routes={data.routes} links={$graphData.links} />
 				{/key}
 			{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
 				<Sheet.Header>
