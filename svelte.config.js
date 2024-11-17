@@ -1,12 +1,22 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapterNode from '@sveltejs/adapter-node';
+import adapterAuto from '@sveltejs/adapter-auto';
+import adapterStatic from '@sveltejs/adapter-static';
+import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const { BASE_PATH = '/admin' } = process.env;
+const { BASE_PATH = '/admin', BUILD_TARGET = 'node' } = process.env;
+
+// See https://kit.svelte.dev/docs/adapters for more information about adapters.
+const adapter =
+	BUILD_TARGET === 'node'
+		? adapterNode()
+		: BUILD_TARGET === 'static'
+			? adapterStatic({ fallback: 'index.html' })
+			: adapterAuto();
 
 /** @type {typeof import("./package.json")}; */
 const pkg = JSON.parse(
@@ -20,8 +30,7 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
-		adapter: adapter(),
+		adapter,
 		paths: {
 			base: BASE_PATH
 			// assets: '/static'

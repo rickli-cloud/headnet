@@ -1,0 +1,59 @@
+name: Pages preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Github Pages
+        uses: actions/configure-pages@v3
+
+      - name: Setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Required for version patching
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Patch version
+        run: npm version 0.0.0-preview --no-commit-hooks --no-git-tag-version
+
+      - name: Build frontend
+        run: deno task build
+        env:
+          BASE_PATH: /headnet
+          BUILD_TARGET: static
+          PUBLIC_MOCK_ENABLED: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './build'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

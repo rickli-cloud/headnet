@@ -4,6 +4,7 @@
 	import { get } from 'svelte/store';
 	import { z } from 'zod';
 
+	import CircleAlert from 'lucide-svelte/icons/circle-alert';
 	import EyeOff from 'lucide-svelte/icons/eye-off';
 	import Eye from 'lucide-svelte/icons/eye';
 
@@ -12,9 +13,13 @@
 	import { Button } from '$lib/components/ui/button';
 
 	import * as Form from '$lib/components/form';
+	import * as Alert from '$lib/components/ui/alert';
 
-	import { base } from '$app/paths';
 	import { initSession, Session } from '$lib/store/session';
+	import { version } from '$app/environment';
+	import { env } from '$env/dynamic/public';
+	import { base } from '$app/paths';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
 
 	let tokenVisible: boolean = false;
 
@@ -56,15 +61,39 @@
 			}));
 		}
 	});
+
+	if (env.PUBLIC_MOCK_ENABLED === 'true') {
+		tokenVisible = true;
+		formData.set({ token: 'demo-key' });
+	}
+
+	function formatVersion(version: string): string {
+		return /^v/.test(version) ? version : 'v' + version;
+	}
 </script>
 
 <main class="grid h-full place-items-center">
 	<Card.Root class="mx-auto w-full max-w-lg">
 		<Card.Header>
-			<Card.Title class="text-2xl">Authenticate</Card.Title>
+			<div class="flex justify-between gap-3">
+				<Card.Title class="text-2xl">Headnet</Card.Title>
+				<span class="text-xs text-muted-foreground">{formatVersion(version)}</span>
+			</div>
 		</Card.Header>
 
 		<Card.Content class="min-w-96">
+			{#if env.PUBLIC_MOCK_ENABLED === 'true'}
+				<Alert.Root class="mb-6">
+					<CircleAlert class="h-4 w-4" />
+					<Alert.Title>Demo mode</Alert.Title>
+					<Alert.Description class="text-muted-foreground">
+						Headnet is running against an in-browser mock API powered by
+						<a class="link" href="https://mswjs.io/"> Mock Service Worker </a>. Feel free to play
+						around and break stuff.
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
+
 			<Form.Root {form} reset={() => form.reset({ data: { token: '', baseUrl: '' } })}>
 				<Form.Field {form} name="token" class="required">
 					<Form.Control let:attrs>
@@ -96,6 +125,7 @@
 							{...$constraints.baseUrl || {}}
 							bind:value={$formData.baseUrl}
 							placeholder="{location.protocol}//{location.host}"
+							disabled={env.PUBLIC_MOCK_ENABLED === 'true'}
 						/>
 						<Form.FieldErrors />
 					</Form.Control>

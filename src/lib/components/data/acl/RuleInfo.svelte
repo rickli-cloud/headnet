@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AclData } from '$lib/api';
+	import type { Acl, AclData, User } from '$lib/api';
 
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
@@ -8,9 +8,12 @@
 
 	import { Badge } from '$lib/components/ui/badge';
 	import { Label } from '$lib/components/ui/label';
+	import EditRule from './EditRule.svelte';
 
 	export let rule: AclData['acls'][0];
 	export let prefixes: { in: Set<string>; out: Set<string> };
+	export let users: User[];
+	export let acl: Acl;
 </script>
 
 <div class="space-y-3 border-b pb-5 last:border-b-0 [&>div]:space-y-2">
@@ -18,15 +21,21 @@
 		<div class="flex items-center justify-between gap-2">
 			<Label>Source</Label>
 			<div class="flex items-center gap-1.5">
-				<button class="link text-muted-foreground hover:text-current">
-					<!-- Edit -->
-					<Settings class="h-5 w-5" />
-				</button>
+				<EditRule {rule} {acl} {users}>
+					<svelte:fragment slot="trigger" let:builder>
+						<button
+							{...builder}
+							use:builder.action
+							class="link text-muted-foreground hover:text-current"
+						>
+							<Settings class="h-5 w-5" />
+						</button>
+					</svelte:fragment>
+				</EditRule>
 
 				<!-- <p class="select-none text-sm text-muted-foreground">|</p> -->
 
-				<button class="link destructive text-muted-foreground hover:text-current">
-					<!--  Delete  -->
+				<button class="link text-red-600/60 hover:text-red-600">
 					<Trash class="h-5 w-5" />
 				</button>
 			</div>
@@ -39,7 +48,7 @@
 	</div>
 
 	<div>
-		<Label>Target</Label>
+		<Label>Destination</Label>
 		<div class="flex items-center gap-1.5">
 			{#each rule.dst as dst}
 				<Badge>{`${dst.host}:${dst.port}`}</Badge>

@@ -46,6 +46,9 @@ jobs:
       - name: Patch version
         run: npm version 0.0.0-unstable --no-commit-hooks --no-git-tag-version
 
+      - name: Run check
+        run: deno task check
+
       - name: Build frontend
         run: deno task build
 

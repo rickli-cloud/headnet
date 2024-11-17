@@ -1,3 +1,16 @@
+/*
+ * Implemented rule targets:
+ *
+ * - [x] Any (*)
+ * - [x] User
+ * - [x] Group
+ * - [x] Tailscale IP
+ * - [x] Hosts
+ * - [x] Subnet CIDR
+ * - [x] Tag
+ * - [x] Autogroup:internet
+ */
+
 import type { ForceGraph3DGenericInstance, ForceGraph3DInstance } from '3d-force-graph';
 import { Address4, Address6 } from 'ip-address';
 
@@ -200,7 +213,7 @@ export function formatGraphData(
 		if (data.acl) {
 			// Main ACL rules
 			for (const rule of data.acl.acls) {
-				for (const dst of rule.dst) {
+				for (const dst of rule.dst || []) {
 					if (dst.host === `autogroup:internet`) {
 						// Exit nodes (autogroup:internet)
 						for (const src of rule.src) {
@@ -255,15 +268,6 @@ export function formatGraphData(
 	}
 }
 
-/**
- * - [x] Any (*)
- * - [x] User
- * - [x] Group
- * - [x] Tailscale IP
- * - [x] Hosts
- * - [x] Subnet CIDR
- * - [x] Tag
- */
 function getSrc(
 	src: string,
 	data: Parameters<typeof formatGraphData>[0],
@@ -335,16 +339,6 @@ function getSrc(
 	return [...ids];
 }
 
-/**
- * - [x] Any (*)
- * - [x] User
- * - [x] Group
- * - [x] Tailscale IP
- * - [x] Hosts
- * - [x] Subnet CIDR
- * - [x] Tag
- * - [x] Autogroup:internet
- */
 function getTarget(
 	target: { host: string; port: string },
 	data: Parameters<typeof formatGraphData>[0],

@@ -19,7 +19,7 @@
 
 	import { GraphMachine, isLinkNode, type GraphDataLink } from '$lib/utils/networkGraph';
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
-	import { type AclData, type Route } from '$lib/api';
+	import { Acl, User, type AclData, type Route } from '$lib/api';
 
 	import MachineStatus from './MachineStatus.svelte';
 	import DeleteMachine from './DeleteMachine.svelte';
@@ -28,6 +28,8 @@
 	export let machine: GraphMachine;
 	export let routes: Route[] | undefined;
 	export let links: GraphDataLink[];
+	export let users: User[];
+	export let acl: Acl;
 
 	const rawAclRules = new Set<AclData['acls'][0]>();
 	const rulePrefixes: { [id: string]: { in: Set<string>; out: Set<string> } } = {};
@@ -265,7 +267,7 @@
 {#if aclRules.length}
 	<div class="space-y-4">
 		{#each aclRules as rule}
-			<RuleInfo {rule} prefixes={rulePrefixes[rule.id]} />
+			<RuleInfo {rule} {users} {acl} prefixes={rulePrefixes[rule.id]} />
 		{/each}
 	</div>
 {:else}

@@ -730,7 +730,7 @@ export class Acl {
 					return {
 						id: window.crypto.randomUUID(),
 						...val,
-						dst: val.dst.map((i) => {
+						dst: val.dst?.map((i) => {
 							const lastIndex = i.lastIndexOf(':');
 							return {
 								host: i.slice(0, lastIndex),

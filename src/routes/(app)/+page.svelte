@@ -26,6 +26,8 @@
 	} from '$lib/utils/networkGraph.js';
 
 	import type { PageData } from './$types.js';
+	import { errorToast } from '$lib/utils/toast.js';
+	import { formatError } from '$lib/utils/error.js';
 
 	export let data;
 
@@ -38,7 +40,7 @@
 
 	const graph = ForceGraph3D({});
 
-	const graphData = writable<GraphData>(formatGraphData(data));
+	const graphData = writable<GraphData>();
 	graphData.subscribe(graph.graphData);
 
 	graphData.subscribe((d) => console.debug({ nodes: d?.nodes.length, links: d?.links.length }));
@@ -46,6 +48,8 @@
 	const preAuthKeys = writable<PreAuthKey[]>([]);
 
 	page.subscribe(async ({ data }) => {
+		console.debug(data);
+		for (const err of data.errors || []) errorToast(formatError(err));
 		graphData.set(formatGraphData(data as PageData));
 		preAuthKeys.set(await PreAuthKey.list(data.users || []));
 	});
@@ -99,6 +103,7 @@
 
 	onMount(async () => {
 		preAuthKeys.set(await PreAuthKey.list(data.users || []));
+		for (const err of data.errors || []) errorToast(formatError(err));
 	});
 </script>
 
@@ -111,7 +116,13 @@
 				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
 			{:else if $selectedNode instanceof GraphMachine}
 				{#key $graphData.links}
-					<MachineInfo machine={$selectedNode} routes={data.routes} links={$graphData.links} />
+					<MachineInfo
+						machine={$selectedNode}
+						routes={data.routes}
+						links={$graphData.links}
+						users={data.users || []}
+						acl={data.acl}
+					/>
 				{/key}
 			{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
 				<Sheet.Header>
@@ -160,7 +171,7 @@
 
 	<Sheet.Root bind:this={linkInfo} let:close>
 		<Sheet.Content>
-			<LinkInfo link={$selectedLink} {graph} {close} />
+			<LinkInfo link={$selectedLink} {graph} {close} users={data.users || []} acl={data.acl} />
 		</Sheet.Content>
 	</Sheet.Root>
 </main>

@@ -2509,9 +2509,11 @@
     "packageJson": {
       "dependencies": [
         "npm:3d-force-graph@^1.73.4",
+        "npm:@faker-js/faker@^9.2.0",
         "npm:@playwright/test@^1.45.3",
         "npm:@sveltejs/adapter-auto@3",
         "npm:@sveltejs/adapter-node@^5.2.9",
+        "npm:@sveltejs/adapter-static@^3.0.6",
         "npm:@sveltejs/kit@2",
         "npm:@sveltejs/vite-plugin-svelte@4",
         "npm:@types/eslint@^9.6.0",
@@ -2529,6 +2531,7 @@
         "npm:json-ast-comments@^1.1.1",
         "npm:lucide-svelte@0.453",
         "npm:mode-watcher@~0.4.1",
+        "npm:msw@^2.6.5",
         "npm:openapi-fetch@0.13",
         "npm:openapi-typescript@^7.4.2",
         "npm:prettier-plugin-svelte@^3.2.6",

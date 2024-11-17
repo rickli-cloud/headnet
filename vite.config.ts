@@ -3,12 +3,14 @@ import { defineConfig, type ViteUserConfig } from 'vitest/config';
 import { config } from 'dotenv';
 
 import pkg from './package.json';
+import { stringify } from 'yaml';
 
 config();
 const {
 	HEADSCALE_HOST = 'http://localhost:8080',
 	PUBLIC_MOCK_ENABLED,
 	BASE_PATH = '/admin',
+	BUILD_TARGET = 'node',
 	HMR_ENABLED = 'true'
 } = process.env;
 
@@ -20,6 +22,12 @@ export default defineConfig(({ mode }) => {
 
 	if (HMR_ENABLED !== 'true') {
 		console.warn('[HMR] disabled');
+	}
+
+	if (mode === 'production') {
+		console.debug(
+			`[build]:\n${stringify({ target: BUILD_TARGET, base: BASE_PATH, mock: PUBLIC_MOCK_ENABLED === 'true' })}`
+		);
 	}
 
 	if (mode === 'development') {

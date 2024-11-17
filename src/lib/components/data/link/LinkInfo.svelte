@@ -7,7 +7,7 @@
 
 	import RuleInfo from '$lib/components/data/acl/RuleInfo.svelte';
 
-	import type { Acl } from '$lib/api';
+	import type { Acl, User } from '$lib/api';
 	import {
 		focusOnNode,
 		GraphMachine,
@@ -18,6 +18,8 @@
 	export let graph: ForceGraph3DGenericInstance<any>;
 	export let link: GraphDataLink | undefined;
 	export let close: () => void;
+	export let users: User[];
+	export let acl: Acl;
 
 	const rules = new Set<Acl['acls'][0]>();
 	const rulePrefixes: { [x: string]: Set<string> } = {};
@@ -118,7 +120,12 @@
 
 	<div class="space-y-4">
 		{#each rules as rule}
-			<RuleInfo {rule} prefixes={{ out: rulePrefixes[rule.id] || new Set(), in: new Set() }} />
+			<RuleInfo
+				{rule}
+				prefixes={{ out: rulePrefixes[rule.id] || new Set(), in: new Set() }}
+				{users}
+				{acl}
+			/>
 		{/each}
 	</div>
 
