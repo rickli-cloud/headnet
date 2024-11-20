@@ -49,6 +49,9 @@ jobs:
       - name: Run check
         run: deno task check
 
+      - name: Mock service worker init
+        run: deno task msw:init
+
       - name: Build frontend
         run: deno task build
 

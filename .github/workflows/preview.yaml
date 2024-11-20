@@ -43,6 +43,9 @@ jobs:
       - name: Patch version
         run: npm version 0.0.0-preview --no-commit-hooks --no-git-tag-version
 
+      - name: Mock service worker init
+        run: deno task msw:init
+
       - name: Build frontend
         run: deno task build
         env:
