@@ -124,6 +124,10 @@ export class GraphDataLink implements GraphDataLinkAttributes {
 	public label?: GraphDataLinkAttributes['label'];
 	public index?: GraphDataLinkAttributes['index'];
 
+	get name(): string {
+		return [...(this.label || [])].join(', ');
+	}
+
 	constructor(data: GraphDataLinkAttributes) {
 		Object.assign(this, data);
 	}

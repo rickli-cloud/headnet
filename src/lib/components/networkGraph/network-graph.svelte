@@ -35,19 +35,11 @@
 	graph.nodeId('nodeId');
 	graph.nodeLabel('nodeName');
 
+	graph.linkThreeObjectExtend(true);
 	graph.linkDirectionalArrowLength(2);
 	graph.linkDirectionalArrowRelPos(1);
 	graph.linkCurvature(0.1);
 
-	graph.linkThreeObjectExtend(true);
-	graph.linkThreeObject((link: GraphDataLink) => {
-		if (link.label) {
-			const sprite = new SpriteText([...link.label].join(', '));
-			sprite.color = 'lightgrey';
-			sprite.textHeight = 1.5;
-			return sprite;
-		}
-	});
 	graph.linkPositionUpdate((sprite, { start, end }) => {
 		if (sprite?.position) {
 			Object.assign(sprite.position, {
@@ -57,6 +49,15 @@
 			});
 		}
 	});
+	// TODO: change to optional setting
+	// graph.linkThreeObject((link: GraphDataLink) => {
+	// 	if (link.label) {
+	// 		const sprite = new SpriteText([...link.label].join(', '));
+	// 		sprite.color = 'transparent';
+	// 		sprite.textHeight = 1.5;
+	// 		return sprite;
+	// 	}
+	// });
 
 	graph.linkDirectionalParticles((link) => (hoverLink === link ? 3 : 0));
 	graph.linkDirectionalParticleWidth(1);

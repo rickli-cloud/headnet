@@ -12,10 +12,10 @@ export async function load({ data, fetch }) {
 
 	return {
 		...(data || {}),
-		machines: machines.data,
-		routes: routes.data,
-		users: users.data,
 		acl: acl.data,
+		users: users.data,
+		routes: routes.data,
+		machines: machines.data,
 		errors: formatApiErrors([machines.error, routes.error, users.error, acl.error])
 	};
 }

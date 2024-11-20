@@ -109,69 +109,69 @@
 
 <main class="relative overflow-x-hidden overflow-y-hidden">
 	<NetworkGraph {graph} />
+</main>
 
-	<Sheet.Root bind:this={nodeInfo} let:close>
-		<Sheet.Content>
-			{#if $selectedNode instanceof User}
-				<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
-			{:else if $selectedNode instanceof GraphMachine}
-				{#key $graphData.links}
-					<MachineInfo
-						machine={$selectedNode}
-						routes={data.routes}
-						links={$graphData.links}
-						users={data.users || []}
-						acl={data.acl}
-					/>
-				{/key}
-			{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
-				<Sheet.Header>
-					<Sheet.Title>Internet</Sheet.Title>
-				</Sheet.Header>
-			{:else}
-				<div class="text-red-600">Node not found</div>
-			{/if}
-		</Sheet.Content>
-	</Sheet.Root>
-
-	<NetworkGraphActions bind:this={nodeActions}>
+<Sheet.Root bind:this={nodeInfo} let:close>
+	<Sheet.Content>
 		{#if $selectedNode instanceof User}
-			{#key $selectedNode}
-				<UserActions
-					user={$selectedNode}
-					acl={data.acl}
-					on:close={nodeActions.close}
-					on:focus={() => {
-						focusOnNode(graph, $selectedNode);
-						nodeActions.close();
-					}}
-				/>
-			{/key}
-		{:else if $selectedNode instanceof Machine}
-			{#key $selectedNode}
-				<MachineActions
+			<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
+		{:else if $selectedNode instanceof GraphMachine}
+			{#key $graphData.links}
+				<MachineInfo
 					machine={$selectedNode}
-					on:close={nodeActions.close}
-					on:focus={() => {
-						focusOnNode(graph, $selectedNode);
-						nodeActions.close();
-					}}
+					routes={data.routes}
+					links={$graphData.links}
+					users={data.users || []}
+					acl={data.acl}
 				/>
 			{/key}
 		{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
-			<InternetActions on:close={nodeActions.close} />
+			<Sheet.Header>
+				<Sheet.Title>Internet</Sheet.Title>
+			</Sheet.Header>
 		{:else}
 			<div class="text-red-600">Node not found</div>
 		{/if}
-	</NetworkGraphActions>
+	</Sheet.Content>
+</Sheet.Root>
 
-	<NetworkGraphActions bind:this={pageActions}>
-		<PageActions on:close={pageActions.close} acl={data.acl} />
-	</NetworkGraphActions>
+<NetworkGraphActions bind:this={nodeActions}>
+	{#if $selectedNode instanceof User}
+		{#key $selectedNode}
+			<UserActions
+				user={$selectedNode}
+				acl={data.acl}
+				on:close={nodeActions.close}
+				on:focus={() => {
+					focusOnNode(graph, $selectedNode);
+					nodeActions.close();
+				}}
+			/>
+		{/key}
+	{:else if $selectedNode instanceof Machine}
+		{#key $selectedNode}
+			<MachineActions
+				machine={$selectedNode}
+				on:close={nodeActions.close}
+				on:focus={() => {
+					focusOnNode(graph, $selectedNode);
+					nodeActions.close();
+				}}
+			/>
+		{/key}
+	{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
+		<InternetActions on:close={nodeActions.close} />
+	{:else}
+		<div class="text-red-600">Node not found</div>
+	{/if}
+</NetworkGraphActions>
 
-	<Sheet.Root bind:this={linkInfo} let:close>
-		<Sheet.Content>
-			<LinkInfo link={$selectedLink} {graph} {close} users={data.users || []} acl={data.acl} />
-		</Sheet.Content>
-	</Sheet.Root>
-</main>
+<NetworkGraphActions bind:this={pageActions}>
+	<PageActions on:close={pageActions.close} acl={data.acl} />
+</NetworkGraphActions>
+
+<Sheet.Root bind:this={linkInfo} let:close>
+	<Sheet.Content>
+		<LinkInfo link={$selectedLink} {graph} {close} users={data.users || []} acl={data.acl} />
+	</Sheet.Content>
+</Sheet.Root>
