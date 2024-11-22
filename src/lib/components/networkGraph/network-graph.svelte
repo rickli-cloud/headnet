@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { type ForceGraph3DGenericInstance } from '3d-force-graph';
-	import SpriteText from 'three-spritetext';
+	// import SpriteText from 'three-spritetext';
 	import type { ClassValue } from 'clsx';
 	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 
-	import { type GraphDataLink } from '$lib/utils/networkGraph';
 	import { debounce } from '$lib/utils/misc';
+	import { GraphMachine, GraphUser } from '$lib/utils/networkGraph';
 
 	interface $$Props extends Partial<HTMLDivElement> {
 		graph: ForceGraph3DGenericInstance<any>;
@@ -70,6 +70,17 @@
 	);
 
 	graph.d3Force('charge')?.strength(-500);
+	// graph.linkAutoColorBy(
+	// 	(link) =>
+	// 		(link.source instanceof GraphMachine || link.source instanceof GraphUser
+	// 			? link.source.id
+	// 			: null) || ''
+	// );
+	graph.nodeAutoColorBy(
+		(node) =>
+			(node instanceof GraphMachine ? node.user?.id : node instanceof GraphUser ? node.id : null) ||
+			''
+	);
 
 	graph.onNodeDragEnd((node) => {
 		if (!opt?.snapBack && typeof node === 'object' && 'x' in node && 'y' in node && 'z' in node) {

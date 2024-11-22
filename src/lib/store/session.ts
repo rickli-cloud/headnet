@@ -13,7 +13,7 @@ export interface SessionData {
 
 export const Session = writable<SessionData | undefined>();
 
-Session.subscribe((session) => console.warn({ session }));
+// Session.subscribe((session) => console.debug({ session }));
 
 export function loadSession(): boolean {
 	const session: SessionData = {

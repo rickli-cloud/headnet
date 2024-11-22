@@ -193,3 +193,7 @@
 		@apply scrolltrack-hidden;
 	}
 }
+
+.scene-tooltip {
+	@apply !text-current;
+}

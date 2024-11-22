@@ -24,6 +24,8 @@ import {
 	type V1User,
 	type V1Node
 } from '$lib/api';
+import { get } from 'svelte/store';
+import { mode } from 'mode-watcher';
 
 const exitRoutes = ['0.0.0.0/0', '::/0'];
 
@@ -51,7 +53,7 @@ export interface GraphDataNodeAttributes extends BaseGraphData {
 export class GraphUser extends User implements GraphDataNodeAttributes {
 	public nodeId: number;
 	public nodeName: string;
-	public color: string;
+	public color: string = '#696969';
 	index?: number | undefined;
 	x?: number | undefined;
 	y?: number | undefined;
@@ -67,14 +69,13 @@ export class GraphUser extends User implements GraphDataNodeAttributes {
 		super(data);
 		this.nodeId = data.id ? userGraphId(data.id) : 0;
 		this.nodeName = String(data.name);
-		this.color = 'blue'; // TODO: change to setting
 	}
 }
 
 export class GraphMachine extends Machine implements GraphDataNodeAttributes {
 	public nodeId: number;
 	public nodeName: string;
-	public color: string;
+	public color: string = ''; // auto color
 	index?: number | undefined;
 	x?: number | undefined;
 	y?: number | undefined;
@@ -90,7 +91,19 @@ export class GraphMachine extends Machine implements GraphDataNodeAttributes {
 		super(data);
 		this.nodeId = data.id ? machineGraphId(data.id) : 0;
 		this.nodeName = String(data.givenName || data.name);
-		this.color = data.online ? 'green' : 'red'; // TODO: change to setting
+	}
+}
+
+export class GraphInternet implements GraphDataNodeAttributes {
+	public readonly nodeId = 1;
+	public readonly nodeName = 'Internet';
+	// public color = '#101010';
+	get color(): string {
+		return get(mode) === 'dark' ? '#EFEFEF' : '#101010';
+	}
+
+	constructor(data?: { color?: string }) {
+		if (data) Object.assign(this, data);
 	}
 }
 
@@ -165,11 +178,7 @@ export function formatGraphData(
 		const exitNodes = new Set<Machine>();
 
 		// Internet node (Exit nodes link to it)
-		nodes.add({
-			nodeId: 1,
-			nodeName: 'internet',
-			color: 'gray'
-		});
+		nodes.add(new GraphInternet());
 
 		// Basic user nodes
 		for (const user of data.users || []) {

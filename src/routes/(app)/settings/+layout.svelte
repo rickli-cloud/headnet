@@ -24,10 +24,6 @@
 <div class="space-y-6 p-10 pb-16">
 	<div class="space-y-0.5">
 		<h2 class="text-2xl font-bold tracking-tight">Settings</h2>
-		<a href={base} class="link flex items-center gap-1 pt-0.5 text-muted-foreground">
-			<ArrowLeft class="mt-0.5 h-4 w-4" />
-			<span>Go back</span>
-		</a>
 	</div>
 
 	<hr class="my-6" />
@@ -35,6 +31,18 @@
 	<div class="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
 		<aside class="-mx-4 lg:w-1/5">
 			<nav class="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
+				<Button
+					href={base + '/'}
+					variant="ghost"
+					class="relative flex justify-start gap-1.5 hover:bg-transparent hover:underline"
+					data-sveltekit-noscroll
+				>
+					<div>
+						<ArrowLeft class="h-4 w-4" />
+					</div>
+					<div class="relative">Go back</div>
+				</Button>
+
 				{#each navItems as item}
 					{@const isActive = $page.url.pathname === item.href}
 
