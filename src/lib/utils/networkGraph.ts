@@ -24,8 +24,6 @@ import {
 	type V1User,
 	type V1Node
 } from '$lib/api';
-import { get } from 'svelte/store';
-import { mode } from 'mode-watcher';
 
 const exitRoutes = ['0.0.0.0/0', '::/0'];
 

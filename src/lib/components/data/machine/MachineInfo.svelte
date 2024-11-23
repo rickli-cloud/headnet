@@ -167,7 +167,12 @@
 </Sheet.Header>
 
 <ul class="menu">
-	<MachineActions {machine} on:close={() => dispatch('close')} on:focus={() => dispatch('focus')} />
+	<MachineActions
+		{machine}
+		{users}
+		on:close={() => dispatch('close')}
+		on:focus={() => dispatch('focus')}
+	/>
 </ul>
 
 <!-- <div style="height: 1px;"></div> -->

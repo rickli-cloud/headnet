@@ -7,13 +7,15 @@
 	import Telescope from 'lucide-svelte/icons/telescope';
 	import Trash from 'lucide-svelte/icons/trash-2';
 
-	import type { Machine } from '$lib/api';
+	import type { Machine, User } from '$lib/api';
 
 	import DeleteMachine from './DeleteMachine.svelte';
 	import EditMachine from './EditMachine.svelte';
 	import ExpireSession from './ExpireSession.svelte';
+	import { isExpired } from '$lib/utils/time';
 
 	export let machine: Machine;
+	export let users: User[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 </script>
@@ -37,7 +39,7 @@
 </li>
 
 <li>
-	<EditMachine {machine}>
+	<EditMachine {machine} {users}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<MonitorCog />
@@ -50,7 +52,11 @@
 <li class="destructive">
 	<ExpireSession {machine} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
-			<button {...builder} use:builder.action>
+			<button
+				{...builder}
+				use:builder.action
+				disabled={!machine.expiry || isExpired(machine.expiry)}
+			>
 				<ShieldOff />
 				<span>Expire session</span>
 			</button>

@@ -8,12 +8,17 @@
 
 	import * as Form from '$lib/components/form';
 
-	import type { Machine } from '$lib/api';
+	import { User, type Machine } from '$lib/api';
+	import Label from '$lib/components/ui/label/label.svelte';
+	import SelectUser from '../user/SelectUser.svelte';
+	import { writable } from 'svelte/store';
 
 	export let machine: Machine;
+	export let users: User[] | undefined;
 
 	const schema = z.object({
-		name: z.string()
+		name: z.string(),
+		assigned_user: z.string()
 	});
 
 	const form = superForm(defaults(zod(schema)), {
@@ -30,9 +35,11 @@
 
 	const { constraints, form: formData } = form;
 
-	formData.set({ name: machine.givenName || '' });
+	function reset() {
+		formData.set({ name: machine.givenName || '', assigned_user: machine.user?.name || '' });
+	}
 
-	function reset() {}
+	reset();
 </script>
 
 <Dialog.Root>
@@ -45,11 +52,18 @@
 			<Dialog.Title>Edit machine</Dialog.Title>
 		</Dialog.Header>
 
-		<Form.Root {form} {reset} submitText="Save">
+		<Form.Root {form} {reset} submitText="Save" hasRequired>
 			<Form.Field {form} name="name">
 				<Form.Control let:attrs>
 					<Form.Label for={attrs.id}>Given name</Form.Label>
 					<Input {...attrs} {...$constraints.name || {}} bind:value={$formData.name} />
+				</Form.Control>
+			</Form.Field>
+
+			<Form.Field {form} name="assigned_user" class="required">
+				<Form.Control let:attrs>
+					<Form.Label for={attrs.id}>Assigned user</Form.Label>
+					<SelectUser {users} bind:selected={$formData.assigned_user} />
 				</Form.Control>
 			</Form.Field>
 		</Form.Root>

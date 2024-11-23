@@ -9,7 +9,7 @@ const MAX_ARRAY_LENGTH = 5;
 const MIN_ARRAY_LENGTH = 0;
 
 const usersLength = faker.number.int({ min: 3, max: 8 });
-const machinesLength = faker.number.int({ min: 10, max: 25 });
+const machinesLength = faker.number.int({ min: 10, max: 30 });
 
 const simulateApiError: boolean = false;
 
@@ -145,8 +145,10 @@ export const handlers = [
 		path: '/api/v1/node',
 		method: 'get',
 		response: {
-			nodes: randomSizedArray(
-				(id) => ({
+			nodes: randomSizedArray((id) => {
+				const userId = faker.number.int({ min: 0, max: usersLength - 1 });
+
+				return {
 					id: String(id),
 					name: faker.person.lastName(),
 					givenName: faker.person.lastName(),
@@ -162,12 +164,15 @@ export const handlers = [
 					forcedTags: [],
 					validTags: [],
 					user: {
-						id: faker.number.octal({ min: 1, max: usersLength - 1 })
+						id: String(userId),
+						name: usernames[userId]
 					},
-					ipAddresses: [faker.internet.ipv4(), faker.internet.ipv6()]
-				}),
-				machinesLength
-			)
+					ipAddresses: [
+						`100.64.${Math.trunc((id + 1) / 255)}.${(id + 1) % 255}`,
+						'fd7a:115c:a1e0::' + (id + 1).toString(16)
+					]
+				};
+			}, machinesLength)
 		}
 	}),
 	handler({

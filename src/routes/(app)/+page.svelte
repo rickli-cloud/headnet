@@ -195,6 +195,7 @@
 		{#key $selectedNode}
 			<MachineActions
 				machine={$selectedNode}
+				users={data.users}
 				on:close={nodeActions.close}
 				on:focus={() => {
 					focusOnNode(graph, $selectedNode);
