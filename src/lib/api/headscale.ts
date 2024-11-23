@@ -88,7 +88,7 @@ export interface V1Policy {
 	 */
 	Hosts: { [x: string]: string };
 	acls: {
-		action: 'accept';
+		action: string;
 		proto?: string;
 		src: string[];
 		dst: string[];
@@ -690,7 +690,7 @@ export class Acl {
 		} catch (err) {
 			return {
 				...response,
-				data: undefined,
+				data: new Acl({}),
 				error: err
 			};
 		}

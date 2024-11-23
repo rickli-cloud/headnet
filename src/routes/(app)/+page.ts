@@ -1,4 +1,4 @@
-import { Acl, formatApiErrors, Headscale, Machine, Route, User } from '$lib/api/index.js';
+import { Acl, ApiError, formatApiErrors, Headscale, Machine, Route, User } from '$lib/api/index.js';
 
 export async function load({ data, fetch }) {
 	const headscale = new Headscale({ fetch });
@@ -16,6 +16,17 @@ export async function load({ data, fetch }) {
 		users: users.data,
 		routes: routes.data,
 		machines: machines.data,
-		errors: formatApiErrors([machines.error, routes.error, users.error, acl.error])
+		errors: (
+			formatApiErrors([
+				machines.error,
+				routes.error,
+				users.error,
+				acl.error instanceof ApiError ? acl.error : undefined
+			]) as unknown[]
+		).concat(
+			acl.error !== null && typeof acl.error !== 'undefined' && !(acl.error instanceof ApiError)
+				? [acl.error]
+				: []
+		)
 	};
 }
