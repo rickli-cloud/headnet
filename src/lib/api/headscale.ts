@@ -667,7 +667,7 @@ export interface AclData {
 	}[];
 	acls: {
 		id: string;
-		action: 'accept';
+		action: string;
 		src: string[];
 		dst: { host: string; port: string }[];
 		proto?: string;
@@ -679,13 +679,21 @@ export class Acl {
 	public static async load(headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/policy');
 
-		return {
-			...response,
-			data: new Acl(response.data),
-			error: response.error
-				? new ApiError(response.error, { method: 'GET', path: '/api/v1/policy' })
-				: undefined
-		};
+		try {
+			return {
+				...response,
+				data: new Acl(response.data),
+				error: response.error
+					? new ApiError(response.error, { method: 'GET', path: '/api/v1/policy' })
+					: undefined
+			};
+		} catch (err) {
+			return {
+				...response,
+				data: undefined,
+				error: err
+			};
+		}
 	}
 
 	protected static parsePolicy(policy: string) {

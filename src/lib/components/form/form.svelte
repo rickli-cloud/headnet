@@ -3,8 +3,10 @@
 	import type { ClassValue } from 'tailwind-variants';
 
 	import { Button } from '$lib/components/ui/form';
+	import Code from '$lib/components/utils/Code.svelte';
 
 	import { cn } from '$lib/utils/shadcn';
+	import { dev } from '$app/environment';
 
 	interface $$Props extends Omit<Partial<HTMLFormElement>, 'children'> {
 		form: SuperForm<any, any>;
@@ -24,6 +26,8 @@
 	export let submitText: $$Props['submitText'] = 'Submit';
 	export let destructive: $$Props['destructive'] = false;
 	export let hasRequired: $$Props['hasRequired'] = false;
+
+	const { form: formData } = form;
 </script>
 
 <form {...$$restProps} class={cn('data-form', $$restProps.class || '')} use:form.enhance on:submit>
@@ -49,4 +53,8 @@
 			</slot>
 		</div>
 	</slot>
+
+	{#if dev}
+		<Code yaml={$formData} />
+	{/if}
 </form>

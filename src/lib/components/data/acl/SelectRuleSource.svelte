@@ -1,126 +1,77 @@
 <script lang="ts">
-	import type { Selected } from 'bits-ui';
 	import { get, writable } from 'svelte/store';
 
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Input } from '$lib/components/ui/input';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Trash_2 from 'lucide-svelte/icons/trash-2';
+
 	import { Button } from '$lib/components/ui/button';
 
-	import { Acl, groupRegex, tagRegex, User } from '$lib/api';
+	import { Acl, User } from '$lib/api';
+
+	import SelectItem from './SelectItem.svelte';
 
 	export let acl: Acl;
 	export let selected: string[];
 	export let users: User[] | undefined;
-	export let required = true;
-	export let id: string = window.crypto.randomUUID();
 
-	const sel = writable<Selected<string>[]>([]);
-	sel.subscribe((state) => (selected = state?.map((i) => i.value)));
+	const items: { [group: string]: string[] } = {
+		Users: getNames(users),
+		Groups: getNames(acl.groups),
+		Hosts: getNames(acl.hosts),
+		Tags: getNames(acl.tagOwners),
+		General: ['*']
+	};
 
-	const customItemInput = writable<string>();
-	const customItems = writable<string[]>(filterCustomItems());
-
-	function commentFilter(data: Array<string>, replaceRegex?: RegExp): Array<string> {
-		return data
-			.filter((i) => i !== '$$comments')
-			.map((i) => (replaceRegex ? i.replace(replaceRegex, '') : i));
-	}
-
-	function filterCustomItems(): string[] {
-		const tags = getNames(acl.tagOwners);
-		const groups = getNames(acl.groups);
-		const hosts = getNames(acl.hosts);
-
-		return selected.filter(
-			(item) =>
-				item !== '*' &&
-				!groups.find((group) => group === item) &&
-				!tags.find((tag) => tag === item) &&
-				!hosts.find((host) => host === item) &&
-				!users?.find((usr) => usr.name === item)
-		);
-	}
+	const sel = writable<string[]>(selected);
+	const newItem = writable<string>('');
 
 	function handleAdd() {
-		const input = get(customItemInput);
-		customItems.update((items) => [...items, input]);
-		customItemInput.set('');
+		if (!get(newItem).length) return;
+
+		sel.update((s) => [...s, get(newItem)]);
+		selected = [...selected, get(newItem)];
+
+		newItem.set('');
 	}
 
-	function getNames(items: { name: string }[]): string[] {
-		return items.map((i) => i.name);
+	function handleDelete(item: string) {
+		if (!item.length) return;
+
+		sel.update((sel) => sel.filter((i) => i !== item));
+		selected = selected.filter((i) => i !== item);
+	}
+
+	function getNames(items: Partial<{ name: string }>[] | undefined): string[] {
+		return items?.map((i) => i.name).filter((i) => typeof i !== 'undefined') || [];
 	}
 </script>
 
-<Select.Root portal={null} multiple bind:selected={$sel} {required}>
-	<Select.Trigger>
-		<Select.Value asChild>
-			<span>
-				{($sel.length || 0) + ' selected'}
-			</span>
-		</Select.Value>
-	</Select.Trigger>
+<div class="space-y-2">
+	{#each $sel || [] as item}
+		<div class="grid gap-1.5" style="grid-template-columns: 1fr auto;">
+			<SelectItem {items} bind:selected={item}></SelectItem>
 
-	<Select.Content class="h-96 overflow-y-scroll">
-		<Select.Group>
-			<Select.Label>Users</Select.Label>
-			{#each users || [] as user}
-				<Select.Item value={user.name}>
-					{user.name}
-				</Select.Item>
-			{/each}
-		</Select.Group>
+			<Button
+				class="hover:bg-destructive hover:text-destructive-foreground"
+				variant="outline"
+				on:click={() => handleDelete(item)}
+			>
+				<Trash_2 class="h-4 w-4" />
+			</Button>
+		</div>
+	{/each}
 
-		<Select.Group>
-			<Select.Label>Groups</Select.Label>
-			{#each commentFilter(getNames(acl.groups)) as group}
-				<Select.Item value={group}>
-					{group.replace(groupRegex, '')}
-				</Select.Item>
-			{/each}
-		</Select.Group>
+	<form
+		class="!mt-5 grid gap-1.5"
+		style="grid-template-columns: 1fr auto;"
+		on:submit|preventDefault|stopPropagation={handleAdd}
+	>
+		{#key $newItem}
+			<SelectItem {items} bind:selected={$newItem} />
+		{/key}
 
-		<Select.Group>
-			<Select.Label>Hosts</Select.Label>
-			{#each commentFilter(getNames(acl.hosts)) as host}
-				<Select.Item value={host}>
-					{host.replace(tagRegex, '')}
-				</Select.Item>
-			{/each}
-		</Select.Group>
-
-		<Select.Group>
-			<Select.Label>Known tags</Select.Label>
-			{#each commentFilter(getNames(acl.tagOwners)) as tag}
-				<Select.Item value={tag}>
-					{tag.replace(tagRegex, '')}
-				</Select.Item>
-			{/each}
-		</Select.Group>
-
-		<Select.Group>
-			<Select.Label>General</Select.Label>
-			<Select.Item value="*">Any</Select.Item>
-		</Select.Group>
-
-		<Select.Group>
-			<Select.Label>Custom</Select.Label>
-			{#each $customItems as tag}
-				<Select.Item value={tag}>
-					{tag}
-				</Select.Item>
-			{/each}
-		</Select.Group>
-	</Select.Content>
-
-	<Select.Input name={id} {id} />
-</Select.Root>
-
-<form
-	class="mb-3 mt-2 grid gap-2.5"
-	style="grid-template-columns: 1fr 50px;"
-	on:submit|preventDefault={handleAdd}
->
-	<Input placeholder="Custom" bind:value={$customItemInput} />
-	<Button type="submit">Add</Button>
-</form>
+		<Button type="submit" variant="outline" disabled={!$newItem.length}>
+			<Plus class="h-4 w-4" />
+		</Button>
+	</form>
+</div>

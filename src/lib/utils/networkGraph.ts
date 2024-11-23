@@ -97,10 +97,8 @@ export class GraphMachine extends Machine implements GraphDataNodeAttributes {
 export class GraphInternet implements GraphDataNodeAttributes {
 	public readonly nodeId = 1;
 	public readonly nodeName = 'Internet';
-	// public color = '#101010';
-	get color(): string {
-		return get(mode) === 'dark' ? '#EFEFEF' : '#101010';
-	}
+	public color = '#ef3340';
+	// get color(): string { return get(mode) === 'dark' ? '#EFEFEF' : '#101010'; }
 
 	constructor(data?: { color?: string }) {
 		if (data) Object.assign(this, data);

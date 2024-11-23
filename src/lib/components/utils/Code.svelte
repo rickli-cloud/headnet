@@ -13,4 +13,4 @@
 </script>
 
 <!-- prettier-ignore -->
-<pre {...$$restProps}><code><slot>{#if yaml}{stringify(yaml)}{:else if json}{JSON.stringify(json, null, 2)}{/if}</slot></code></pre>
+<pre {...$$restProps} class="whitespace-break-spaces"><code><slot>{#if yaml}{stringify(yaml)}{:else if json}{JSON.stringify(json, null, 2)}{/if}</slot></code></pre>

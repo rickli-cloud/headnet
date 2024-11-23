@@ -75,10 +75,13 @@
 	</div>
 
 	{#if rule.comments?.length}
-		<div class="space-y-1.5">
-			{#each rule.comments as comment}
-				<p>{comment}</p>
-			{/each}
+		<div>
+			<Label>Description</Label>
+			<div class="space-y-1.5">
+				{#each rule.comments as comment}
+					<p>{comment}</p>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>

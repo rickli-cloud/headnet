@@ -1,15 +1,15 @@
 import { HttpResponse, http, type HttpResponseInit, type PathParams } from 'msw';
 import { faker } from '@faker-js/faker';
 
-import type { paths, RpcStatus, V1Policy } from '$lib/api';
+import { Acl, type paths, type RpcStatus, type V1Policy } from '$lib/api';
 
 faker.seed(1);
 
 const MAX_ARRAY_LENGTH = 5;
-const MIN_ARRAY_LENGTH = 1;
+const MIN_ARRAY_LENGTH = 0;
 
-const usersLength = faker.number.int({ min: 3, max: 10 });
-const machinesLength = faker.number.int({ min: 30, max: 50 });
+const usersLength = faker.number.int({ min: 3, max: 8 });
+const machinesLength = faker.number.int({ min: 10, max: 25 });
 
 const simulateApiError: boolean = false;
 
@@ -222,50 +222,70 @@ export const handlers = [
 	handler({
 		path: '/api/v1/policy',
 		method: 'get',
-		response: {
-			policy: JSON.stringify({
-				Hosts: {
-					demo: '172.20.10.1/32'
-				},
-				tagOwners: {
-					'tag:demo': ['group:demo']
-				},
-				groups: {
-					...groups,
-					'group:internet': randomSizedArray(
-						() => usernames[faker.number.int({ min: 0, max: usersLength - 1 })]
-					)
-				},
-				acls: [
-					...randomSizedArray(
-						() => ({
-							action: 'accept',
-							src: [
-								Object.keys(groups)[
-									faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })
-								]
-							],
-							dst: [
-								Object.keys(groups)[
-									faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })
-								] + ':*'
-							]
-						}),
-						faker.number.int({ min: 2, max: Object.keys(groups).length })
-					),
-					{
-						action: 'accept',
-						src: ['group:internet'],
-						dst: ['autogroup:internet:*']
+		response: () => {
+			const policy = new Acl({
+				policy: JSON.stringify({
+					Hosts: {
+						demo: '172.20.10.1/32'
 					},
-					{
+					tagOwners: {
+						'tag:demo': ['group:demo']
+					},
+					groups: {
+						...groups,
+						'group:internet': randomSizedArray(
+							() => usernames[faker.number.int({ min: 0, max: usersLength - 1 })]
+						)
+					},
+					acls: []
+				} as V1Policy),
+				updatedAt: faker.date.recent().toISOString()
+			});
+
+			policy.acls = [
+				...randomSizedArray(
+					() => ({
+						id: '',
 						action: 'accept',
-						src: ['*'],
-						dst: ['demo:*']
-					}
-				]
-			} as V1Policy),
-			updatedAt: faker.date.recent().toISOString()
+						src: [
+							Object.keys(groups)[faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })]
+						],
+						dst: [
+							{
+								host: Object.keys(groups)[
+									faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })
+								],
+								port: '*'
+							}
+						],
+						comments: ['// Demo groups \n']
+					}),
+					faker.number.int({ min: 2, max: Object.keys(groups).length })
+				),
+				...usernames.map((name) => ({
+					id: '',
+					action: 'accept',
+					src: [name],
+					dst: [{ host: name, port: '*' }],
+					comments: ["// Allow communication between user's owned devices \n"]
+				})),
+				{
+					id: '',
+					action: 'accept',
+					src: ['group:internet'],
+					dst: [{ host: 'autogroup:internet', port: '*' }],
+					comments: ['// Allow access to all exit nodes \n']
+				},
+				{
+					id: '',
+					action: 'accept',
+					src: ['*'],
+					dst: [{ host: 'demo', port: '*' }],
+					comments: ['// Demo host \n']
+				}
+			];
+
+			return { policy: policy.stringify(), updatedAt: policy.updatedAt };
 		}
 	}),
 	handler({
