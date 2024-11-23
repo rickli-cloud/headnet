@@ -168,7 +168,7 @@ export const handlers = [
 						name: usernames[userId]
 					},
 					ipAddresses: [
-						`100.64.${Math.trunc((id + 1) / 255)}.${(id + 1) % 255}`,
+						`100.64.${((id + 1) / 255).toFixed(0)}.${(id + 1) % 255}`,
 						'fd7a:115c:a1e0::' + (id + 1).toString(16)
 					]
 				};
