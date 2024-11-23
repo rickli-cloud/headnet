@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Address4, Address6 } from 'ip-address';
+	import { createEventDispatcher } from 'svelte';
 
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
 	import ToggleRight from 'lucide-svelte/icons/toggle-right';
-	import MonitorCog from 'lucide-svelte/icons/monitor-cog';
 	import ToggleLeft from 'lucide-svelte/icons/toggle-left';
-	import Trash from 'lucide-svelte/icons/trash-2';
+	// import MonitorCog from 'lucide-svelte/icons/monitor-cog';
+	// import Trash from 'lucide-svelte/icons/trash-2';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -17,19 +18,27 @@
 
 	import Secret from '$lib/components/utils/Secret.svelte';
 
-	import { GraphMachine, isLinkNode, type GraphDataLink } from '$lib/utils/networkGraph';
+	import {
+		focusOnNode,
+		GraphMachine,
+		isLinkNode,
+		type GraphDataLink
+	} from '$lib/utils/networkGraph';
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
 	import { Acl, User, type AclData, type Route } from '$lib/api';
 
+	import MachineActions from './MachineActions.svelte';
 	import MachineStatus from './MachineStatus.svelte';
-	import DeleteMachine from './DeleteMachine.svelte';
-	import EditMachine from './EditMachine.svelte';
+	// import DeleteMachine from './DeleteMachine.svelte';
+	// import EditMachine from './EditMachine.svelte';
 
 	export let machine: GraphMachine;
 	export let routes: Route[] | undefined;
 	export let links: GraphDataLink[];
 	export let users: User[];
 	export let acl: Acl;
+
+	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 
 	const rawAclRules = new Set<AclData['acls'][0]>();
 	const rulePrefixes: { [id: string]: { in: Set<string>; out: Set<string> } } = {};
@@ -72,7 +81,7 @@
 
 <Sheet.Header>
 	<Sheet.Title class="flex items-center gap-1.5 font-normal">
-		<DropdownMenu.Root>
+		<!-- <DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
 					<EllipsisVertical class="h-4 w-4" />
@@ -104,7 +113,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+		</DropdownMenu.Root> -->
 
 		<span class="font-semibold">
 			{machine.givenName}
@@ -157,7 +166,11 @@
 	</div>
 </Sheet.Header>
 
-<div style="height: 1px;"></div>
+<ul class="menu">
+	<MachineActions {machine} on:close={() => dispatch('close')} on:focus={() => dispatch('focus')} />
+</ul>
+
+<!-- <div style="height: 1px;"></div> -->
 
 <div class="space-y-2">
 	<div class="text-sm font-medium">Disco Key</div>

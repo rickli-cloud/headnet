@@ -135,7 +135,7 @@ export const handlers = [
 		response: {}
 	}),
 	handler({
-		path: '/api/v1/apikey/{prefix}',
+		path: '/api/v1/apikey/:prefix' as '/api/v1/apikey/{prefix}',
 		method: 'delete',
 		response: {}
 	}),
@@ -183,39 +183,44 @@ export const handlers = [
 		response: {}
 	}),
 	handler({
-		path: '/api/v1/node/{nodeId}/expire',
+		path: '/api/v1/node/:nodeId/expire' as '/api/v1/node/{nodeId}/expire',
 		method: 'post',
 		response: {
 			node: {}
 		}
 	}),
 	handler({
-		path: '/api/v1/node/{nodeId}/rename/{newName}',
+		path: '/api/v1/node/:nodeId/rename/:newName' as '/api/v1/node/{nodeId}/rename/{newName}',
 		method: 'post',
 		response: {
 			node: {}
 		}
 	}),
 	handler({
-		path: '/api/v1/node/{nodeId}/routes',
+		path: '/api/v1/node/:nodeId/routes' as '/api/v1/node/{nodeId}/routes',
 		method: 'get',
 		response: {
 			routes: []
 		}
 	}),
 	handler({
-		path: '/api/v1/node/{nodeId}/tags',
+		path: '/api/v1/node/:nodeId/tags' as '/api/v1/node/{nodeId}/tags',
 		method: 'post',
 		response: {
 			node: {}
 		}
 	}),
 	handler({
-		path: '/api/v1/node/{nodeId}/user',
+		path: '/api/v1/node/:nodeId/user' as '/api/v1/node/{nodeId}/user',
 		method: 'post',
 		response: {
 			node: {}
 		}
+	}),
+	handler({
+		path: '/api/v1/node/:nodeId' as '/api/v1/node/{nodeId}',
+		method: 'delete',
+		response: {}
 	}),
 
 	// Policy

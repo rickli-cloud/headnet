@@ -33,10 +33,10 @@
 		async onUpdate(ev) {
 			if (ev.form.valid) {
 				try {
-					const { error } = await machine.delete();
+					const { error } = await machine.expire();
 					if (error) throw error;
 
-					successToast(`Deleted machine "${machine.givenName || machine.name}"`);
+					successToast(`Expired session of machine "${machine.givenName || machine.name}"`);
 					dispatch('submit');
 					open = false;
 				} catch (err) {
@@ -57,7 +57,7 @@
 
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Delete machine</Dialog.Title>
+			<Dialog.Title>Expire machine session</Dialog.Title>
 		</Dialog.Header>
 
 		<Form.Root {form} destructive hasRequired class="mt-4" disabled={!$formData.confirm}>

@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
+
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
-	import UserRoundPen from 'lucide-svelte/icons/user-round-pen';
 	import TimerOff from 'lucide-svelte/icons/timer-off';
-	import Trash from 'lucide-svelte/icons/trash-2';
+	// import UserRoundPen from 'lucide-svelte/icons/user-round-pen';
+	// import Trash from 'lucide-svelte/icons/trash-2';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -14,25 +16,31 @@
 	import { formatDuration, isExpired } from '$lib/utils/time';
 	import type { Acl, PreAuthKey, User } from '$lib/api';
 
-	import EditUser from './EditUser.svelte';
-	import DeleteUser from './DeleteUser.svelte';
 	import ExpirePreAuthKey from '../preAuthKey/ExpirePreAuthKey.svelte';
+	import UserActions from './UserActions.svelte';
+	// import DeleteUser from './DeleteUser.svelte';
+	// import EditUser from './EditUser.svelte';
 
 	export let user: User;
 	export let acl: Acl | undefined;
 	export let preAuthKeys: PreAuthKey[] | undefined;
-	export let close: () => void;
+
+	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 
 	$: groups = acl?.groups
 		.filter((i) => user.name && i.members.includes(user.name))
 		.map((group) => group.name);
 
 	$: keys = preAuthKeys?.filter((key) => key.user === user.name) || [];
+
+	function close() {
+		dispatch('close');
+	}
 </script>
 
 <Sheet.Header>
 	<Sheet.Title class="flex items-center gap-1.5">
-		<DropdownMenu.Root>
+		<!-- <DropdownMenu.Root>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
 					<EllipsisVertical class="h-4 w-4" />
@@ -64,7 +72,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+		</DropdownMenu.Root> -->
 
 		<span>
 			{user.name}
@@ -90,6 +98,10 @@
 		</div>
 	{/if}
 </Sheet.Header>
+
+<ul class="menu">
+	<UserActions {user} {acl} on:close={close} on:focus={() => dispatch('focus')} />
+</ul>
 
 <Sheet.Header>
 	<Sheet.Title>Auth keys</Sheet.Title>

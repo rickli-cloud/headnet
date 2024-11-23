@@ -154,8 +154,8 @@
 		}
 
 		& > li {
-			& a,
-			& button {
+			& > a,
+			& > button {
 				@apply grid w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted disabled:text-muted-foreground;
 				grid-template-columns: 16px 1fr auto;
 

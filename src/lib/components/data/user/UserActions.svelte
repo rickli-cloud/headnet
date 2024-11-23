@@ -5,7 +5,6 @@
 	import EyeClosed from 'lucide-svelte/icons/eye-closed';
 	import Telescope from 'lucide-svelte/icons/telescope';
 	import Trash from 'lucide-svelte/icons/trash-2';
-	import X from 'lucide-svelte/icons/x';
 
 	import type { Acl, User } from '$lib/api';
 	import EditUser from './EditUser.svelte';
@@ -16,21 +15,6 @@
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 </script>
-
-<div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
-	<div>
-		<span>{user.name}</span>
-		<span class="text-muted-foreground">#{user.id}</span>
-	</div>
-
-	<button
-		class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted"
-		on:click={() => dispatch('close')}
-	>
-		<X class="h-4 w-4" />
-	</button>
-</div>
-<hr />
 
 <li>
 	<button on:click={() => dispatch('focus')}>

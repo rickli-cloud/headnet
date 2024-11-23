@@ -27,11 +27,15 @@
 	export let destructive: $$Props['destructive'] = false;
 	export let hasRequired: $$Props['hasRequired'] = false;
 
-	const { form: formData } = form;
+	const { form: formData, errors } = form;
 </script>
 
 <form {...$$restProps} class={cn('data-form', $$restProps.class || '')} use:form.enhance on:submit>
 	<slot />
+
+	{#if dev}
+		<Code yaml={{ errors: $errors, data: $formData }} />
+	{/if}
 
 	<slot name="controls" {reset} {disabled} {submitText} {resetText}>
 		<div class="!mt-8 !space-y-4">
@@ -53,8 +57,4 @@
 			</slot>
 		</div>
 	</slot>
-
-	{#if dev}
-		<Code yaml={$formData} />
-	{/if}
 </form>

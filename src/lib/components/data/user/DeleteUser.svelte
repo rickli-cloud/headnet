@@ -70,7 +70,7 @@
 			<Dialog.Title>Delete user</Dialog.Title>
 		</Dialog.Header>
 
-		<Form.Root {form} destructive hasRequired class="mt-4">
+		<Form.Root {form} destructive hasRequired class="mt-4" disabled={!$formData.confirm}>
 			<Form.Field {form} name="confirm">
 				<Form.Control let:attrs>
 					<div class="flex flex-row-reverse items-center justify-end gap-2.5">

@@ -3,10 +3,13 @@
 	import ForceGraph3D from '3d-force-graph';
 	import { onMount } from 'svelte';
 
+	import X from 'lucide-svelte/icons/x';
+
 	import * as Sheet from '$lib/components/ui/sheet';
 
 	import InternetActions from '$lib/components/data/internet/InternetActions.svelte';
 	import MachineActions from '$lib/components/data/machine/MachineActions.svelte';
+	import MachineStatus from '$lib/components/data/machine/MachineStatus.svelte';
 	import MachineInfo from '$lib/components/data/machine/MachineInfo.svelte';
 	import PageActions from '$lib/components/data/page/PageActions.svelte';
 	import UserActions from '$lib/components/data/user/UserActions.svelte';
@@ -114,7 +117,16 @@
 <Sheet.Root bind:this={nodeInfo} let:close>
 	<Sheet.Content>
 		{#if $selectedNode instanceof User}
-			<UserInfo user={$selectedNode} acl={data.acl} preAuthKeys={$preAuthKeys} {close} />
+			<UserInfo
+				user={$selectedNode}
+				acl={data.acl}
+				preAuthKeys={$preAuthKeys}
+				on:close={close}
+				on:focus={() => {
+					focusOnNode(graph, $selectedNode);
+					close();
+				}}
+			/>
 		{:else if $selectedNode instanceof GraphMachine}
 			{#key $graphData.links}
 				<MachineInfo
@@ -123,6 +135,11 @@
 					links={$graphData.links}
 					users={data.users || []}
 					acl={data.acl}
+					on:close={close}
+					on:focus={() => {
+						focusOnNode(graph, $selectedNode);
+						close();
+					}}
 				/>
 			{/key}
 		{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
@@ -137,6 +154,18 @@
 
 <NetworkGraphActions bind:this={nodeActions}>
 	{#if $selectedNode instanceof User}
+		<div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
+			<div>
+				<span>{$selectedNode.name}</span>
+				<span class="text-muted-foreground">#{$selectedNode.id}</span>
+			</div>
+
+			<button class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted" on:click={nodeActions.close}>
+				<X class="h-4 w-4" />
+			</button>
+		</div>
+		<hr />
+
 		{#key $selectedNode}
 			<UserActions
 				user={$selectedNode}
@@ -149,6 +178,20 @@
 			/>
 		{/key}
 	{:else if $selectedNode instanceof Machine}
+		<div class="grid items-center gap-2" style="grid-template-columns: auto 1fr auto;">
+			<MachineStatus online={$selectedNode.online} lastSeen={$selectedNode.lastSeen} />
+
+			<div>
+				<span>{$selectedNode.givenName}</span>
+				<span class="text-muted-foreground">#{$selectedNode.id}</span>
+			</div>
+
+			<button class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted" on:click={nodeActions.close}>
+				<X class="h-4 w-4" />
+			</button>
+		</div>
+		<hr />
+
 		{#key $selectedNode}
 			<MachineActions
 				machine={$selectedNode}
