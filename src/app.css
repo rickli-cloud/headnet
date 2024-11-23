@@ -89,7 +89,12 @@
 	}
 
 	.data-form {
-		@apply space-y-6 [&>div]:space-y-2;
+		@apply space-y-6;
+
+		& > div {
+			@apply space-y-2;
+		}
+
 		& label:has(+ *[required])::after,
 		& label:has(+ *[aria-required='true'])::after,
 		& label:has(+ *.required)::after,

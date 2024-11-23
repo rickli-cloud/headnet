@@ -82,7 +82,7 @@
 							<Select.Value />
 						</Select.Trigger>
 
-						<Select.Content>
+						<Select.Content class="!mt-0">
 							<Select.Group>
 								<Select.Item value="accept">accept</Select.Item>
 							</Select.Group>

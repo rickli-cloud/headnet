@@ -39,7 +39,7 @@ export {
 };
 
 export const sheetVariants = tv({
-	base: 'bg-background fixed z-50 gap-4 p-6 shadow-lg space-y-4 [&>div:has(h2):not(:first-child)]:!mt-8',
+	base: 'bg-background fixed z-50 gap-4 p-6 shadow-lg space-y-4',
 	variants: {
 		side: {
 			top: 'inset-x-0 top-0 border-b',
