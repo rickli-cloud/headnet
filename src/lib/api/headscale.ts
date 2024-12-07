@@ -10,11 +10,17 @@ import type { components, paths } from './headscale.d';
 import { ApiError } from './index';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
+import { uuidv4 } from '$lib/utils/misc';
 
 export const registerMethodRegex: RegExp = /^REGISTER_METHOD_/;
 export const commentRegex: RegExp = /^\/\/(\s+)?/;
 export const groupRegex: RegExp = /^group:/;
 export const tagRegex: RegExp = /^tag:/;
+
+export const stringifyComment = (c: string) => (commentRegex.test(c) ? c : `// ${c}\n`);
+export const parseComment = (c: string): string => {
+	return commentRegex.test(c.trim()) ? c.trim().replace(commentRegex, '') : c.trim();
+};
 
 export type ApiPath = keyof paths;
 export type ApiMethod = 'get' | 'post' | 'delete' | 'put';
@@ -700,6 +706,8 @@ export class Acl {
 		const p: V1Policy = policy?.length ? parse(stripJsonTrailingCommas(policy)) : undefined;
 		const comments = p as unknown as V1PolicyComments;
 
+		console.debug({ p, comments, policy });
+
 		return {
 			policy: p,
 			comments,
@@ -708,9 +716,7 @@ export class Acl {
 				.map(([name, cidr]) => ({
 					name,
 					cidr,
-					comments: comments.Hosts?.$$comments?.[name]?.[0].map((i) =>
-						i.trim().replace(commentRegex, '')
-					)
+					comments: comments.Hosts?.$$comments?.[name]?.[0].map(parseComment)
 				})),
 			groups: Object.entries(p?.groups || {})
 				.filter(([key]) => key !== '$$comments')
@@ -720,36 +726,28 @@ export class Acl {
 					ownedTags: Object.entries(p?.tagOwners || {})
 						.filter((i) => i[1].includes(name))
 						.map(([k]) => k),
-					comments: comments.groups?.$$comments?.[name]?.[0].map((i) =>
-						i.trim().replace(commentRegex, '')
-					)
+					comments: comments.groups?.$$comments?.[name]?.[0].map(parseComment)
 				})),
 			tagOwners: Object.entries(p?.tagOwners || {})
 				.filter(([key]) => key !== '$$comments')
 				.map(([name, members]) => ({
 					name,
 					members,
-					comments: comments.tagOwners?.$$comments?.[name]?.[0].map((i) =>
-						i.trim().replace(commentRegex, '')
-					)
+					comments: comments.tagOwners?.$$comments?.[name]?.[0].map(parseComment)
 				})),
 			acls:
-				p?.acls.map((val, index) => {
-					return {
-						id: window.crypto.randomUUID(),
-						...val,
-						dst: val.dst?.map((i) => {
-							const lastIndex = i.lastIndexOf(':');
-							return {
-								host: i.slice(0, lastIndex),
-								port: i.slice(lastIndex + 1, i.length + 1)
-							};
-						}),
-						comments: comments.$$comments?.$acls?.[index]?.[0].map((i) =>
-							i.trim().replace(commentRegex, '')
-						)
-					};
-				}) || []
+				p?.acls.map((val, index) => ({
+					...val,
+					id: uuidv4(),
+					comments: comments.$$comments?.$acls?.[index]?.[0].map(parseComment),
+					dst: val.dst?.map((i) => {
+						const lastIndex = i.lastIndexOf(':');
+						return {
+							host: i.slice(0, lastIndex),
+							port: i.slice(lastIndex + 1, i.length + 1)
+						};
+					})
+				})) || []
 		};
 	}
 
@@ -805,27 +803,29 @@ export class Acl {
 		const policy: V1Policy = {
 			Hosts: Object.fromEntries(
 				this.hosts.map((host, i) => {
-					comments.Hosts.$$comments[i] = [host.comments || []];
+					comments.Hosts.$$comments[i] = [host.comments?.map(stringifyComment) || []];
 					return [host.name, host.cidr];
 				})
 			),
 			groups: Object.fromEntries(
 				this.groups.map((group, i) => {
-					comments.groups.$$comments[i] = [group.comments || []];
+					comments.groups.$$comments[i] = [group.comments?.map(stringifyComment) || []];
 					return [group.name, group.members];
 				})
 			),
 			tagOwners: Object.fromEntries(
 				this.tagOwners.map((tagOwners, i) => {
-					comments.tagOwners.$$comments[i] = [tagOwners.comments || []];
+					comments.tagOwners.$$comments[i] = [tagOwners.comments?.map(stringifyComment) || []];
 					return [tagOwners.name, tagOwners.members];
 				})
 			),
 			acls: this.acls.map((acl, i) => {
-				comments.$$comments.$acls[i] = [acl.comments || []];
+				comments.$$comments.$acls[i] = [acl.comments?.map(stringifyComment) || []];
 				const dst = acl.dst.map((i) => i.host + ':' + i.port);
-				delete acl.comments;
-				return { ...acl, dst };
+				const newAcl: { [x: string]: any } = JSON.parse(JSON.stringify(acl));
+				delete newAcl.comments;
+				delete newAcl.id;
+				return { ...(newAcl as typeof acl), dst };
 			})
 		};
 

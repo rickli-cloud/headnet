@@ -1,9 +1,9 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
+import { stringify } from 'yaml';
 import { config } from 'dotenv';
 
 import pkg from './package.json';
-import { stringify } from 'yaml';
 
 config();
 const {

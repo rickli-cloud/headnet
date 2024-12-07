@@ -5,8 +5,10 @@
 	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 
-	import { debounce } from '$lib/utils/misc';
+	import Spinner from '$lib/components/utils/Spinner.svelte';
+
 	import { GraphMachine, GraphUser } from '$lib/utils/networkGraph';
+	import { debounce } from '$lib/utils/misc';
 
 	interface $$Props extends Partial<HTMLDivElement> {
 		graph: ForceGraph3DGenericInstance<any>;
@@ -30,7 +32,7 @@
 
 	mode.subscribe(setTheme);
 
-	graph.showNavInfo(true); // TODO: change to setting
+	graph.showNavInfo(false); // TODO: change to setting
 
 	graph.nodeId('nodeId');
 	graph.nodeLabel('nodeName');
@@ -124,4 +126,6 @@
 	}
 </script>
 
-<div {...$$restProps} bind:this={target}></div>
+<div {...$$restProps} bind:this={target}>
+	<Spinner />
+</div>

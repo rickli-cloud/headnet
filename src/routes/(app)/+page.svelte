@@ -18,8 +18,9 @@
 
 	import { NetworkGraph, NetworkGraphActions } from '$lib/components/networkGraph';
 
-	import { page } from '$app/stores';
 	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
+	import { errorToast } from '$lib/utils/toast.js';
+	import { formatError } from '$lib/utils/error.js';
 	import {
 		focusOnNode,
 		formatGraphData,
@@ -27,10 +28,9 @@
 		GraphMachine,
 		type GraphData
 	} from '$lib/utils/networkGraph.js';
+	import { page } from '$app/stores';
 
 	import type { PageData } from './$types.js';
-	import { errorToast } from '$lib/utils/toast.js';
-	import { formatError } from '$lib/utils/error.js';
 
 	export let data;
 

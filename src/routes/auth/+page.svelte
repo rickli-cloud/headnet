@@ -19,7 +19,6 @@
 	import { version } from '$app/environment';
 	import { env } from '$env/dynamic/public';
 	import { base } from '$app/paths';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
 
 	let tokenVisible: boolean = false;
 
@@ -94,7 +93,7 @@
 				</Alert.Root>
 			{/if}
 
-			<Form.Root {form} reset={() => form.reset({ data: { token: '', baseUrl: '' } })}>
+			<Form.Root {form} hasRequired reset={() => form.reset({ data: { token: '', baseUrl: '' } })}>
 				<Form.Field {form} name="token" class="required">
 					<Form.Control let:attrs>
 						<Form.Label for={attrs.id}>API key</Form.Label>

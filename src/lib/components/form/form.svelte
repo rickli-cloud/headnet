@@ -17,6 +17,7 @@
 		submitText?: string;
 		destructive?: boolean;
 		hasRequired?: boolean;
+		disableControl?: boolean;
 	}
 
 	export let form: $$Props['form'];
@@ -26,6 +27,7 @@
 	export let submitText: $$Props['submitText'] = 'Submit';
 	export let destructive: $$Props['destructive'] = false;
 	export let hasRequired: $$Props['hasRequired'] = false;
+	export let disableControl: $$Props['disableControl'] = false;
 
 	const { form: formData, errors } = form;
 </script>
@@ -33,28 +35,34 @@
 <form {...$$restProps} class={cn('data-form', $$restProps.class || '')} use:form.enhance on:submit>
 	<slot />
 
-	{#if dev}
-		<Code yaml={{ errors: $errors, data: $formData }} />
-	{/if}
-
-	<slot name="controls" {reset} {disabled} {submitText} {resetText}>
-		<div class="!mt-8 !space-y-4">
-			<div class="star-note" class:required={hasRequired}>required</div>
-
-			<slot name="buttons" {reset} {disabled} {submitText} {resetText}>
-				<div class="grid grid-cols-2 items-end justify-center gap-2">
-					{#if typeof reset === 'function'}
-						<Button type="button" on:click={reset} {disabled} variant="outline">{resetText}</Button>
-					{/if}
-
-					<Button
-						variant={destructive ? 'destructive' : 'default'}
-						type="submit"
-						class="col-[2]"
-						{disabled}>{submitText}</Button
-					>
-				</div>
-			</slot>
+	<!-- {#if dev}
+		<div class="rounded bg-muted px-4 py-2 text-muted-foreground">
+			<Code yaml={{ errors: $errors, data: $formData }} />
 		</div>
-	</slot>
+	{/if} -->
+
+	<div class="star-note" class:required={hasRequired}>required</div>
+
+	{#if !disableControl}
+		<slot name="controls" {reset} {disabled} {submitText} {resetText}>
+			<div class="!space-y-4">
+				<slot name="buttons" {reset} {disabled} {submitText} {resetText}>
+					<div class="grid grid-cols-2 items-end justify-center gap-2">
+						{#if typeof reset === 'function'}
+							<Button type="button" on:click={reset} {disabled} variant="outline"
+								>{resetText}</Button
+							>
+						{/if}
+
+						<Button
+							variant={destructive ? 'destructive' : 'default'}
+							type="submit"
+							class="col-[2]"
+							{disabled}>{submitText}</Button
+						>
+					</div>
+				</slot>
+			</div>
+		</slot>
+	{/if}
 </form>

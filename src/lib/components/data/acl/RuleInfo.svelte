@@ -84,4 +84,8 @@
 			</div>
 		</div>
 	{/if}
+
+	<div class="text-[10px] text-muted-foreground">
+		#{rule.id}
+	</div>
 </div>

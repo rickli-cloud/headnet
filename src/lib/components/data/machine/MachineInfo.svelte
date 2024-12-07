@@ -29,7 +29,7 @@
 
 	import MachineActions from './MachineActions.svelte';
 	import MachineStatus from './MachineStatus.svelte';
-	import { invertHex } from '$lib/utils/misc';
+	// import { invertHex } from '$lib/utils/misc';
 	// import DeleteMachine from './DeleteMachine.svelte';
 	// import EditMachine from './EditMachine.svelte';
 
@@ -137,9 +137,7 @@
 	</Sheet.Description>
 
 	<div class="flex flex-wrap items-center gap-x-1.5 gap-y-2 pt-1">
-		<Badge
-			style="color: {invertHex(machine.color.replace(/^#/, ''))}; background-color: {machine.color}"
-		>
+		<Badge style="background-color: {machine.color}">
 			User: {machine.user?.name}
 		</Badge>
 

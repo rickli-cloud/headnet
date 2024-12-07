@@ -1,4 +1,29 @@
 <script lang="ts">
+	import ConfirmAction from '$lib/components/utils/ConfirmAction.svelte';
+
+	import { endSession } from '$lib/store/session';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
+
+	function handleSubmit() {
+		endSession();
+		goto(base + '/auth');
+	}
+</script>
+
+<ConfirmAction
+	title="End session?"
+	description="Remove all session data and return to the login page"
+	on:submit={handleSubmit}
+	confirm={false}
+	destructive
+>
+	<svelte:fragment slot="trigger" let:builder>
+		<slot name="trigger" {builder} />
+	</svelte:fragment>
+</ConfirmAction>
+
+<!-- <script lang="ts">
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { buttonVariants } from '$lib/components/ui/button';
 
@@ -40,4 +65,4 @@
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
-</AlertDialog.Root>
+</AlertDialog.Root> -->

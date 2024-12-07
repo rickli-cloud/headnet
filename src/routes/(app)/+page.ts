@@ -1,4 +1,5 @@
 import { Acl, ApiError, formatApiErrors, Headscale, Machine, Route, User } from '$lib/api/index.js';
+import { stringify } from 'yaml';
 
 export async function load({ data, fetch }) {
 	const headscale = new Headscale({ fetch });
@@ -9,6 +10,9 @@ export async function load({ data, fetch }) {
 		User.list(headscale),
 		Acl.load(headscale)
 	]);
+
+	console.debug(acl.data.stringify());
+	console.debug(stringify(acl.data.acls));
 
 	return {
 		...(data || {}),

@@ -370,5 +370,12 @@ export const handlers = [
 				}
 			};
 		}
+	}),
+	handler({
+		path: '/api/v1/user/{name}',
+		method: 'delete',
+		response: async ({}) => {
+			return {};
+		}
 	})
 ];

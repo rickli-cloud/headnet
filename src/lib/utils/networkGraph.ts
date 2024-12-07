@@ -120,8 +120,6 @@ export interface GraphDataLinkAttributes {
 	target: LinkNode;
 	/** Displayed as text */
 	routes: { host: string; port: string; rule: AclRule | undefined }[];
-	/** Selective label to prevent doubles / overlap */
-	label?: Set<string>;
 	/** idk */
 	index?: string;
 }
@@ -130,11 +128,10 @@ export class GraphDataLink implements GraphDataLinkAttributes {
 	public source: GraphDataLinkAttributes['source'] = 0;
 	public target: GraphDataLinkAttributes['target'] = 0;
 	public routes: GraphDataLinkAttributes['routes'] = [];
-	public label?: GraphDataLinkAttributes['label'];
 	public index?: GraphDataLinkAttributes['index'];
 
 	get name(): string {
-		return [...(this.label || [])].join(', ');
+		return this.routes.map((route) => `${route.host}:${route.port}`).join(', ');
 	}
 
 	constructor(data: GraphDataLinkAttributes) {
@@ -166,6 +163,7 @@ export function formatGraphData(
 	},
 	opt: FormatGraphDataOptions = {}
 ): FormatGraphDataResult {
+	console.debug('formatGraphData', data);
 	console.time('formatGraphData');
 
 	try {
@@ -256,7 +254,7 @@ export function formatGraphData(
 											new GraphDataLink({
 												source: source,
 												target: target.id,
-												routes: target.routes
+												routes: target.routes.map((route) => ({ ...route, rule }))
 											})
 										);
 								}
@@ -269,7 +267,7 @@ export function formatGraphData(
 
 		return {
 			nodes: [...nodes],
-			links: formatLinks([...links]),
+			links: formatLinks([...links], data.acl?.acls),
 			exitNodes: [...exitNodes]
 		};
 	} finally {
@@ -377,10 +375,7 @@ function getTarget(
 				for (const subTarget of getTarget({ host: member, port: target.port }, data, rule, opt)) {
 					result.add({
 						...subTarget,
-						routes: subTarget.routes.map((route) => ({
-							...route,
-							source: `${target.host}:${target.port}`
-						}))
+						routes: subTarget.routes // .map((route) => ({ ...route, source: `${target.host}:${target.port}` }))
 					});
 				}
 			}
@@ -473,8 +468,71 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 }
 
 /** Eliminates duplicates & ensures only one link gets a label to prevent overlap */
-function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
-	const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
+function formatLinks(links: GraphDataLink[], acls: Acl['acls'] | undefined): GraphDataLink[] {
+	const aclRules = Object.fromEntries(acls?.map((acl) => [acl.id, acl]) || []);
+	const temp: {
+		[sourceId: number]: {
+			[targetId: number]: {
+				[ruleId: string]: {
+					host: string;
+					port: string;
+				}[];
+			};
+		};
+	} = {};
+
+	for (const link of links) {
+		if (
+			(typeof link.source === 'number' || typeof link.source === 'string') &&
+			(typeof link.target === 'number' || typeof link.target === 'string') &&
+			link.source !== link.target
+		) {
+			if (typeof temp[Number(link.source)] !== 'object') {
+				temp[Number(link.source)] = {};
+			}
+			if (typeof temp[Number(link.source)][Number(link.target)] !== 'object') {
+				temp[Number(link.source)][Number(link.target)] = {};
+			}
+			for (const route of link.routes) {
+				if (route.rule) {
+					if (!Array.isArray(temp[Number(link.source)][Number(link.target)][route.rule?.id])) {
+						temp[Number(link.source)][Number(link.target)][route.rule?.id] = [];
+					}
+					temp[Number(link.source)][Number(link.target)][route.rule?.id].push({
+						host: route.host,
+						port: route.port
+					});
+					// aclRules.set(route.rule.id, route.rule);
+				}
+			}
+		}
+	}
+
+	const formatted = new Set<GraphDataLink>();
+
+	for (const [sourceId, targets] of Object.entries(temp)) {
+		for (const [targetId, rules] of Object.entries(targets)) {
+			const routes: GraphDataLinkAttributes['routes'] = [];
+
+			for (const [ruleId, ruleRoutes] of Object.entries(rules)) {
+				routes.push(...ruleRoutes.map((route) => ({ ...route, rule: aclRules[ruleId] })));
+			}
+
+			formatted.add(
+				new GraphDataLink({
+					source: Number(sourceId),
+					target: Number(targetId),
+					routes
+				})
+			);
+		}
+	}
+
+	console.debug({ links, temp, formatted, aclRules });
+
+	return [...formatted];
+
+	/* const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
 
 	for (const link of links) {
 		if (
@@ -492,6 +550,8 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 		}
 	}
 
+	console.table(temp);
+
 	const formattedLinks = new Set<GraphDataLink>();
 
 	for (const [source, targets] of Object.entries(temp)) {
@@ -506,18 +566,23 @@ function formatLinks(links: GraphDataLink[]): GraphDataLink[] {
 		}
 	}
 
-	return [...formattedLinks].map((link, i, links) => {
-		const reverseLink = links.find((l) => l.target === link.source && l.source === link.target);
-
-		if (reverseLink?.label instanceof Set) {
-			for (const route of link.routes) reverseLink.label.add(`${route.host}:${route.port}`);
-		} else {
-			if (!(link.label instanceof Set)) link.label = new Set();
-			for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
-		}
-
+	return [...formattedLinks].map((link) => {
+		if (!(link.label instanceof Set)) link.label = new Set();
+		for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
 		return link;
-	});
+	}); */
+	// return [...formattedLinks].map((link, i, links) => {
+	// 	const reverseLink = links.find((l) => l.target === link.source && l.source === link.target);
+
+	// 	if (reverseLink?.label instanceof Set) {
+	// 		for (const route of link.routes) reverseLink.label.add(`${route.host}:${route.port}`);
+	// 	} else {
+	// 		if (!(link.label instanceof Set)) link.label = new Set();
+	// 		for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
+	// 	}
+
+	// 	return link;
+	// });
 }
 
 export function focusOnNode(

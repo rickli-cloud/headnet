@@ -1,9 +1,9 @@
-FROM node:22-alpine
+FROM denoland/deno:distroless
 
-WORKDIR /opt/headnet
+WORKDIR /app
 
 COPY ./build .
 
 EXPOSE 3000
 
-CMD [ "node", "." ]
+CMD [ "run", "--allow-env", "--allow-read=/app", "--allow-net=0.0.0.0:3000", "index.js" ]
