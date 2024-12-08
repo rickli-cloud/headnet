@@ -2,7 +2,7 @@ export function neverExpires(timestamp: string): boolean {
 	return timestamp === '0001-01-01T00:00:00Z';
 }
 
-export function formatDuration(ms: number, includeMs: boolean = false, maxUnits = 3): string {
+export function formatDuration(ms: number, includeMs: boolean = false, maxUnits = 2): string {
 	interface TimeData {
 		y: number;
 		d: number;

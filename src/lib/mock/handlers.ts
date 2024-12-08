@@ -9,7 +9,7 @@ const MAX_ARRAY_LENGTH = 5;
 const MIN_ARRAY_LENGTH = 0;
 
 const usersLength = faker.number.int({ min: 3, max: 8 });
-const machinesLength = faker.number.int({ min: 10, max: 30 });
+const machinesLength = faker.number.int({ min: 10, max: 28 });
 
 const simulateApiError: boolean = false;
 
@@ -115,10 +115,14 @@ export const handlers = [
 		response: {
 			apiKeys: randomSizedArray(() => ({
 				id: faker.number.octal(),
-				prefix: faker.lorem.words(),
-				expiration: faker.date.past().toISOString(),
+				prefix: btoa(
+					String.fromCharCode.apply(null, [...crypto.getRandomValues(new Uint8Array(3))])
+				),
+				expiration: faker.date
+					.between({ from: Date.now() - 1000 * 60 * 24 * 31, to: Date.now() + 1000 * 60 * 24 * 31 })
+					.toISOString(),
 				createdAt: faker.date.past().toISOString(),
-				lastSeen: faker.date.past().toISOString()
+				lastSeen: faker.date.recent().toISOString()
 			}))
 		}
 	}),

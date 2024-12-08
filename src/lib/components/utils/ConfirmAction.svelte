@@ -18,6 +18,8 @@
 	export let confirm: boolean = true;
 	export let confirmText: string = 'I understand that this action can not be undone';
 	export let destructive: boolean = confirm;
+	export let asChild: boolean = true;
+	export let disabled: boolean = false;
 
 	export function open() {
 		isOpen = true;
@@ -43,7 +45,7 @@
 </script>
 
 <AlertDialog.Root bind:open={isOpen}>
-	<AlertDialog.Trigger asChild let:builder>
+	<AlertDialog.Trigger let:builder {asChild} {disabled}>
 		<slot name="trigger" {builder} />
 	</AlertDialog.Trigger>
 

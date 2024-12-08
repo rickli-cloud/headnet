@@ -163,7 +163,6 @@ export function formatGraphData(
 	},
 	opt: FormatGraphDataOptions = {}
 ): FormatGraphDataResult {
-	console.debug('formatGraphData', data);
 	console.time('formatGraphData');
 
 	try {
@@ -502,7 +501,6 @@ function formatLinks(links: GraphDataLink[], acls: Acl['acls'] | undefined): Gra
 						host: route.host,
 						port: route.port
 					});
-					// aclRules.set(route.rule.id, route.rule);
 				}
 			}
 		}
@@ -528,61 +526,7 @@ function formatLinks(links: GraphDataLink[], acls: Acl['acls'] | undefined): Gra
 		}
 	}
 
-	console.debug({ links, temp, formatted, aclRules });
-
 	return [...formatted];
-
-	/* const temp: { [x: number]: { [y: number]: Set<GraphDataLinkAttributes['routes'][0]> } } = {};
-
-	for (const link of links) {
-		if (
-			(typeof link.source === 'number' || typeof link.source === 'string') &&
-			(typeof link.target === 'number' || typeof link.target === 'string') &&
-			link.source !== link.target
-		) {
-			if (typeof temp[Number(link.source)] !== 'object') {
-				temp[Number(link.source)] = {};
-			}
-			if (!(temp[Number(link.source)][Number(link.target)] instanceof Set)) {
-				temp[Number(link.source)][Number(link.target)] = new Set();
-			}
-			for (const route of link.routes) temp[Number(link.source)][Number(link.target)].add(route);
-		}
-	}
-
-	console.table(temp);
-
-	const formattedLinks = new Set<GraphDataLink>();
-
-	for (const [source, targets] of Object.entries(temp)) {
-		for (const [target, routes] of Object.entries(targets)) {
-			formattedLinks.add(
-				new GraphDataLink({
-					source: Number(source),
-					target: Number(target),
-					routes: [...(routes || [])]
-				})
-			);
-		}
-	}
-
-	return [...formattedLinks].map((link) => {
-		if (!(link.label instanceof Set)) link.label = new Set();
-		for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
-		return link;
-	}); */
-	// return [...formattedLinks].map((link, i, links) => {
-	// 	const reverseLink = links.find((l) => l.target === link.source && l.source === link.target);
-
-	// 	if (reverseLink?.label instanceof Set) {
-	// 		for (const route of link.routes) reverseLink.label.add(`${route.host}:${route.port}`);
-	// 	} else {
-	// 		if (!(link.label instanceof Set)) link.label = new Set();
-	// 		for (const route of link.routes) link.label.add(`${route.host}:${route.port}`);
-	// 	}
-
-	// 	return link;
-	// });
 }
 
 export function focusOnNode(

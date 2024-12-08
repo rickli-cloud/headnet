@@ -5,9 +5,12 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import Settings from 'lucide-svelte/icons/settings-2';
 	import Trash from 'lucide-svelte/icons/trash-2';
+	import Info from 'lucide-svelte/icons/info';
 
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Label } from '$lib/components/ui/label';
+
 	import EditRule from './EditRule.svelte';
 
 	export let rule: AclData['acls'][0];
@@ -35,7 +38,7 @@
 
 				<!-- <p class="select-none text-sm text-muted-foreground">|</p> -->
 
-				<button class="link text-red-600/60 hover:text-red-600">
+				<button class="link text-muted-foreground hover:text-red-600">
 					<Trash class="h-5 w-5" />
 				</button>
 			</div>
@@ -57,7 +60,24 @@
 	</div>
 
 	<div>
-		<Label>Routes</Label>
+		<Label class="flex items-center gap-1.5">
+			Routes
+			<Tooltip.Root>
+				<Tooltip.Trigger tabindex={-1}>
+					<Info class="h-3.5 w-3.5" />
+				</Tooltip.Trigger>
+
+				<Tooltip.Content side="right">
+					<div class="grid grid-cols-2 items-center gap-x-1 gap-y-0.5">
+						<ArrowLeft class="h-4 w-4" />
+						<p>In</p>
+
+						<ArrowRight class="h-4 w-4" />
+						<p>Out</p>
+					</div>
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</Label>
 		<ul class="space-y-0.5">
 			{#each [...prefixes.in]
 				.map((prefix) => ({ prefix, direction: 'in' }))

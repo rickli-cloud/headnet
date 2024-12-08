@@ -122,7 +122,7 @@
 		}
 		& th,
 		& td {
-			@apply whitespace-nowrap py-2;
+			@apply whitespace-nowrap px-1.5 py-2;
 		}
 		& tr {
 			@apply border-t first:border-t-0;

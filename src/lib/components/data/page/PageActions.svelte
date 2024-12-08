@@ -9,15 +9,16 @@
 	import Users from 'lucide-svelte/icons/users';
 	import Plus from 'lucide-svelte/icons/plus';
 	import Cog from 'lucide-svelte/icons/cog';
+	import Tag from 'lucide-svelte/icons/tag';
 	import X from 'lucide-svelte/icons/x';
-
-	import * as Sheet from '$lib/components/ui/sheet';
 
 	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
 	import EndSession from './EndSession.svelte';
 
 	import { base } from '$app/paths';
 	import type { Acl } from '$lib/api';
+	import ApikeyInfo from '../apikey/ApikeyInfo.svelte';
+	import GroupInfo from '../group/GroupInfo.svelte';
 
 	export let acl: Acl | undefined;
 
@@ -63,17 +64,32 @@
 </li>
 
 <li>
-	<button disabled>
-		<Users />
-		<span>Groups</span>
-	</button>
+	<GroupInfo groups={acl?.groups}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Users />
+				<span>Groups</span>
+			</button>
+		</svelte:fragment>
+	</GroupInfo>
 </li>
 
 <li>
 	<button disabled>
-		<KeyRound />
-		<span>Api keys</span>
+		<Tag />
+		<span> Tags </span>
 	</button>
+</li>
+
+<li>
+	<ApikeyInfo on:submit={() => dispatch('close')}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<KeyRound />
+				<span>API keys</span>
+			</button>
+		</svelte:fragment>
+	</ApikeyInfo>
 </li>
 
 <li>
@@ -94,9 +110,7 @@
 
 <li>
 	<a href="{base}/settings">
-		<span>
-			<Cog />
-		</span>
+		<Cog />
 		<span> Settings </span>
 	</a>
 </li>

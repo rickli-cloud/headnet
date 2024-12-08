@@ -5,8 +5,6 @@
 	import EllipsisVertical from 'lucide-svelte/icons/ellipsis-vertical';
 	import ToggleRight from 'lucide-svelte/icons/toggle-right';
 	import ToggleLeft from 'lucide-svelte/icons/toggle-left';
-	// import MonitorCog from 'lucide-svelte/icons/monitor-cog';
-	// import Trash from 'lucide-svelte/icons/trash-2';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -18,20 +16,12 @@
 
 	import Secret from '$lib/components/utils/Secret.svelte';
 
-	import {
-		focusOnNode,
-		GraphMachine,
-		isLinkNode,
-		type GraphDataLink
-	} from '$lib/utils/networkGraph';
+	import { GraphMachine, isLinkNode, type GraphDataLink } from '$lib/utils/networkGraph';
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
 	import { Acl, User, type AclData, type Route } from '$lib/api';
 
 	import MachineActions from './MachineActions.svelte';
 	import MachineStatus from './MachineStatus.svelte';
-	// import { invertHex } from '$lib/utils/misc';
-	// import DeleteMachine from './DeleteMachine.svelte';
-	// import EditMachine from './EditMachine.svelte';
 
 	export let machine: GraphMachine;
 	export let routes: Route[] | undefined;
@@ -82,40 +72,6 @@
 
 <Sheet.Header>
 	<Sheet.Title class="flex items-center gap-1.5 font-normal">
-		<!-- <DropdownMenu.Root>
-			<DropdownMenu.Trigger asChild let:builder>
-				<Button builders={[builder]} variant="ghost" class="h-7 w-7 p-1.5">
-					<EllipsisVertical class="h-4 w-4" />
-				</Button>
-			</DropdownMenu.Trigger>
-
-			<DropdownMenu.Content align="start" class="min-w-64 max-w-96">
-				<DropdownMenu.Group>
-					<DropdownMenu.Item asChild>
-						<EditMachine {machine}>
-							<svelte:fragment slot="trigger" let:builder>
-								<button class="menu-button" {...builder} use:builder.action>
-									<MonitorCog class="mr-2 h-4 w-4" />
-									<span>Edit</span>
-								</button>
-							</svelte:fragment>
-						</EditMachine>
-					</DropdownMenu.Item>
-
-					<DropdownMenu.Item asChild>
-						<DeleteMachine {machine}>
-							<svelte:fragment slot="trigger" let:builder>
-								<button class="menu-button destructive" {...builder} use:builder.action>
-									<Trash class="mr-2 h-4 w-4" />
-									<span>Delete</span>
-								</button>
-							</svelte:fragment>
-						</DeleteMachine>
-					</DropdownMenu.Item>
-				</DropdownMenu.Group>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root> -->
-
 		<span class="font-semibold">
 			{machine.givenName}
 		</span>
@@ -179,8 +135,6 @@
 		on:focus={() => dispatch('focus')}
 	/>
 </ul>
-
-<!-- <div style="height: 1px;"></div> -->
 
 <div class="space-y-2">
 	<div class="text-sm font-medium">Disco Key</div>

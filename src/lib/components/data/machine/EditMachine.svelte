@@ -69,39 +69,3 @@
 		</Form.Root>
 	</Dialog.Content>
 </Dialog.Root>
-
-<!-- <form class="data-form">
-	<div>
-		<Label for="user.id">Machine key</Label>
-		<Input id="user.id" type="password" readonly value={machine.machineKey} />
-	</div>
-
-	<div>
-		<Label for="user.id">Node key</Label>
-		<Input id="user.id" type="password" readonly value={machine.nodeKey} />
-	</div>
-
-	<div>
-		<Label for="user.id">Disco key</Label>
-		<Input id="user.id" type="password" readonly value={machine.discoKey} />
-	</div>
-</form> -->
-
-<!-- <table class="basic-table w-full overflow-x-scroll">
-	<tbody>
-		<tr>
-			<th>Name</th>
-			<td>{machine.name}</td>
-		</tr>
-
-		<tr>
-			<th>ID</th>
-			<td>{machine.id}</td>
-		</tr>
-
-		<tr>
-			<th>Created</th>
-			<td>{machine.createdAt}</td>
-		</tr>
-	</tbody>
-</table> -->

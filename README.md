@@ -19,8 +19,6 @@ Distroless docker container running deno
 - `x.x.x-pre` Pre-release images (potentially unstable)
 - `unstable` Built on every push to main
 
-### Example
-
 #### Docker run
 
 ```sh
