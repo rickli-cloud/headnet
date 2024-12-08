@@ -103,10 +103,10 @@ jobs:
 
       - name: Release build assets
         shell: bash
+        working-directory: ${{ github.workspace }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         run: |
-          cd ${{github.workspace}}
           cp LICENSE build/LICENSE
           zip -r headnet-${{ matrix.target }}-${{ github.event.release.tag_name }}.zip build
           gh release upload ${{ github.event.release.tag_name }} headnet-${{ matrix.target }}-${{ github.event.release.tag_name }}.zip
@@ -118,18 +118,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+          - tag: darwin-aarch64
+            platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
-            tag: darwin-aarch64
-          - platform: 'macos-latest' # for Intel based macs.
+          - tag: darwin-x86_64
+            platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
-            tag: darwin-x86_64
-          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+          - tag: linux-x86_64
+            platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
             args: ''
-            tag: linux-x86_64
-          - platform: 'windows-latest'
+          - tag: windows-x86_64
+            platform: 'windows-latest'
             args: ''
-            tag: windows-x86_64
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -174,10 +174,10 @@ jobs:
 
       - name: Release build assets
         shell: bash
+        working-directory: ${{ github.workspace }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         run: |
-          cd ${{github.workspace}}
           cp LICENSE src-tauri/target/release/LICENSE
           zip -r headnet-${{ matrix.tag }}-${{ github.event.release.tag_name }}.zip src-tauri/target/release
           gh release upload ${{ github.event.release.tag_name }} headnet-${{ matrix.tag }}-${{ github.event.release.tag_name }}.zip
