@@ -6,84 +6,6 @@ on:
       - published
 
 jobs:
-  build-static:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Patch version
-        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
-
-      - name: Build static app
-        run: deno task build
-        env:
-          BUILD_TARGET: static
-
-      - name: Release build assets
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: |
-          cd ${{github.workspace}}
-          cp LICENSE build/LICENSE
-          zip -r headnet-static-${{ github.event.release.tag_name }}.zip build
-          gh release upload ${{ github.event.release.tag_name }} headnet-static-${{ github.event.release.tag_name }}.zip
-
-  build-node:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Patch version
-        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
-
-      - name: Build node app
-        run: deno task build
-
-      - name: Release build assets
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: |
-          cd ${{github.workspace}}
-          cp LICENSE build/LICENSE
-          zip -r headnet-node-${{ github.event.release.tag_name }}.zip build
-          gh release upload ${{ github.event.release.tag_name }} headnet-node-${{ github.event.release.tag_name }}.zip
-
   build-docker:
     runs-on: ubuntu-latest
     permissions:
@@ -143,9 +65,55 @@ jobs:
           tags: ghcr.io/rickli-cloud/headnet:latest
           push: true
 
+  build-basic:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: node
+          - target: static
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Patch version
+        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
+
+      - name: Build app
+        run: deno task build
+        env:
+          BUILD_TARGET: ${{ matrix.target }}
+
+      - name: Release build assets
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          cd ${{github.workspace}}
+          cp LICENSE build/LICENSE
+          zip -r headnet-${{ matrix.target }}-${{ github.event.release.tag_name }}.zip build
+          gh release upload ${{ github.event.release.tag_name }} headnet-${{ matrix.target }}-${{ github.event.release.tag_name }}.zip
+
   build-tauri:
     permissions:
-      contents: read
+      contents: write
     strategy:
       fail-fast: false
       matrix:
