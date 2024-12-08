@@ -31,12 +31,12 @@ jobs:
       - name: Patch version
         run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
 
-      - name: Build app
+      - name: Build static app
         run: deno task build
         env:
           BUILD_TARGET: static
 
-      - name: Release build
+      - name: Release build assets
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
@@ -71,10 +71,10 @@ jobs:
       - name: Patch version
         run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
 
-      - name: Build app
+      - name: Build node app
         run: deno task build
 
-      - name: Release build
+      - name: Release build assets
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
@@ -145,19 +145,23 @@ jobs:
 
   build-tauri:
     permissions:
-      contents: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
+            tag: darwin-aarch64
           - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
+            tag: darwin-x86_64
           - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
             args: ''
+            tag: linux-x86_64
           - platform: 'windows-latest'
             args: ''
+            tag: windows-x86_64
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -191,15 +195,21 @@ jobs:
       - name: Patch version
         run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_TARGET: static
           BASE_PATH: /
         with:
-          tagName: headnet-v__VERSION__
-          releaseName: 'Headnet v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: ${{ github.event.release.prerelease }}
           args: ${{ matrix.args }}
+
+      - name: Release build assets
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          cd ${{github.workspace}}
+          cp LICENSE src-tauri/target/release/LICENSE
+          zip -r headnet-${{ matrix.tag }}-${{ github.event.release.tag_name }}.zip src-tauri/target/release
+          gh release upload ${{ github.event.release.tag_name }} headnet-${{ matrix.tag }}-${{ github.event.release.tag_name }}.zip
