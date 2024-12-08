@@ -152,10 +152,14 @@ jobs:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install zip (windows)
+        if: matrix.platform == 'windows-latest'
+        run: choco install zip -y
 
       - name: install frontend dependencies
         run: deno install
@@ -173,7 +177,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Release build assets
-        shell: bash
+        # shell: bash
         working-directory: ${{ github.workspace }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
