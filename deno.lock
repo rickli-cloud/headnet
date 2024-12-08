@@ -11,6 +11,9 @@
     "npm:@sveltejs/adapter-static@^3.0.6": "3.0.6_@sveltejs+kit@2.7.3__@sveltejs+vite-plugin-svelte@4.0.0___svelte@5.1.2____acorn@8.13.0___vite@5.4.10__svelte@5.1.2___acorn@8.13.0__vite@5.4.10_@sveltejs+vite-plugin-svelte@4.0.0__svelte@5.1.2___acorn@8.13.0__vite@5.4.10_svelte@5.1.2__acorn@8.13.0_vite@5.4.10_@types+node@22.8.5",
     "npm:@sveltejs/kit@2": "2.7.3_@sveltejs+vite-plugin-svelte@4.0.0__svelte@5.1.2___acorn@8.13.0__vite@5.4.10_svelte@5.1.2__acorn@8.13.0_vite@5.4.10",
     "npm:@sveltejs/vite-plugin-svelte@4": "4.0.0_svelte@5.1.2__acorn@8.13.0_vite@5.4.10",
+    "npm:@tauri-apps/api@^2.1.1": "2.1.1",
+    "npm:@tauri-apps/cli@^2.1.0": "2.1.0",
+    "npm:@tauri-apps/plugin-http@~2.0.1": "2.0.1",
     "npm:@types/eslint@^9.6.0": "9.6.1",
     "npm:@types/node@^22.8.5": "22.8.5",
     "npm:autoprefixer@^10.4.20": "10.4.20_postcss@8.4.47",
@@ -658,6 +661,60 @@
       "integrity": "sha512-UoKGxQ3r5kYI9dALKJapMmuK+1zWM/H17Z1+iwnNmzcJRnfFuevZs375TA5rW31pu4BS4NoSy1fRsexDXfWn5w==",
       "dependencies": [
         "tslib@2.8.0"
+      ]
+    },
+    "@tauri-apps/api@2.1.1": {
+      "integrity": "sha512-fzUfFFKo4lknXGJq8qrCidkUcKcH2UHhfaaCNt4GzgzGaW2iS26uFOg4tS3H4P8D6ZEeUxtiD5z0nwFF0UN30A=="
+    },
+    "@tauri-apps/cli-darwin-arm64@2.1.0": {
+      "integrity": "sha512-ESc6J6CE8hl1yKH2vJ+ALF+thq4Be+DM1mvmTyUCQObvezNCNhzfS6abIUd3ou4x5RGH51ouiANeT3wekU6dCw=="
+    },
+    "@tauri-apps/cli-darwin-x64@2.1.0": {
+      "integrity": "sha512-TasHS442DFs8cSH2eUQzuDBXUST4ECjCd0yyP+zZzvAruiB0Bg+c8A+I/EnqCvBQ2G2yvWLYG8q/LI7c87A5UA=="
+    },
+    "@tauri-apps/cli-linux-arm-gnueabihf@2.1.0": {
+      "integrity": "sha512-aP7ZBGNL4ny07Cbb6kKpUOSrmhcIK2KhjviTzYlh+pPhAptxnC78xQGD3zKQkTi2WliJLPmBYbOHWWQa57lQ9w=="
+    },
+    "@tauri-apps/cli-linux-arm64-gnu@2.1.0": {
+      "integrity": "sha512-ZTdgD5gLeMCzndMT2f358EkoYkZ5T+Qy6zPzU+l5vv5M7dHVN9ZmblNAYYXmoOuw7y+BY4X/rZvHV9pcGrcanQ=="
+    },
+    "@tauri-apps/cli-linux-arm64-musl@2.1.0": {
+      "integrity": "sha512-NzwqjUCilhnhJzusz3d/0i0F1GFrwCQbkwR6yAHUxItESbsGYkZRJk0yMEWkg3PzFnyK4cWTlQJMEU52TjhEzA=="
+    },
+    "@tauri-apps/cli-linux-x64-gnu@2.1.0": {
+      "integrity": "sha512-TyiIpMEtZxNOQmuFyfJwaaYbg3movSthpBJLIdPlKxSAB2BW0VWLY3/ZfIxm/G2YGHyREkjJvimzYE0i37PnMA=="
+    },
+    "@tauri-apps/cli-linux-x64-musl@2.1.0": {
+      "integrity": "sha512-/dQd0TlaxBdJACrR72DhynWftzHDaX32eBtS5WBrNJ+nnNb+znM3gON6nJ9tSE9jgDa6n1v2BkI/oIDtypfUXw=="
+    },
+    "@tauri-apps/cli-win32-arm64-msvc@2.1.0": {
+      "integrity": "sha512-NdQJO7SmdYqOcE+JPU7bwg7+odfZMWO6g8xF9SXYCMdUzvM2Gv/AQfikNXz5yS7ralRhNFuW32i5dcHlxh4pDg=="
+    },
+    "@tauri-apps/cli-win32-ia32-msvc@2.1.0": {
+      "integrity": "sha512-f5h8gKT/cB8s1ticFRUpNmHqkmaLutT62oFDB7N//2YTXnxst7EpMIn1w+QimxTvTk2gcx6EcW6bEk/y2hZGzg=="
+    },
+    "@tauri-apps/cli-win32-x64-msvc@2.1.0": {
+      "integrity": "sha512-P/+LrdSSb5Xbho1LRP4haBjFHdyPdjWvGgeopL96OVtrFpYnfC+RctB45z2V2XxqFk3HweDDxk266btjttfjGw=="
+    },
+    "@tauri-apps/cli@2.1.0": {
+      "integrity": "sha512-K2VhcKqBhAeS5pNOVdnR/xQRU6jwpgmkSL2ejHXcl0m+kaTggT0WRDQnFtPq6NljA7aE03cvwsbCAoFG7vtkJw==",
+      "dependencies": [
+        "@tauri-apps/cli-darwin-arm64",
+        "@tauri-apps/cli-darwin-x64",
+        "@tauri-apps/cli-linux-arm-gnueabihf",
+        "@tauri-apps/cli-linux-arm64-gnu",
+        "@tauri-apps/cli-linux-arm64-musl",
+        "@tauri-apps/cli-linux-x64-gnu",
+        "@tauri-apps/cli-linux-x64-musl",
+        "@tauri-apps/cli-win32-arm64-msvc",
+        "@tauri-apps/cli-win32-ia32-msvc",
+        "@tauri-apps/cli-win32-x64-msvc"
+      ]
+    },
+    "@tauri-apps/plugin-http@2.0.1": {
+      "integrity": "sha512-j6IA3pVBybSCwPpsihpX4z8bs6PluuGtr06ahL/xy4D8HunNBTmRmadJrFOQi0gOAbaig4MkQ15nzNLBLy8R1A==",
+      "dependencies": [
+        "@tauri-apps/api"
       ]
     },
     "@tweenjs/tween.js@25.0.0": {
@@ -2854,6 +2911,9 @@
         "npm:@sveltejs/adapter-static@^3.0.6",
         "npm:@sveltejs/kit@2",
         "npm:@sveltejs/vite-plugin-svelte@4",
+        "npm:@tauri-apps/api@^2.1.1",
+        "npm:@tauri-apps/cli@^2.1.0",
+        "npm:@tauri-apps/plugin-http@~2.0.1",
         "npm:@types/eslint@^9.6.0",
         "npm:@types/node@^22.8.5",
         "npm:autoprefixer@^10.4.20",

@@ -56,6 +56,10 @@ For all [releases](https://github.com/rickli-cloud/headnet/releases) there are z
 
 > The node server **is not capable of TLS** and is best used in combination with a reverse proxy. This does not pose a big security risk (assuming the internal network is somewhat secure) as no sensitive data is directly transmitted to this server.
 
+### Desktop application
+
+For all [releases](https://github.com/rickli-cloud/headnet/releases) there are standalone executables or installers provided for different platforms. Thanks to a special client integration it is possible to completely circumvent any CORS restrictions
+
 ## Environment configuration
 
 > [!NOTE]  
@@ -128,6 +132,8 @@ deno install
 
 ## Building
 
+### Node / Static
+
 Create a production build:
 
 ```sh
@@ -141,6 +147,17 @@ deno task build
 > docker run -it --rm --workdir /app -v ${PWD}:/app:rw --entrypoint /bin/sh denoland/deno:latest
 > ```
 
+### Tauri
+
+Needs specific configuration to work properly:
+
+- `BASE_PATH = "/"`
+- `BUILD_TARGET = "static"`
+
+```sh
+deno task tauri build
+```
+
 ## Developing
 
 Start a development server:
@@ -153,9 +170,10 @@ deno task dev
 
 Some of the major projects used:
 
-- [Deno 2](https://deno.com/)
-- [Svelte 5](https://svelte.dev/)
-- [Shadcn](https://www.shadcn-svelte.com/)
+- [deno 2](https://deno.com/)
+- [tauri 2](https://v2.tauri.app/)
+- [svelte 5](https://svelte.dev/)
+- [shadcn](https://www.shadcn-svelte.com/)
 - [3d-force-graph](https://github.com/vasturiano/3d-force-graph)
 - [json-ast-comments](https://github.com/2betop/json-ast-comments)
 - [openapi-typescript](https://openapi-ts.dev/)

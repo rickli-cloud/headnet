@@ -32,7 +32,7 @@ const config = {
 	kit: {
 		adapter,
 		paths: {
-			base: BASE_PATH
+			base: BASE_PATH === '/' ? undefined : BASE_PATH
 			// assets: '/static'
 		},
 		version: {

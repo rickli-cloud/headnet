@@ -19,12 +19,13 @@
 	import { version } from '$app/environment';
 	import { env } from '$env/dynamic/public';
 	import { base } from '$app/paths';
+	import { isTauri } from '$lib/utils/tauri';
 
 	let tokenVisible: boolean = false;
 
 	const loginSchema = z.object({
 		token: z.string(),
-		baseUrl: z.string().url().optional()
+		baseUrl: isTauri() ? z.string().url() : z.string().url().optional()
 	});
 
 	const form = superForm(defaults(zod(loginSchema)), {
@@ -123,7 +124,7 @@
 							{...attrs}
 							{...$constraints.baseUrl || {}}
 							bind:value={$formData.baseUrl}
-							placeholder="{location.protocol}//{location.host}"
+							placeholder={isTauri() ? '' : `${location.protocol}//${location.host}`}
 							disabled={env.PUBLIC_MOCK_ENABLED === 'true'}
 						/>
 						<Form.FieldErrors />

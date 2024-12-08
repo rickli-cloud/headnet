@@ -12,6 +12,15 @@ import { goto } from '$app/navigation';
 import { base } from '$app/paths';
 import { uuidv4 } from '$lib/utils/misc';
 
+import type { fetch } from '@tauri-apps/plugin-http';
+import { isTauri } from '$lib/utils/tauri';
+
+let tauriFetch: typeof fetch;
+
+if (isTauri()) {
+	import('@tauri-apps/plugin-http').then(({ fetch }) => (tauriFetch = fetch));
+}
+
 export const registerMethodRegex: RegExp = /^REGISTER_METHOD_/;
 export const commentRegex: RegExp = /^\/\/(\s+)?/;
 export const groupRegex: RegExp = /^group:/;
@@ -38,7 +47,8 @@ export class Headscale {
 		this.client = createClient({
 			signal: AbortSignal.timeout(timeout),
 			baseUrl: get(Session)?.baseUrl,
-			...(clientOptions || {})
+			...(clientOptions || {}),
+			fetch: isTauri() ? tauriFetch : clientOptions?.fetch
 		});
 
 		this.client.use({

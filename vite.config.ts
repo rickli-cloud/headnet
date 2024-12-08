@@ -11,7 +11,10 @@ const {
 	PUBLIC_MOCK_ENABLED,
 	BASE_PATH = '/admin',
 	BUILD_TARGET = 'node',
-	HMR_ENABLED = 'true'
+	HMR_ENABLED = 'true',
+	TAURI_ENV_PLATFORM,
+	TAURI_ENV_ARCH,
+	TAURI_ENV_DEBUG
 } = process.env;
 
 export default defineConfig(({ mode }) => {
@@ -21,20 +24,26 @@ export default defineConfig(({ mode }) => {
 	};
 
 	if (HMR_ENABLED !== 'true') {
-		console.warn('[HMR] disabled');
+		console.warn('[HMR]: disabled');
 	}
 
 	if (mode === 'production') {
 		console.debug(
-			`[build]:\n${stringify({ target: BUILD_TARGET, base: BASE_PATH, mock: PUBLIC_MOCK_ENABLED === 'true' })}`
+			`[build]:\n${stringify({ target: BUILD_TARGET, base: BASE_PATH, mock: PUBLIC_MOCK_ENABLED === 'true', tauri: TAURI_ENV_PLATFORM !== undefined })}`
+		);
+	}
+
+	if (typeof TAURI_ENV_PLATFORM !== 'undefined') {
+		console.debug(
+			`[tauri]:\n${stringify({ arch: TAURI_ENV_ARCH, platform: TAURI_ENV_PLATFORM, debug: TAURI_ENV_DEBUG })}`
 		);
 	}
 
 	if (mode === 'development') {
 		if (PUBLIC_MOCK_ENABLED === 'true') {
-			console.debug(`[Mock] ^/api`);
+			console.debug(`[Mock]: ^/api`);
 		} else if (typeof HEADSCALE_HOST === 'string') {
-			console.debug(`[Proxy] ^/api => ${HEADSCALE_HOST}`);
+			console.debug(`[Proxy]: ^/api => ${HEADSCALE_HOST}`);
 			server.proxy = {
 				'^/api': {
 					target: HEADSCALE_HOST,
@@ -51,6 +60,9 @@ export default defineConfig(({ mode }) => {
 		plugins: [sveltekit()],
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}']
+		},
+		define: {
+			__TAURI__: typeof TAURI_ENV_PLATFORM !== 'undefined'
 		}
 	};
 });

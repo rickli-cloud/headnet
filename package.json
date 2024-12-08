@@ -15,7 +15,9 @@
     "test": "npm run test:unit -- --run && npm run test:e2e",
     "test:e2e": "playwright test",
     "gen:openapi:latest": "openapi-typescript https://converter.swagger.io/api/convert?url=https://raw.githubusercontent.com/juanfont/headscale/refs/heads/main/gen/openapiv2/headscale/v1/headscale.swagger.json -o ./src/lib/api/headscale.d.ts",
-    "msw:init": "msw init"
+    "msw:init": "msw init",
+    "tauri": "tauri",
+    "tauri:build": "tauri build"
   },
   "devDependencies": {
     "3d-force-graph": "^1.73.4",
@@ -27,6 +29,8 @@
     "@sveltejs/adapter-static": "^3.0.6",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/cli": "^2.1.0",
     "@types/eslint": "^9.6.0",
     "@types/node": "^22.8.5",
     "autoprefixer": "^10.4.20",
@@ -63,6 +67,7 @@
     "zod": "^3.23.8"
   },
   "dependencies": {
+    "@tauri-apps/plugin-http": "~2.0.1",
     "dotenv": "^16.4.5"
   },
   "msw": {

@@ -6,23 +6,100 @@ on:
       - published
 
 jobs:
-  build:
+  build-static:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
-      # Required for version patching
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Patch version
+        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
+
+      - name: Build app
+        run: deno task build
+        env:
+          BUILD_TARGET: static
+
+      - name: Release build
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          cd ${{github.workspace}}
+          cp LICENSE build/LICENSE
+          zip -r headnet-static-${{ github.event.release.tag_name }}.zip build
+          gh release upload ${{ github.event.release.tag_name }} headnet-static-${{ github.event.release.tag_name }}.zip
+
+  build-node:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Patch version
+        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
+
+      - name: Build app
+        run: deno task build
+
+      - name: Release build
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          cd ${{github.workspace}}
+          cp LICENSE build/LICENSE
+          zip -r headnet-node-${{ github.event.release.tag_name }}.zip build
+          gh release upload ${{ github.event.release.tag_name }} headnet-node-${{ github.event.release.tag_name }}.zip
+
+  build-docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -44,42 +121,17 @@ jobs:
         run: deno install
 
       - name: Patch version
-        run: npm version ${{ github.ref_name }} --no-commit-hooks --no-git-tag-version
+        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
 
-      - name: Build static app
+      - name: Build app
         run: deno task build
-        env:
-          BUILD_TARGET: static
-
-      - name: Release static build
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: |
-          cd ${{github.workspace}}
-          cp LICENSE build/LICENSE
-          zip -r headnet-static-${{github.event.release.tag_name}}.zip build
-          gh release upload ${{github.event.release.tag_name}} headnet-static-${{github.event.release.tag_name}}.zip
-
-      - name: Build node app
-        run: deno task build
-
-      - name: Release node build
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: |
-          cd ${{github.workspace}}
-          cp LICENSE build/LICENSE
-          zip -r headnet-node-${{github.event.release.tag_name}}.zip build
-          gh release upload ${{github.event.release.tag_name}} headnet-node-${{github.event.release.tag_name}}.zip
 
       - name: Build versioned docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/rickli-cloud/headnet:${{ github.ref_name }}
+          tags: ghcr.io/rickli-cloud/headnet:${{ github.event.release.tag_name }}
           push: true
 
       - name: Build latest docker image
@@ -90,3 +142,64 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/rickli-cloud/headnet:latest
           push: true
+
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Setup deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install frontend dependencies
+        run: deno install
+
+      - name: Patch version
+        run: npm version ${{ github.event.release.tag_name }} --no-commit-hooks --no-git-tag-version
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_TARGET: static
+          BASE_PATH: /
+        with:
+          tagName: headnet-v__VERSION__
+          releaseName: 'Headnet v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: ${{ github.event.release.prerelease }}
+          args: ${{ matrix.args }}
