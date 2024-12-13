@@ -211,7 +211,7 @@
 </NetworkGraphActions>
 
 <NetworkGraphActions bind:this={pageActions}>
-	<PageActions on:close={pageActions.close} acl={data.acl} />
+	<PageActions on:close={pageActions.close} acl={data.acl} users={data.users} />
 </NetworkGraphActions>
 
 <Sheet.Root bind:this={linkInfo} let:close>

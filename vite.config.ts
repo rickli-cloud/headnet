@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
 
 	if (typeof TAURI_ENV_PLATFORM !== 'undefined') {
 		console.debug(
-			`[tauri]:\n${stringify({ arch: TAURI_ENV_ARCH, platform: TAURI_ENV_PLATFORM, debug: TAURI_ENV_DEBUG })}`
+			`[tauri]:\n${stringify({ arch: TAURI_ENV_ARCH, platform: TAURI_ENV_PLATFORM, debug: TAURI_ENV_DEBUG === 'true' })}`
 		);
 	}
 

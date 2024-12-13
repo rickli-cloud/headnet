@@ -13,13 +13,15 @@
 	import X from 'lucide-svelte/icons/x';
 
 	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
+	import ApikeyInfo from '$lib/components/data/apikey/ApikeyInfo.svelte';
+	import TagInfo from '$lib/components/data/tag/TagInfo.svelte';
+	import UserAndGroupInfo from './UserAndGroupInfo.svelte';
 	import EndSession from './EndSession.svelte';
 
+	import type { Acl, User } from '$lib/api';
 	import { base } from '$app/paths';
-	import type { Acl } from '$lib/api';
-	import ApikeyInfo from '../apikey/ApikeyInfo.svelte';
-	import GroupInfo from '../group/GroupInfo.svelte';
 
+	export let users: User[] | undefined;
 	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
@@ -59,26 +61,30 @@
 <li>
 	<button disabled>
 		<Network />
-		<span>Hosts</span>
+		<span>Machines, Hosts</span>
 	</button>
 </li>
 
 <li>
-	<GroupInfo groups={acl?.groups}>
+	<UserAndGroupInfo {acl} {users} on:close={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Users />
-				<span>Groups</span>
+				<span>Users, Groups</span>
 			</button>
 		</svelte:fragment>
-	</GroupInfo>
+	</UserAndGroupInfo>
 </li>
 
 <li>
-	<button disabled>
-		<Tag />
-		<span> Tags </span>
-	</button>
+	<TagInfo tags={acl?.tagOwners}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Tag />
+				<span> Tags </span>
+			</button>
+		</svelte:fragment>
+	</TagInfo>
 </li>
 
 <li>
@@ -92,26 +98,26 @@
 	</ApikeyInfo>
 </li>
 
-<li>
-	<button disabled>
-		<Braces />
-		<span>Policy</span>
-	</button>
-</li>
-
 <hr />
-
-<li>
-	<button disabled>
-		<Sliders />
-		<span> Filters </span>
-	</button>
-</li>
 
 <li>
 	<a href="{base}/settings">
 		<Cog />
 		<span> Settings </span>
+	</a>
+</li>
+
+<li>
+	<a href="{base}/settings/filters">
+		<Sliders />
+		<span> Filters </span>
+	</a>
+</li>
+
+<li>
+	<a href="{base}/settings/policy">
+		<Braces />
+		<span> Policy </span>
 	</a>
 </li>
 

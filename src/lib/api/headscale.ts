@@ -1,4 +1,5 @@
 import createClient, { type Client, type ClientOptions } from 'openapi-fetch';
+import type { fetch } from '@tauri-apps/plugin-http';
 import { stringify, parse } from 'json-ast-comments';
 import { Address4, Address6 } from 'ip-address';
 import { get } from 'svelte/store';
@@ -6,14 +7,14 @@ import { get } from 'svelte/store';
 import { stripJsonTrailingCommas } from '$lib/utils/json';
 import { endSession, Session } from '$lib/store/session';
 
-import type { components, paths } from './headscale.d';
-import { ApiError } from './index';
+import { isTauri } from '$lib/utils/tauri';
+import { env } from '$env/dynamic/public';
+import { uuidv4 } from '$lib/utils/misc';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
-import { uuidv4 } from '$lib/utils/misc';
 
-import type { fetch } from '@tauri-apps/plugin-http';
-import { isTauri } from '$lib/utils/tauri';
+import type { components, paths } from './headscale.d';
+import { ApiError } from './index';
 
 let tauriFetch: typeof fetch;
 
@@ -48,7 +49,7 @@ export class Headscale {
 			signal: AbortSignal.timeout(timeout),
 			baseUrl: get(Session)?.baseUrl,
 			...(clientOptions || {}),
-			fetch: isTauri() ? tauriFetch : clientOptions?.fetch
+			fetch: isTauri() && env.PUBLIC_MOCK_ENABLED !== 'true' ? tauriFetch : clientOptions?.fetch
 		});
 
 		this.client.use({
