@@ -8,8 +8,9 @@
 	import { Badge } from '$lib/components/ui/badge';
 
 	import { tagRegex, type Acl } from '$lib/api';
+	import EditTag from './EditTag.svelte';
 
-	export let tags: Acl['tagOwners'] | undefined;
+	export let acl: Acl | undefined;
 </script>
 
 <Sheet.Root>
@@ -42,13 +43,22 @@
 			</Table.Header>
 
 			<Table.Body>
-				{#each tags || [] as tag}
+				{#each acl?.tagOwners || [] as tag}
 					<Table.Row>
 						<Table.Cell class="pr-0.5">
 							<div class="flex h-6 items-center">
-								<button class="link mr-1.5 text-muted-foreground hover:text-current">
-									<Settings class="h-4 w-4" />
-								</button>
+								<EditTag {tag} {acl}>
+									<svelte:fragment slot="trigger" let:builder>
+										<button
+											{...builder}
+											use:builder.action
+											class="link mr-1.5 text-muted-foreground hover:text-current"
+										>
+											<Settings class="h-4 w-4" />
+										</button>
+									</svelte:fragment>
+								</EditTag>
+
 								<button class="link text-muted-foreground hover:text-red-600">
 									<Trash class="h-4 w-4" />
 								</button>

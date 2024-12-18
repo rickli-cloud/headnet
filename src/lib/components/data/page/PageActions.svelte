@@ -3,6 +3,7 @@
 
 	import Sliders from 'lucide-svelte/icons/sliders-horizontal';
 	import KeyRound from 'lucide-svelte/icons/key-round';
+	import Terminal from 'lucide-svelte/icons/terminal';
 	import Network from 'lucide-svelte/icons/network';
 	import LogOut from 'lucide-svelte/icons/log-out';
 	import Braces from 'lucide-svelte/icons/braces';
@@ -77,7 +78,7 @@
 </li>
 
 <li>
-	<TagInfo tags={acl?.tagOwners}>
+	<TagInfo {acl}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Tag />
@@ -85,6 +86,13 @@
 			</button>
 		</svelte:fragment>
 	</TagInfo>
+</li>
+
+<li>
+	<button disabled>
+		<Terminal />
+		<span>SSH</span>
+	</button>
 </li>
 
 <li>

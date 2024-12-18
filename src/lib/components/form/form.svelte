@@ -49,17 +49,19 @@
 				<slot name="buttons" {reset} {disabled} {submitText} {resetText}>
 					<div class="grid grid-cols-2 items-end justify-center gap-2">
 						{#if typeof reset === 'function'}
-							<Button type="button" on:click={reset} {disabled} variant="outline"
-								>{resetText}</Button
-							>
+							<Button type="button" on:click={reset} {disabled} variant="outline">
+								{resetText}
+							</Button>
 						{/if}
 
 						<Button
 							variant={destructive ? 'destructive' : 'default'}
 							type="submit"
 							class="col-[2]"
-							{disabled}>{submitText}</Button
+							{disabled}
 						>
+							{submitText}
+						</Button>
 					</div>
 				</slot>
 			</div>

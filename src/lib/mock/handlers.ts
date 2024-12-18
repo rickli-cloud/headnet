@@ -239,7 +239,7 @@ export const handlers = [
 		response: () => {
 			const policy = new Acl({
 				policy: JSON.stringify({
-					Hosts: {
+					hosts: {
 						demo: '172.20.10.1/32'
 					},
 					tagOwners: {

@@ -136,7 +136,6 @@
 				{:else}
 					<p class="w-full text-center text-sm text-muted-foreground">no API keys found</p>
 				{/if}
-				<tr></tr>
 			</Table.Body>
 		</Table.Root>
 

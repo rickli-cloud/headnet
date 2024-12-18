@@ -9,9 +9,7 @@
 	import * as Form from '$lib/components/form';
 
 	import { User, type Machine } from '$lib/api';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import SelectUser from '../user/SelectUser.svelte';
-	import { writable } from 'svelte/store';
 
 	export let machine: Machine;
 	export let users: User[] | undefined;

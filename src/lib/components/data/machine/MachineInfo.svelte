@@ -151,6 +151,13 @@
 	<Secret secret={machine.machineKey} />
 </div>
 
+{#if machine.preAuthKey?.key}
+	<div class="space-y-2">
+		<div class="text-sm font-medium">Auth Key</div>
+		<Secret secret={machine.preAuthKey.key} />
+	</div>
+{/if}
+
 <div class="space-y-2">
 	<div class="text-sm font-medium">Addresses</div>
 	<ul class="list-disc pl-6">

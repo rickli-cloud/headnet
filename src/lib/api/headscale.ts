@@ -103,7 +103,7 @@ export interface V1Policy {
 	 * as they're prone to be hijacked by replacing their IP addresses.
 	 * see https://github.com/tailscale/tailscale/issues/3800 for more information.
 	 */
-	Hosts: { [x: string]: string };
+	hosts: { [x: string]: string };
 	acls: {
 		action: string;
 		proto?: string;
@@ -722,7 +722,7 @@ export class Acl {
 		return {
 			policy: p,
 			comments,
-			hosts: Object.entries(p?.Hosts || {})
+			hosts: Object.entries(p?.hosts || {})
 				.filter(([key]) => key !== '$$comments')
 				.map(([name, cidr]) => ({
 					name,
@@ -769,10 +769,10 @@ export class Acl {
 		const comments = this.policy as unknown as V1PolicyComments;
 
 		return {
-			$$comments: comments.$$comments || {},
-			Hosts: { $$comments: comments.Hosts.$$comments || {} },
-			groups: { $$comments: comments.groups.$$comments || {} },
-			tagOwners: { $$comments: comments.tagOwners.$$comments || {} }
+			$$comments: comments?.$$comments || {},
+			Hosts: { $$comments: comments?.Hosts?.$$comments || {} },
+			groups: { $$comments: comments?.groups?.$$comments || {} },
+			tagOwners: { $$comments: comments?.tagOwners?.$$comments || {} }
 		};
 	}
 
@@ -794,7 +794,7 @@ export class Acl {
 			this.tagOwners = acl.tagOwners;
 			this.acls = acl.acls;
 		} else {
-			this.policy = { Hosts: {}, groups: {}, tagOwners: {}, acls: [] };
+			this.policy = { hosts: {}, groups: {}, tagOwners: {}, acls: [] };
 			this.hosts = [];
 			this.groups = [];
 			this.tagOwners = [];
@@ -812,7 +812,7 @@ export class Acl {
 		else if (typeof comments.$$comments.$acls !== 'object') comments.$$comments.$acls = {};
 
 		const policy: V1Policy = {
-			Hosts: Object.fromEntries(
+			hosts: Object.fromEntries(
 				this.hosts.map((host, i) => {
 					comments.Hosts.$$comments[i] = [host.comments?.map(stringifyComment) || []];
 					return [host.name, host.cidr];
@@ -846,7 +846,7 @@ export class Acl {
 			...policy,
 			Hosts: {
 				$$comments: comments.Hosts.$$comments,
-				...policy.Hosts
+				...policy.hosts
 			},
 			groups: {
 				$$comments: comments.groups.$$comments,

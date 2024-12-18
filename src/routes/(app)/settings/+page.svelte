@@ -14,6 +14,8 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { mode, setMode } from 'mode-watcher';
 	import { get } from 'svelte/store';
+	import { version } from '$app/environment';
+	import { formatVersion } from '$lib/utils/misc';
 
 	const form = superForm(
 		{ theme: get(mode) },
@@ -99,3 +101,20 @@
 		</RadioGroup.Root>
 	</Form.Fieldset>
 </form>
+
+<br />
+
+<div class="w-full border-b pb-4">
+	<h3 class="text-lg font-medium">About</h3>
+	<!-- <p class="text-sm text-muted-foreground"></p> -->
+</div>
+
+<div class="grid items-center gap-3" style="grid-template-columns: 1fr auto;">
+	<div class="space-y-2">
+		<h4 class="text-sm font-medium">Version</h4>
+	</div>
+
+	<div class="text-sm">
+		{formatVersion(version)}
+	</div>
+</div>

@@ -4,8 +4,9 @@
 	import { get } from 'svelte/store';
 	import { z } from 'zod';
 
-	import CircleAlert from 'lucide-svelte/icons/circle-alert';
+	import TriangleAlert from 'lucide-svelte/icons/triangle-alert';
 	import EyeOff from 'lucide-svelte/icons/eye-off';
+	import Info from 'lucide-svelte/icons/info';
 	import Eye from 'lucide-svelte/icons/eye';
 
 	import * as Card from '$lib/components/ui/card';
@@ -16,10 +17,11 @@
 	import * as Alert from '$lib/components/ui/alert';
 
 	import { initSession, Session } from '$lib/store/session';
-	import { version } from '$app/environment';
+	import { isTouchDevice } from '$lib/utils/client';
+	import { isTauri } from '$lib/utils/tauri';
 	import { env } from '$env/dynamic/public';
 	import { base } from '$app/paths';
-	import { isTauri } from '$lib/utils/tauri';
+	// import { version } from '$app/environment';
 
 	let tokenVisible: boolean = false;
 
@@ -66,33 +68,42 @@
 		tokenVisible = true;
 		formData.set({ token: 'demo-key' });
 	}
-
-	function formatVersion(version: string): string {
-		return /^v/.test(version) ? version : 'v' + version;
-	}
 </script>
 
-<main class="grid h-full place-items-center">
-	<Card.Root class="mx-auto w-full max-w-lg">
-		<Card.Header>
+<main class="h-full place-items-center overflow-y-scroll sm:grid">
+	<Card.Root class="mx-auto my-4 w-full max-w-lg border-0">
+		<!-- <Card.Header>
 			<div class="flex justify-between gap-3">
 				<Card.Title class="text-2xl">Headnet</Card.Title>
 				<span class="text-xs text-muted-foreground">{formatVersion(version)}</span>
 			</div>
-		</Card.Header>
+		</Card.Header> -->
 
 		<Card.Content class="min-w-96">
-			{#if env.PUBLIC_MOCK_ENABLED === 'true'}
-				<Alert.Root class="mb-6">
-					<CircleAlert class="h-4 w-4" />
-					<Alert.Title>Demo mode</Alert.Title>
-					<Alert.Description class="text-muted-foreground">
-						Headnet is running against an in-browser mock API powered by
-						<a class="link" href="https://mswjs.io/"> Mock Service Worker </a>. Feel free to play
-						around and break stuff.
-					</Alert.Description>
-				</Alert.Root>
-			{/if}
+			<div class="mb-8 space-y-2.5 [&>div]:!mb-0">
+				{#if isTouchDevice()}
+					<Alert.Root class="mb-6">
+						<TriangleAlert class="h-4 w-4" />
+						<Alert.Title>Touch device</Alert.Title>
+						<Alert.Description class="text-muted-foreground">
+							Please note that using a touch device may limit functionality, as some features are
+							optimized for mouse input, potentially impacting your experience.
+						</Alert.Description>
+					</Alert.Root>
+				{/if}
+
+				{#if env.PUBLIC_MOCK_ENABLED === 'true'}
+					<Alert.Root class="mb-6">
+						<Info class="h-4 w-4" />
+						<Alert.Title>Demo mode</Alert.Title>
+						<Alert.Description class="text-muted-foreground">
+							Headnet is running against an in-browser mock API powered by
+							<a class="link" href="https://mswjs.io/"> Mock Service Worker </a>. Feel free to play
+							around and break stuff.
+						</Alert.Description>
+					</Alert.Root>
+				{/if}
+			</div>
 
 			<Form.Root {form} hasRequired reset={() => form.reset({ data: { token: '', baseUrl: '' } })}>
 				<Form.Field {form} name="token" class="required">
