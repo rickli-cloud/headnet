@@ -105,7 +105,12 @@
 				{/if}
 			</div>
 
-			<Form.Root {form} hasRequired reset={() => form.reset({ data: { token: '', baseUrl: '' } })}>
+			<Form.Root
+				{form}
+				hasRequired
+				reset={() => form.reset({ data: { token: '', baseUrl: '' } })}
+				submitText="Continue"
+			>
 				<Form.Field {form} name="token" class="required">
 					<Form.Control let:attrs>
 						<Form.Label for={attrs.id}>API key</Form.Label>

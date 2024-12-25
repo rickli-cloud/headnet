@@ -96,6 +96,10 @@ function randomSizedArray<T>(
 	return [...new Array(size).keys()].map((i) => handle(i));
 }
 
+function randomString(bytes: number): string {
+	return btoa(String.fromCharCode.apply(null, [...crypto.getRandomValues(new Uint8Array(bytes))]));
+}
+
 const usernames = [...new Array(usersLength).keys()].map(() => faker.person.firstName());
 const groups = Object.fromEntries(
 	randomSizedArray(() => [
@@ -313,6 +317,22 @@ export const handlers = [
 		path: '/api/v1/preauthkey',
 		method: 'get',
 		response: {}
+	}),
+	handler({
+		path: '/api/v1/preauthkey',
+		method: 'post',
+		response: async ({ request }) => {
+			const body = await request.json();
+			return {
+				preAuthKey: {
+					...body,
+					key: randomString(33),
+					id: faker.number.octal(),
+					createdAt: new Date().toISOString(),
+					used: false
+				}
+			};
+		}
 	}),
 
 	// Routes

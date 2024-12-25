@@ -5,7 +5,7 @@
 	import { writable } from 'svelte/store';
 	import { z } from 'zod';
 
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -21,7 +21,7 @@
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
-	let open: boolean;
+	let mainSheet: InstanceType<typeof Sheet.Root>;
 
 	const schema = z.object({
 		name: z.string(),
@@ -84,7 +84,7 @@
 
 					successToast(`Saved user "${ev.form.data.name}"`);
 					dispatch('submit');
-					open = false;
+					mainSheet.close();
 				} catch (err) {
 					console.error(err);
 					errorToast(formatError(err));
@@ -116,15 +116,15 @@
 	}
 </script>
 
-<Dialog.Root bind:open>
-	<Dialog.Trigger asChild let:builder>
+<Sheet.Root bind:this={mainSheet}>
+	<Sheet.Trigger asChild let:builder>
 		<slot name="trigger" {builder} />
-	</Dialog.Trigger>
+	</Sheet.Trigger>
 
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit user</Dialog.Title>
-		</Dialog.Header>
+	<Sheet.Content side="left">
+		<Sheet.Header>
+			<Sheet.Title>Edit user</Sheet.Title>
+		</Sheet.Header>
 
 		<Form.Root {form} {reset} submitText="Save" hasRequired>
 			<Form.Field {form} name="name">
@@ -153,5 +153,5 @@
 				</Select.Root>
 			</div>
 		</Form.Root>
-	</Dialog.Content>
-</Dialog.Root>
+	</Sheet.Content>
+</Sheet.Root>

@@ -1,20 +1,26 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui';
-	import { writable } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
 
 	import * as Select from '$lib/components/ui/select';
 
 	import type { User } from '$lib/api';
 
-	export let users: User[] | undefined;
-	export let selected: string | undefined;
+	interface $$Props extends Partial<HTMLElement> {
+		users: User[] | undefined;
+		selected: string | undefined;
+		required?: boolean;
+	}
 
-	const sel = writable<Selected<string | undefined>>({ value: selected, label: selected });
+	export let users: $$Props['users'];
+	export let selected: $$Props['selected'];
 
-	sel.subscribe(({ value }) => (selected = value));
+	const sel = writable<Selected<string> | undefined>(
+		selected ? { value: selected, label: selected } : undefined
+	);
 </script>
 
-<Select.Root bind:selected={$sel} required>
+<Select.Root {...$$restProps} bind:selected={$sel}>
 	<Select.Trigger>
 		<Select.Value />
 	</Select.Trigger>

@@ -22,6 +22,7 @@
 	// import EditUser from './EditUser.svelte';
 
 	export let user: User;
+	export let users: User[] | undefined;
 	export let acl: Acl | undefined;
 	export let preAuthKeys: PreAuthKey[] | undefined;
 
@@ -100,7 +101,7 @@
 </Sheet.Header>
 
 <ul class="menu">
-	<UserActions {user} {acl} on:close={close} on:focus={() => dispatch('focus')} />
+	<UserActions {users} {user} {acl} on:close={close} on:focus={() => dispatch('focus')} />
 </ul>
 
 <Sheet.Header>

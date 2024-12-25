@@ -9,8 +9,11 @@
 	import type { Acl, User } from '$lib/api';
 	import EditUser from './EditUser.svelte';
 	import DeleteUser from './DeleteUser.svelte';
+	import Plus from 'lucide-svelte/icons/plus';
+	import CreatePreAuthKey from '../preAuthKey/CreatePreAuthKey.svelte';
 
 	export let user: User;
+	export let users: User[] | undefined;
 	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
@@ -32,6 +35,24 @@
 		</span>
 		<span> Hide </span>
 	</button>
+</li>
+
+<li>
+	<CreatePreAuthKey
+		{users}
+		{acl}
+		initData={{ user: user.name }}
+		on:submit={() => dispatch('close')}
+	>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<span>
+					<Plus />
+				</span>
+				<span> Auth key </span>
+			</button>
+		</svelte:fragment>
+	</CreatePreAuthKey>
 </li>
 
 <li>

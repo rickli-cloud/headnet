@@ -99,6 +99,7 @@
 		& label:has(+ *[aria-required='true'])::after,
 		& label:has(+ *.required)::after,
 		& .required > label::after,
+		& label.required::after,
 		& .star-note::before {
 			@apply mx-0.5 text-current opacity-60;
 			content: '*';

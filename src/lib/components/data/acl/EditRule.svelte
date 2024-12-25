@@ -6,7 +6,7 @@
 	import { z } from 'zod';
 
 	import * as Select from '$lib/components/ui/select/index.js';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { Textarea } from '$lib/components/ui/textarea';
 
 	import * as Form from '$lib/components/form';
@@ -62,15 +62,15 @@
 	reset();
 </script>
 
-<Dialog.Root>
-	<Dialog.Trigger asChild let:builder>
+<Sheet.Root>
+	<Sheet.Trigger asChild let:builder>
 		<slot name="trigger" {builder} />
-	</Dialog.Trigger>
+	</Sheet.Trigger>
 
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit rule</Dialog.Title>
-		</Dialog.Header>
+	<Sheet.Content side="left">
+		<Sheet.Header>
+			<Sheet.Title>Edit rule</Sheet.Title>
+		</Sheet.Header>
 
 		<Form.Root {form} {reset} submitText="Save">
 			<Form.Field {form} name="action">
@@ -115,5 +115,5 @@
 				</Form.Control>
 			</Form.Field>
 		</Form.Root>
-	</Dialog.Content>
-</Dialog.Root>
+	</Sheet.Content>
+</Sheet.Root>

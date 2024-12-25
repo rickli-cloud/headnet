@@ -118,6 +118,7 @@
 	<Sheet.Content>
 		{#if $selectedNode instanceof User}
 			<UserInfo
+				users={data.users}
 				user={$selectedNode}
 				acl={data.acl}
 				preAuthKeys={$preAuthKeys}
@@ -168,6 +169,7 @@
 
 		{#key $selectedNode}
 			<UserActions
+				users={data.users}
 				user={$selectedNode}
 				acl={data.acl}
 				on:close={nodeActions.close}
@@ -204,6 +206,14 @@
 			/>
 		{/key}
 	{:else if $selectedNode && 'nodeId' in $selectedNode && $selectedNode.nodeId === 1}
+		<div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
+			<span>Internet</span>
+			<button class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted" on:click={nodeActions.close}>
+				<X class="h-4 w-4" />
+			</button>
+		</div>
+		<hr />
+
 		<InternetActions on:close={nodeActions.close} />
 	{:else}
 		<div class="text-red-600">Node not found</div>

@@ -3,7 +3,7 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { Input } from '$lib/components/ui/input';
 
 	import * as Form from '$lib/components/form';
@@ -40,15 +40,15 @@
 	reset();
 </script>
 
-<Dialog.Root>
-	<Dialog.Trigger asChild let:builder>
+<Sheet.Root>
+	<Sheet.Trigger asChild let:builder>
 		<slot name="trigger" {builder} />
-	</Dialog.Trigger>
+	</Sheet.Trigger>
 
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit machine</Dialog.Title>
-		</Dialog.Header>
+	<Sheet.Content side="left">
+		<Sheet.Header>
+			<Sheet.Title>Edit machine</Sheet.Title>
+		</Sheet.Header>
 
 		<Form.Root {form} {reset} submitText="Save" hasRequired>
 			<Form.Field {form} name="name">
@@ -65,5 +65,5 @@
 				</Form.Control>
 			</Form.Field>
 		</Form.Root>
-	</Dialog.Content>
-</Dialog.Root>
+	</Sheet.Content>
+</Sheet.Root>

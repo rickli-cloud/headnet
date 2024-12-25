@@ -2,49 +2,63 @@
 
 [![Unstable release](https://github.com/rickli-cloud/headnet/actions/workflows/unstable.yaml/badge.svg)](https://github.com/rickli-cloud/headnet/actions/workflows/unstable.yaml)
 
-A web-ui for [Headscale](https://github.com/juanfont/headscale) with a focus on easy ACL management thru 3D network visualization
+Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) with a focus on easy ACL management thru 3D network visualization
 
-## Deploy
+- [Features](#features)
+- [Deployment Options](#deployment-options)
+  - [Docker](#docker)
+  - [Static / Node](#static--node)
+  - [Desktop Application](#desktop-application)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Building](#building)
+- [Technology Stack](#technology-stack)
 
-Headnet comes packaged in different ways ready to deploy
+## Features
+
+- **Interactive 3D Network Visualization**: Visualize your network topology in 3D for intuitive management.
+- **Simplified ACL Management**: Easily manage Access Control Lists, Groups and more with a user-friendly interface.
+
+## Deployment Options
+
+> [!NOTE]  
+> The Node server does not support TLS and is best used behind a reverse proxy.
 
 ### Docker
 
-Distroless docker container running deno
+Headnet is available as a distroless Docker container running Deno.
+l
+**Tags:**
 
-#### Tags
+- `latest`: Latest stable release
+- `x.x.x`: Specific release versions
+- `x.x.x-pre`: Pre-release versions (potentially unstable)
+- `unstable`: Built on every push to the main branch
 
-- `latest` Latest stable release
-- `x.x.x` Release images
-- `x.x.x-pre` Pre-release images (potentially unstable)
-- `unstable` Built on every push to main
-
-#### Docker run
+**Using Docker Run:**
 
 ```sh
 docker run -d -p 3000:3000 ghcr.io/rickli-cloud/headnet:latest
 ```
 
-#### Docker compose
+**Using Docker Compose:**
 
-Save this as `docker-compose.yaml`:
+Create a `docker-compose.yaml` file:
 
 ```yaml
 version: '3.9'
-name: headnet
 services:
   headnet:
     image: ghcr.io/rickli-cloud/headnet:${HEADNET_VERSION:-latest}
     container_name: headnet
-    pull_policy: always
     restart: always
     ports:
-      - 0.0.0.0:3000:3000/tcp
+      - 3000:3000
     environment:
-      PUBLIC_MOCK_ENABLED: 'true' # Demo mode enabled
+      PUBLIC_MOCK_ENABLED: 'true' # Enable demo mode (requires a build with MSW included!)
 ```
 
-Start it up:
+Start the service:
 
 ```sh
 docker compose up -d
@@ -52,62 +66,63 @@ docker compose up -d
 
 ### Static / Node
 
-For all [releases](https://github.com/rickli-cloud/headnet/releases) there are zip archives provided for each build target
+Pre-built zip archives for various build targets are available in the [releases](https://github.com/rickli-cloud/headnet/releases).
 
-> The node server **is not capable of TLS** and is best used in combination with a reverse proxy. This does not pose a big security risk (assuming the internal network is somewhat secure) as no sensitive data is directly transmitted to this server.
+### Desktop Application
 
-### Desktop application
+Standalone executables and installers for different platforms are provided in the [releases](https://github.com/rickli-cloud/headnet/releases).
 
-For all [releases](https://github.com/rickli-cloud/headnet/releases) there are standalone executables or installers provided for different platforms. Thanks to a special client integration it is possible to completely circumvent any CORS restrictions
+> These applications include special client integrations to bypass any CORS restrictions. This allows it to work with any Headscale instance without additional configuration.
 
-## Environment configuration
+## Configuration
 
-> [!NOTE]  
-> When using the static build target the environment can be configured on buildtime or by modifying the `/_app/env.js` file.
-> Example to enable mocking:
->
-> ```js
-> export const env = { PUBLIC_MOCK_ENABLED: 'true' };
-> ```
+Environment variables can be configured at build time or by modifying the `/_app/env.js` file in static builds.
 
-### Base path
+### Example to Enable Mocking
 
-> Only affective during buildtime
+```js
+export const env = { PUBLIC_MOCK_ENABLED: 'true' };
+```
+
+### Base Path
+
+> Only affective during development & buildtime
 
 ```sh
-# linux
+# Linux
 export BASE_PATH="/admin"
-# windows
+
+# Windows
 $env:BASE_PATH="/admin"
 ```
 
-### Build target
+### Build Target
 
 > Only affective during buildtime
 
-With the help of SvelteKit adapters it is possible to target different environments. For now this includes:
-
-- `node` Ready to serve requests running node or deno
-- `static` Can be served using almost any webserver capable of serving static files (single page application)
-- `auto` Let SvelteKit figure it out
+- `node`: For Node.js or Deno servers
+- `static`: For static file servers
+- `auto`: Let SvelteKit decide
 
 ```sh
-# linux
+# Linux
 export BUILD_TARGET="node"
-# windows
+
+# Windows
 $env:BUILD_TARGET="node"
 ```
 
-### Development proxy
+### Development Proxy
 
 > Only affective during development
 
-To circumvent CORS issues vite provides a dev proxy leading to your headscale instance. To enable this you have to define your headscale host as a environment variable
+To circumvent CORS issues vite provides a dev proxy leading to your headscale instance.
 
 ```sh
-# linux
+# Linux
 export HEADSCALE_HOST="https://headscale.example.com"
-# windows
+
+# Windows
 $env:HEADSCALE_HOST="https://headscale.example.com"
 ```
 
@@ -116,68 +131,75 @@ $env:HEADSCALE_HOST="https://headscale.example.com"
 Mock the whole API with the help of a service worker. This enables "demo mode"
 
 ```sh
-# linux
+# Linux
 export PUBLIC_MOCK_ENABLED="false"
-# windows
+
+# Windows
 $env:PUBLIC_MOCK_ENABLED="false"
 ```
 
-## Install dependencies
+> [!IMPORTANT]  
+> This only works if the build includes the required service worker. To keep the size down it is **not included** in the production releases.
 
-Dependencies are required for building or developing
+## Development
+
+**Install Dependencies:**
 
 ```sh
 deno install
 ```
 
-## Building
-
-### Node / Static
-
-Create a production build:
-
-```sh
-deno task build
-```
-
-> [!TIP]  
-> You can use docker for building if you do not want to / cant install deno:
->
-> ```sh
-> docker run -it --rm --workdir /app -v ${PWD}:/app:rw --entrypoint /bin/sh denoland/deno:latest
-> ```
-
-### Tauri
-
-Needs specific configuration to work properly:
-
-- `BASE_PATH = "/"`
-- `BUILD_TARGET = "static"`
-
-```sh
-deno task tauri build
-```
-
-## Developing
-
-Start a development server:
+**Starting Development Server:**
 
 ```sh
 deno task dev
 ```
 
-## Stack
+## Building
 
-Some of the major projects used:
+> [!TIP]  
+> This can be done in Docker:
+>
+> ```sh
+> docker run -it --rm --workdir /app -v ${PWD}:/app:rw --entrypoint /bin/sh denoland/deno:latest
+> ```
 
-- [deno 2](https://deno.com/)
-- [tauri 2](https://v2.tauri.app/)
-- [svelte 5](https://svelte.dev/)
+**Install Dependencies:**
+
+```sh
+deno install
+```
+
+**For Node or Static builds:**
+
+```sh
+deno task build
+```
+
+**For Tauri builds:**
+
+Ensure the following configuration:
+
+- `BASE_PATH = "/"`
+- `BUILD_TARGET = "static"`
+
+Then run:
+
+```sh
+deno task tauri build
+```
+
+## Technology Stack
+
+Headnet is built using the following technologies:
+
+- [Deno 2](https://deno.com/)
+- [Tauri 2](https://v2.tauri.app/)
+- [Svelte 5](https://svelte.dev/)
 - [shadcn](https://www.shadcn-svelte.com/)
 - [3d-force-graph](https://github.com/vasturiano/3d-force-graph)
 - [json-ast-comments](https://github.com/2betop/json-ast-comments)
 - [openapi-typescript](https://openapi-ts.dev/)
-- [mock service worker](https://mswjs.io/)
+- [Mock Service Worker](https://mswjs.io/)
 
-> [!NOTE]  
-> Deno provides additional functionality such as automatic types for third party modules. NodeJS does not support this and will not work with this project during development / building.
+> **Note:** Deno provides additional functionality, such as automatic types for third-party modules. Node.js does not support this and will not work
