@@ -123,7 +123,7 @@ export type CommentObj = {
 export interface V1PolicyComments {
 	groups: CommentObj;
 	tagOwners: CommentObj;
-	Hosts: CommentObj;
+	hosts: CommentObj;
 	$$comments: { $acls: { [x: number]: string[][] } };
 }
 
@@ -727,7 +727,7 @@ export class Acl {
 				.map(([name, cidr]) => ({
 					name,
 					cidr,
-					comments: comments.Hosts?.$$comments?.[name]?.[0].map(parseComment)
+					comments: comments.hosts?.$$comments?.[name]?.[0].map(parseComment)
 				})),
 			groups: Object.entries(p?.groups || {})
 				.filter(([key]) => key !== '$$comments')
@@ -770,7 +770,7 @@ export class Acl {
 
 		return {
 			$$comments: comments?.$$comments || {},
-			Hosts: { $$comments: comments?.Hosts?.$$comments || {} },
+			hosts: { $$comments: comments?.hosts?.$$comments || {} },
 			groups: { $$comments: comments?.groups?.$$comments || {} },
 			tagOwners: { $$comments: comments?.tagOwners?.$$comments || {} }
 		};
@@ -805,7 +805,7 @@ export class Acl {
 	public stringify(): string {
 		const comments = this.comments;
 
-		if (typeof comments.Hosts.$$comments !== 'object') comments.Hosts.$$comments = {};
+		if (typeof comments.hosts.$$comments !== 'object') comments.hosts.$$comments = {};
 		if (typeof comments.groups.$$comments !== 'object') comments.groups.$$comments = {};
 		if (typeof comments.tagOwners.$$comments !== 'object') comments.tagOwners.$$comments = {};
 		if (typeof comments.$$comments !== 'object') comments.$$comments = { $acls: {} };
@@ -814,7 +814,7 @@ export class Acl {
 		const policy: V1Policy = {
 			hosts: Object.fromEntries(
 				this.hosts.map((host, i) => {
-					comments.Hosts.$$comments[i] = [host.comments?.map(stringifyComment) || []];
+					comments.hosts.$$comments[i] = [host.comments?.map(stringifyComment) || []];
 					return [host.name, host.cidr];
 				})
 			),
@@ -844,8 +844,8 @@ export class Acl {
 			...this.policy,
 			...comments,
 			...policy,
-			Hosts: {
-				$$comments: comments.Hosts.$$comments,
+			hosts: {
+				$$comments: comments.hosts.$$comments,
 				...policy.hosts
 			},
 			groups: {

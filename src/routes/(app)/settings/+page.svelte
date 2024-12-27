@@ -14,8 +14,9 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { mode, setMode } from 'mode-watcher';
 	import { get } from 'svelte/store';
-	import { version } from '$app/environment';
+	import { dev, version } from '$app/environment';
 	import { formatVersion } from '$lib/utils/misc';
+	import { Session } from '$lib/store/session';
 
 	const form = superForm(
 		{ theme: get(mode) },
@@ -109,12 +110,26 @@
 	<!-- <p class="text-sm text-muted-foreground"></p> -->
 </div>
 
-<div class="grid items-center gap-3" style="grid-template-columns: 1fr auto;">
+<div class="grid items-center gap-x-2.5 gap-y-5" style="grid-template-columns: 1fr auto;">
 	<div class="space-y-2">
 		<h4 class="text-sm font-medium">Version</h4>
 	</div>
 
 	<div class="text-sm">
-		{formatVersion(version)}
+		{dev ? 'development' : formatVersion(version)}
+	</div>
+
+	<div>
+		<h4 class="text-sm font-medium">API version</h4>
+	</div>
+
+	<div class="text-sm">v1</div>
+
+	<div>
+		<h4 class="text-sm font-medium">API host</h4>
+	</div>
+
+	<div class="text-sm">
+		{$Session?.baseUrl || `${window.location.protocol}//${window.location.host}`}
 	</div>
 </div>

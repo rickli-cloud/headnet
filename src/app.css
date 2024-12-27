@@ -194,6 +194,7 @@
 	.scrolltrack-hidden::-webkit-scrollbar-track {
 		@apply border bg-transparent;
 	}
+	.overflow-scroll,
 	.overflow-x-scroll,
 	.overflow-y-scroll {
 		@apply scrolltrack-hidden;

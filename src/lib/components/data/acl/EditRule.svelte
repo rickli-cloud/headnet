@@ -17,7 +17,7 @@
 	import SelectRuleTarget from './SelectRuleTarget.svelte';
 
 	export let acl: Acl;
-	export let users: User[];
+	export let users: User[] | undefined;
 	export let rule: AclData['acls'][0];
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();

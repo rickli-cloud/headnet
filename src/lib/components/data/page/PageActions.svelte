@@ -8,6 +8,7 @@
 	import LogOut from 'lucide-svelte/icons/log-out';
 	import Braces from 'lucide-svelte/icons/braces';
 	import Users from 'lucide-svelte/icons/users';
+	import Lock from 'lucide-svelte/icons/lock';
 	import Plus from 'lucide-svelte/icons/plus';
 	import Cog from 'lucide-svelte/icons/cog';
 	import Tag from 'lucide-svelte/icons/tag';
@@ -21,9 +22,10 @@
 
 	import type { Acl, User } from '$lib/api';
 	import { base } from '$app/paths';
+	import AccessControlInfo from '../acl/AccessControlInfo.svelte';
 
+	export let acl: Acl;
 	export let users: User[] | undefined;
-	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
@@ -58,6 +60,17 @@
 </li>
 
 <hr />
+
+<li>
+	<AccessControlInfo {acl} {users}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Lock />
+				<span>Access control</span>
+			</button>
+		</svelte:fragment>
+	</AccessControlInfo>
+</li>
 
 <li>
 	<button disabled>

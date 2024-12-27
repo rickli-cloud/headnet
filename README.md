@@ -5,11 +5,16 @@
 Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) with a focus on easy ACL management thru 3D network visualization
 
 - [Features](#features)
-- [Deployment Options](#deployment-options)
+- [Deployment options](#deployment-options)
   - [Docker](#docker)
   - [Static / Node](#static--node)
-  - [Desktop Application](#desktop-application)
+  - [Desktop application](#desktop-application)
 - [Configuration](#configuration)
+  - [Passing environment variables](#passing-environment-variables)
+  - [Base path](#base-path)
+  - [Build target](#build-target)
+  - [Development proxy](#development-proxy)
+  - [Mocking](#mocking)
 - [Development](#development)
 - [Building](#building)
 - [Technology Stack](#technology-stack)
@@ -27,21 +32,21 @@ Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) wi
 ### Docker
 
 Headnet is available as a distroless Docker container running Deno.
-l
-**Tags:**
+
+#### Tags
 
 - `latest`: Latest stable release
 - `x.x.x`: Specific release versions
 - `x.x.x-pre`: Pre-release versions (potentially unstable)
 - `unstable`: Built on every push to the main branch
 
-**Using Docker Run:**
+#### Using Docker Run
 
 ```sh
 docker run -d -p 3000:3000 ghcr.io/rickli-cloud/headnet:latest
 ```
 
-**Using Docker Compose:**
+#### Using Docker Compose
 
 Create a `docker-compose.yaml` file:
 
@@ -76,13 +81,27 @@ Standalone executables and installers for different platforms are provided in th
 
 ## Configuration
 
-Environment variables can be configured at build time or by modifying the `/_app/env.js` file in static builds.
+### Passing environment variables
 
-### Example to Enable Mocking
+Environment variables can be configured in different ways depending on the deployment method.
+
+> Some variables might only be affective during development or at buildtime!
+
+#### Node / Deno server
+
+Reads environment variables given to it. To read .env files follow the [sveltekit documentation](https://svelte.dev/docs/kit/adapter-node#Environment-variables).
+
+#### Static builds
+
+Configure environment at buildtime or modify the `/_app/env.js` file. Example to Enable Mocking:
 
 ```js
 export const env = { PUBLIC_MOCK_ENABLED: 'true' };
 ```
+
+#### Desktop application (tauri)
+
+Unfortunately you **can not** configure anything after buildtime.
 
 ### Base Path
 
@@ -139,7 +158,9 @@ $env:PUBLIC_MOCK_ENABLED="false"
 ```
 
 > [!IMPORTANT]  
-> This only works if the build includes the required service worker. To keep the size down it is **not included** in the production releases.
+> This only works if the build includes the required service worker.
+> To keep the size down it is **not included** in the production releases.
+> Create the service worker with: `deno task msw:init`
 
 ## Development
 
@@ -196,10 +217,11 @@ Headnet is built using the following technologies:
 - [Deno 2](https://deno.com/)
 - [Tauri 2](https://v2.tauri.app/)
 - [Svelte 5](https://svelte.dev/)
-- [shadcn](https://www.shadcn-svelte.com/)
+- [shadcn svelte](https://www.shadcn-svelte.com/)
 - [3d-force-graph](https://github.com/vasturiano/3d-force-graph)
 - [json-ast-comments](https://github.com/2betop/json-ast-comments)
 - [openapi-typescript](https://openapi-ts.dev/)
 - [Mock Service Worker](https://mswjs.io/)
 
-> **Note:** Deno provides additional functionality, such as automatic types for third-party modules. Node.js does not support this and will not work
+> [!NOTE]  
+> Deno provides additional functionality, such as automatic types for third-party modules. Node.js does not support this and will not work

@@ -4,6 +4,7 @@
 
 	import Sliders from 'lucide-svelte/icons/sliders-horizontal';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+	import LogOut from 'lucide-svelte/icons/log-out';
 	import Braces from 'lucide-svelte/icons/braces';
 	import Cog from 'lucide-svelte/icons/cog';
 
@@ -12,6 +13,7 @@
 	import { cn } from '$lib/utils/shadcn';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
+	import EndSession from '$lib/components/data/page/EndSession.svelte';
 
 	const navItems: { href: string; title: string; icon: ConstructorOfATypedSvelteComponent }[] = [
 		{ href: base + '/', title: 'Go back', icon: ArrowLeft },
@@ -26,14 +28,14 @@
 	});
 </script>
 
-<div class="space-y-6 p-10 pb-16">
+<div class="h-full min-w-[512px] space-y-6 overflow-scroll p-10 pb-16">
 	<div class="space-y-0.5">
 		<h2 class="text-2xl font-bold tracking-tight">Settings</h2>
 	</div>
 
 	<hr class="my-6" />
 
-	<div class="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+	<div class="flex h-full flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
 		<aside class="-mx-4 lg:w-1/5">
 			<nav class="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
 				{#each navItems as item}
@@ -65,6 +67,23 @@
 						</div>
 					</Button>
 				{/each}
+
+				<EndSession>
+					<svelte:fragment slot="trigger" let:builder>
+						<Button
+							variant="ghost"
+							class="relative justify-start hover:bg-transparent hover:underline"
+							data-sveltekit-noscroll
+							builders={[builder]}
+						>
+							<div class="relative flex items-center gap-1.5">
+								<LogOut class="h-4 w-4" />
+
+								<span> Log out </span>
+							</div>
+						</Button>
+					</svelte:fragment>
+				</EndSession>
 			</nav>
 		</aside>
 

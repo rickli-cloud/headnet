@@ -19,5 +19,9 @@ export function uuidv4() {
 }
 
 export function formatVersion(version: string): string {
-	return /^v/.test(version) ? version : 'v' + version;
+	return /^v?0.0.0-?/.test(version)
+		? version.replace(/^v?0.0.0-?/, '') || 'unknown'
+		: /^v/.test(version)
+			? version
+			: 'v' + version;
 }
