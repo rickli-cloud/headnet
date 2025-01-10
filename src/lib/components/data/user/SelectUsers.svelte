@@ -8,21 +8,21 @@
 
 	interface $$Props extends Partial<HTMLElement> {
 		users: User[] | undefined;
-		selected: string | undefined;
+		selected: string[] | undefined;
 		required?: boolean;
 	}
 
 	export let users: $$Props['users'];
 	export let selected: $$Props['selected'];
 
-	const sel = writable<Selected<string> | undefined>(
-		selected ? { value: selected, label: selected } : undefined
+	const sel = writable<Selected<string>[] | undefined>(
+		selected?.map((i) => ({ label: i, value: i }))
 	);
 
-	sel.subscribe((s) => (selected = s?.value));
+	sel.subscribe((s) => (selected = s?.map((i) => i.value)));
 </script>
 
-<Select.Root {...$$restProps} bind:selected={$sel}>
+<Select.Root {...$$restProps} bind:selected={$sel} multiple>
 	<Select.Trigger>
 		<Select.Value />
 	</Select.Trigger>

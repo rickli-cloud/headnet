@@ -2,7 +2,8 @@ FROM golang:latest as build
 
 WORKDIR /work
 
-COPY . .
+COPY build/ build/
+COPY server.go server.go
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build $PWD/server.go
 
@@ -15,4 +16,3 @@ COPY --from=build /work/server .
 EXPOSE 3000
 
 ENTRYPOINT [ "/server" ]
-

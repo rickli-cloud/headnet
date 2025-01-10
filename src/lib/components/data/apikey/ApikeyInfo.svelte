@@ -52,7 +52,7 @@
 			<Sheet.Title>API keys</Sheet.Title>
 			<Sheet.Description>
 				API keys provide administrator level access to Headscale and should never be shared with
-				untrusted parties.
+				untrusted parties
 			</Sheet.Description>
 		</Sheet.Header>
 
@@ -65,20 +65,20 @@
 			</li>
 		</ul>
 
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head></Table.Head>
-					<Table.Head>Key</Table.Head>
-					<Table.Head>Created</Table.Head>
-					<Table.Head>Expires</Table.Head>
-					<Table.Head>Last seen</Table.Head>
-					<Table.Head>ID</Table.Head>
-				</Table.Row>
-			</Table.Header>
+		{#if apikeys?.length}
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head></Table.Head>
+						<Table.Head>Key</Table.Head>
+						<Table.Head>Created</Table.Head>
+						<Table.Head>Expires</Table.Head>
+						<Table.Head>Last seen</Table.Head>
+						<Table.Head>ID</Table.Head>
+					</Table.Row>
+				</Table.Header>
 
-			<Table.Body>
-				{#if apikeys?.length}
+				<Table.Body>
 					{#each apikeys as apiKey}
 						<Table.Row>
 							<Table.Cell class="pr-0">
@@ -133,11 +133,24 @@
 							</Table.Cell>
 						</Table.Row>
 					{/each}
-				{:else}
-					<p class="w-full text-center text-sm text-muted-foreground">no API keys found</p>
-				{/if}
-			</Table.Body>
-		</Table.Root>
+				</Table.Body>
+			</Table.Root>
+		{:else}
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head></Table.Head>
+						<Table.Head>Key</Table.Head>
+						<Table.Head>Created</Table.Head>
+						<Table.Head>Expires</Table.Head>
+						<Table.Head>Last seen</Table.Head>
+						<Table.Head>ID</Table.Head>
+					</Table.Row>
+				</Table.Header>
+			</Table.Root>
+
+			<p class="w-full p-4 text-center text-sm text-muted-foreground">no API keys found</p>
+		{/if}
 
 		<slot />
 	</Sheet.Content>

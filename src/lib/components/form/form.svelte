@@ -35,11 +35,11 @@
 <form {...$$restProps} class={cn('data-form', $$restProps.class || '')} use:form.enhance on:submit>
 	<slot />
 
-	<!-- {#if dev}
+	{#if dev}
 		<div class="rounded bg-muted px-4 py-2 text-muted-foreground">
 			<Code yaml={{ errors: $errors, data: $formData }} />
 		</div>
-	{/if} -->
+	{/if}
 
 	<div class="star-note" class:required={hasRequired}>required</div>
 

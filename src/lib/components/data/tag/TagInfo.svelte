@@ -9,6 +9,7 @@
 
 	import { tagRegex, type Acl } from '$lib/api';
 	import EditTag from './EditTag.svelte';
+	import CreateTag from './CreateTag.svelte';
 
 	export let acl: Acl | undefined;
 </script>
@@ -26,10 +27,14 @@
 
 		<ul class="menu">
 			<li>
-				<button disabled>
-					<Plus />
-					<span> Create </span>
-				</button>
+				<CreateTag {acl}>
+					<svelte:fragment slot="trigger" let:builder>
+						<button {...builder} use:builder.action>
+							<Plus />
+							<span> Create </span>
+						</button>
+					</svelte:fragment>
+				</CreateTag>
 			</li>
 		</ul>
 

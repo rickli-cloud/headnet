@@ -11,6 +11,7 @@
 	import EditUser from '../user/EditUser.svelte';
 	import DeleteUser from '../user/DeleteUser.svelte';
 	import CreateUser from '../user/CreateUser.svelte';
+	import CreateGroup from '../group/CreateGroup.svelte';
 
 	export let users: User[] | undefined;
 	export let acl: Acl | undefined;
@@ -48,10 +49,14 @@
 			</li>
 
 			<li>
-				<button disabled>
-					<Plus />
-					<span> Group </span>
-				</button>
+				<CreateGroup {acl} {users}>
+					<svelte:fragment slot="trigger" let:builder>
+						<button {...builder} use:builder.action>
+							<Plus />
+							<span> Group </span>
+						</button>
+					</svelte:fragment>
+				</CreateGroup>
 			</li>
 		</ul>
 
@@ -99,13 +104,15 @@
 
 						<Table.Cell>
 							<p class="h-6 whitespace-nowrap font-semibold" style="line-height: 24px;">
-								{user.name}
+								<button class="link">
+									{user.name}
 
-								{#if user.id}
-									<span class="text-muted-foreground">
-										#{user.id}
-									</span>
-								{/if}
+									{#if user.id}
+										<span class="text-muted-foreground">
+											#{user.id}
+										</span>
+									{/if}
+								</button>
 							</p>
 						</Table.Cell>
 

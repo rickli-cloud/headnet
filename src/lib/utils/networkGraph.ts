@@ -11,7 +11,7 @@
  * - [x] Autogroup:internet
  */
 
-import type { ForceGraph3DGenericInstance, ForceGraph3DInstance } from '3d-force-graph';
+import type { ForceGraph3DGenericInstance } from '3d-force-graph';
 import { Address4, Address6 } from 'ip-address';
 
 import {

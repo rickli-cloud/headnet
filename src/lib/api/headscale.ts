@@ -674,7 +674,6 @@ export interface AclData {
 	groups: {
 		name: string;
 		members: string[];
-		ownedTags: string[];
 		comments?: string[];
 	}[];
 	tagOwners: {
@@ -734,9 +733,6 @@ export class Acl {
 				.map(([name, members]) => ({
 					name,
 					members,
-					ownedTags: Object.entries(p?.tagOwners || {})
-						.filter((i) => i[1].includes(name))
-						.map(([k]) => k),
 					comments: comments.groups?.$$comments?.[name]?.[0].map(parseComment)
 				})),
 			tagOwners: Object.entries(p?.tagOwners || {})
@@ -833,7 +829,7 @@ export class Acl {
 			acls: this.acls.map((acl, i) => {
 				comments.$$comments.$acls[i] = [acl.comments?.map(stringifyComment) || []];
 				const dst = acl.dst.map((i) => i.host + ':' + i.port);
-				const newAcl: { [x: string]: any } = JSON.parse(JSON.stringify(acl));
+				const newAcl: { [x: string]: unknown } = JSON.parse(JSON.stringify(acl));
 				delete newAcl.comments;
 				delete newAcl.id;
 				return { ...(newAcl as typeof acl), dst };
