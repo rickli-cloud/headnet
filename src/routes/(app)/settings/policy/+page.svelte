@@ -1,10 +1,18 @@
 <script lang="ts">
+	import { type ComponentProps } from 'svelte';
+	import * as monaco from 'monaco-editor';
+
 	import MonacoEditor from '$lib/components/utils/MonacoEditor.svelte';
-	import { writable } from 'svelte/store';
 
 	export let data;
 
-	const content = writable<string>(data.acl.stringify());
+	let editor: ComponentProps<MonacoEditor>['editor'];
 </script>
 
-<MonacoEditor {content} readonly />
+<MonacoEditor
+	class="h-full w-full"
+	bind:editor
+	on:ready={(ev) => {
+		ev.detail.setModel(monaco.editor.createModel(data.acl.stringify(), 'json'));
+	}}
+/>

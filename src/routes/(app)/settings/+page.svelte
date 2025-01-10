@@ -17,6 +17,7 @@
 	import { dev, version } from '$app/environment';
 	import { formatVersion } from '$lib/utils/misc';
 	import { Session } from '$lib/store/session';
+	import { env } from '$env/dynamic/public';
 
 	const form = superForm(
 		{ theme: get(mode) },
@@ -110,7 +111,7 @@
 	<!-- <p class="text-sm text-muted-foreground"></p> -->
 </div>
 
-<div class="grid items-center gap-x-2.5 gap-y-5" style="grid-template-columns: 1fr auto;">
+<div class="grid items-center gap-x-16 gap-y-4" style="grid-template-columns: auto 1fr;">
 	<div class="space-y-2">
 		<h4 class="text-sm font-medium">Version</h4>
 	</div>
@@ -130,6 +131,10 @@
 	</div>
 
 	<div class="text-sm">
-		{$Session?.baseUrl || `${window.location.protocol}//${window.location.host}`}
+		{#if env.PUBLIC_MOCK_ENABLED}
+			msw
+		{:else}
+			{$Session?.baseUrl || `${window.location.protocol}//${window.location.host}`}
+		{/if}
 	</div>
 </div>

@@ -1,9 +1,18 @@
-FROM denoland/deno:distroless
+FROM golang:latest as build
 
-WORKDIR /app
+WORKDIR /work
 
-COPY ./build .
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build $PWD/server.go
+
+FROM scratch
+
+LABEL maintainer=github/rickli-cloud
+
+COPY --from=build /work/server .
 
 EXPOSE 3000
 
-CMD [ "run", "--allow-env", "--allow-read=/app", "--allow-net=0.0.0.0:3000", "index.js" ]
+ENTRYPOINT [ "/server" ]
+

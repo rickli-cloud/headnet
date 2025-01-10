@@ -7,12 +7,11 @@ Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) wi
 - [Features](#features)
 - [Deployment options](#deployment-options)
   - [Docker](#docker)
-  - [Static / Node](#static--node)
+  - [Static server](#static-server)
   - [Desktop application](#desktop-application)
 - [Configuration](#configuration)
   - [Passing environment variables](#passing-environment-variables)
   - [Base path](#base-path)
-  - [Build target](#build-target)
   - [Development proxy](#development-proxy)
   - [Mocking](#mocking)
 - [Development](#development)
@@ -27,11 +26,11 @@ Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) wi
 ## Deployment Options
 
 > [!NOTE]  
-> The Node server does not support TLS and is best used behind a reverse proxy.
+> The provided server does not support TLS and is best used behind a reverse proxy.
 
 ### Docker
 
-Headnet is available as a distroless Docker container running Deno.
+Headnet is available as a distroless Docker container a [basic golang webserver](https://github.com/rickli-cloud/headnet/blob/main/server.go).
 
 #### Tags
 
@@ -43,7 +42,7 @@ Headnet is available as a distroless Docker container running Deno.
 #### Using Docker Run
 
 ```sh
-docker run -d -p 3000:3000 ghcr.io/rickli-cloud/headnet:latest
+docker run -d -p 3000:3000 ghcr.io/rickli-cloud/headnet:unstable
 ```
 
 #### Using Docker Compose
@@ -54,7 +53,7 @@ Create a `docker-compose.yaml` file:
 version: '3.9'
 services:
   headnet:
-    image: ghcr.io/rickli-cloud/headnet:${HEADNET_VERSION:-latest}
+    image: ghcr.io/rickli-cloud/headnet:${HEADNET_VERSION:-unstable}
     container_name: headnet
     restart: always
     ports:
@@ -69,13 +68,13 @@ Start the service:
 docker compose up -d
 ```
 
-### Static / Node
+### Static server
 
-Pre-built zip archives for various build targets are available in the [releases](https://github.com/rickli-cloud/headnet/releases).
+You can download a zip archive [for each release](https://github.com/rickli-cloud/headnet/releases) containing almost everything needed to deploy headnet on a static webserver like Nginx or Apache.
 
 ### Desktop Application
 
-Standalone executables and installers for different platforms are provided in the [releases](https://github.com/rickli-cloud/headnet/releases).
+Standalone executables and installers for different platforms are provided [for each release](https://github.com/rickli-cloud/headnet/releases).
 
 > These applications include special client integrations to bypass any CORS restrictions. This allows it to work with any Headscale instance without additional configuration.
 
@@ -87,11 +86,11 @@ Environment variables can be configured in different ways depending on the deplo
 
 > Some variables might only be affective during development or at buildtime!
 
-#### Node / Deno server
+#### Docker / Go server
 
-Reads environment variables given to it. To read .env files follow the [sveltekit documentation](https://svelte.dev/docs/kit/adapter-node#Environment-variables).
+Reads environment variables starting with `PUBLIC_` and serves them automatically on `/admin/_app/env.js`.
 
-#### Static builds
+#### Static files
 
 Configure environment at buildtime or modify the `/_app/env.js` file. Example to Enable Mocking:
 
@@ -102,48 +101,6 @@ export const env = { PUBLIC_MOCK_ENABLED: 'true' };
 #### Desktop application (tauri)
 
 Unfortunately you **can not** configure anything after buildtime.
-
-### Base Path
-
-> Only affective during development & buildtime
-
-```sh
-# Linux
-export BASE_PATH="/admin"
-
-# Windows
-$env:BASE_PATH="/admin"
-```
-
-### Build Target
-
-> Only affective during buildtime
-
-- `node`: For Node.js or Deno servers
-- `static`: For static file servers
-- `auto`: Let SvelteKit decide
-
-```sh
-# Linux
-export BUILD_TARGET="node"
-
-# Windows
-$env:BUILD_TARGET="node"
-```
-
-### Development Proxy
-
-> Only affective during development
-
-To circumvent CORS issues vite provides a dev proxy leading to your headscale instance.
-
-```sh
-# Linux
-export HEADSCALE_HOST="https://headscale.example.com"
-
-# Windows
-$env:HEADSCALE_HOST="https://headscale.example.com"
-```
 
 ### Mocking
 
@@ -159,8 +116,34 @@ $env:PUBLIC_MOCK_ENABLED="false"
 
 > [!IMPORTANT]  
 > This only works if the build includes the required service worker.
-> To keep the size down it is **not included** in the production releases.
+> To keep the size down it is **not included** in the production releases.  
 > Create the service worker with: `deno task msw:init`
+
+### Base Path
+
+> Only affective during development & buildtime
+
+```sh
+# Linux
+export BASE_PATH="/admin"
+
+# Windows
+$env:BASE_PATH="/admin"
+```
+
+### Development Proxy
+
+> Only affective during development
+
+To circumvent CORS issues vite provides a dev proxy leading to your headscale instance.
+
+```sh
+# Linux
+export HEADSCALE_HOST="https://headscale.example.com"
+
+# Windows
+$env:HEADSCALE_HOST="https://headscale.example.com"
+```
 
 ## Development
 
@@ -191,18 +174,17 @@ deno task dev
 deno install
 ```
 
-**For Node or Static builds:**
+### Static
 
 ```sh
 deno task build
 ```
 
-**For Tauri builds:**
+### Tauri
 
 Ensure the following configuration:
 
 - `BASE_PATH = "/"`
-- `BUILD_TARGET = "static"`
 
 Then run:
 
@@ -210,18 +192,27 @@ Then run:
 deno task tauri build
 ```
 
+### Docker image
+
+> The docker image does not build the svelte app, only bundles the static files into a small server.
+
+```sh
+docker build . -t headnet:custom
+```
+
 ## Technology Stack
 
 Headnet is built using the following technologies:
 
-- [Deno 2](https://deno.com/)
-- [Tauri 2](https://v2.tauri.app/)
-- [Svelte 5](https://svelte.dev/)
-- [shadcn svelte](https://www.shadcn-svelte.com/)
 - [3d-force-graph](https://github.com/vasturiano/3d-force-graph)
+- [deno 2](https://github.com/denoland/deno)
 - [json-ast-comments](https://github.com/2betop/json-ast-comments)
-- [openapi-typescript](https://openapi-ts.dev/)
-- [Mock Service Worker](https://mswjs.io/)
+- [mock service worker](https://github.com/mswjs/msw)
+- [monaco editor](https://github.com/microsoft/monaco-editor)
+- [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)
+- [shadcn svelte](https://github.com/huntabyte/shadcn-svelte)
+- [svelte 5](https://github.com/sveltejs/svelte)
+- [tauri 2](https://github.com/tauri-apps/tauri)
 
 > [!NOTE]  
 > Deno provides additional functionality, such as automatic types for third-party modules. Node.js does not support this and will not work

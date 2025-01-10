@@ -36,7 +36,7 @@
 	<hr class="my-6" />
 
 	<div class="flex h-full flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
-		<aside class="-mx-4 lg:w-1/5">
+		<aside class="-mx-4 overflow-x-scroll pb-4 lg:w-1/5">
 			<nav class="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
 				{#each navItems as item}
 					{@const isActive = $page.url.pathname === item.href}

@@ -20,12 +20,10 @@
 		"tauri:build": "tauri build"
 	},
 	"devDependencies": {
-		"3d-force-graph": "^1.73.4",
 		"@faker-js/faker": "^9.2.0",
 		"@playwright/test": "^1.45.3",
 		"@rollup/plugin-terser": "^0.4.4",
 		"@sveltejs/adapter-auto": "^3.0.0",
-		"@sveltejs/adapter-node": "^5.2.9",
 		"@sveltejs/adapter-static": "^3.0.6",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
@@ -33,6 +31,7 @@
 		"@tauri-apps/cli": "^2.1.0",
 		"@types/eslint": "^9.6.0",
 		"@types/node": "^22.8.5",
+		"3d-force-graph": "^1.73.4",
 		"autoprefixer": "^10.4.20",
 		"bits-ui": "^0.21.16",
 		"clsx": "^2.1.1",

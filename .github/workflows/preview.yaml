@@ -25,7 +25,7 @@ jobs:
       - name: Setup Github Pages
         uses: actions/configure-pages@v3
 
-      - name: Setup deno
+      - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -41,7 +41,7 @@ jobs:
         run: deno install
 
       - name: Patch version
-        run: npm version 0.0.0-preview --no-commit-hooks --no-git-tag-version
+        run: npm version 0.0.0-demo --no-commit-hooks --no-git-tag-version
 
       - name: Mock service worker init
         run: deno task msw:init
