@@ -20,7 +20,8 @@
 		Groups: getNames(acl.groups),
 		Hosts: getNames(acl.hosts),
 		Tags: getNames(acl.tagOwners),
-		General: ['*']
+		General: ['*'],
+		Autogroup: ['autogroup:internet']
 	};
 
 	const sel = writable<RuleTarget[]>(selected);
