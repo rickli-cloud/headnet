@@ -14,18 +14,21 @@
 	import Tag from 'lucide-svelte/icons/tag';
 	import X from 'lucide-svelte/icons/x';
 
-	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
+	import AccessControlInfo from '$lib/components/data/acl/AccessControlInfo.svelte';
 	import ApikeyInfo from '$lib/components/data/apikey/ApikeyInfo.svelte';
+	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
 	import TagInfo from '$lib/components/data/tag/TagInfo.svelte';
+
+	import type { Acl, Machine, User } from '$lib/api';
+	import { base } from '$app/paths';
+
+	import MachineAndHostInfo from '../host/HostInfo.svelte';
 	import UserAndGroupInfo from './UserAndGroupInfo.svelte';
 	import EndSession from './EndSession.svelte';
 
-	import type { Acl, User } from '$lib/api';
-	import { base } from '$app/paths';
-	import AccessControlInfo from '../acl/AccessControlInfo.svelte';
-
 	export let acl: Acl;
 	export let users: User[] | undefined;
+	export let machines: Machine[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
@@ -62,7 +65,7 @@
 <hr />
 
 <li>
-	<AccessControlInfo {acl} {users}>
+	<AccessControlInfo {acl} {users} on:close>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Lock />
@@ -73,14 +76,7 @@
 </li>
 
 <li>
-	<button disabled>
-		<Network />
-		<span>Machines, Hosts</span>
-	</button>
-</li>
-
-<li>
-	<UserAndGroupInfo {acl} {users} on:close={() => dispatch('close')}>
+	<UserAndGroupInfo {acl} {users} on:close>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Users />
@@ -88,6 +84,17 @@
 			</button>
 		</svelte:fragment>
 	</UserAndGroupInfo>
+</li>
+
+<li>
+	<MachineAndHostInfo {machines} {acl}>
+		<svelte:fragment slot="trigger" let:builder>
+			<button {...builder} use:builder.action>
+				<Network />
+				<span>Hosts</span>
+			</button>
+		</svelte:fragment>
+	</MachineAndHostInfo>
 </li>
 
 <li>
@@ -109,7 +116,7 @@
 </li>
 
 <li>
-	<ApikeyInfo on:submit={() => dispatch('close')}>
+	<ApikeyInfo on:close>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<KeyRound />

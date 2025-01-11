@@ -51,7 +51,6 @@
 	const preAuthKeys = writable<PreAuthKey[]>([]);
 
 	page.subscribe(async ({ data }) => {
-		console.debug(data);
 		for (const err of data.errors || []) errorToast(formatError(err));
 		graphData.set(formatGraphData(data as PageData));
 		preAuthKeys.set(await PreAuthKey.list(data.users || []));
@@ -221,7 +220,12 @@
 </NetworkGraphActions>
 
 <NetworkGraphActions bind:this={pageActions}>
-	<PageActions on:close={pageActions.close} acl={data.acl} users={data.users} />
+	<PageActions
+		on:close={pageActions.close}
+		acl={data.acl}
+		users={data.users}
+		machines={data.machines}
+	/>
 </NetworkGraphActions>
 
 <Sheet.Root bind:this={linkInfo} let:close>

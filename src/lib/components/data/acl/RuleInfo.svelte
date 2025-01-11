@@ -12,11 +12,14 @@
 	import { Label } from '$lib/components/ui/label';
 
 	import EditRule from './EditRule.svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	export let acl: Acl;
 	export let users: User[] | undefined;
 	export let rule: AclData['acls'][0];
 	export let prefixes: { in: Set<string>; out: Set<string> } | undefined = undefined;
+
+	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
 
 <div class="space-y-3 border-b pb-5 last:border-b-0 [&>div]:space-y-2">
@@ -24,7 +27,7 @@
 		<div class="flex items-center justify-between gap-2">
 			<Label>Source</Label>
 			<div class="flex items-center gap-1.5">
-				<EditRule {rule} {acl} {users}>
+				<EditRule {rule} {acl} {users} on:submit={() => dispatch('close')}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button
 							{...builder}

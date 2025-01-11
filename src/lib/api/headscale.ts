@@ -716,8 +716,6 @@ export class Acl {
 		const p: V1Policy = policy?.length ? parse(stripJsonTrailingCommas(policy)) : undefined;
 		const comments = p as unknown as V1PolicyComments;
 
-		console.debug({ p, comments, policy });
-
 		return {
 			policy: p,
 			comments,

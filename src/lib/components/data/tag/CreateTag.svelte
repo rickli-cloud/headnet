@@ -39,7 +39,9 @@
 			if (ev.form.valid && acl) {
 				acl.tagOwners.push(ev.form.data);
 				try {
-					await acl.save();
+					const { error } = await acl.save();
+					if (error) throw error;
+
 					successToast(`Created tag "${ev.form.data.name}"`);
 					dispatch('submit');
 					mainSheet.close();

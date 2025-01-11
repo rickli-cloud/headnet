@@ -3,8 +3,8 @@
 	import Trash from 'lucide-svelte/icons/trash-2';
 	import Plus from 'lucide-svelte/icons/plus';
 
-	import * as Table from '$lib/components/ui/table';
 	import * as Sheet from '$lib/components/ui/sheet';
+	import * as Table from '$lib/components/ui/table';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 
 	import { type User, type Acl } from '$lib/api';

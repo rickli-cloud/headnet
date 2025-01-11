@@ -18,7 +18,7 @@
 
 	export let apikeys: ApiKey[] | undefined = undefined;
 
-	const dispatch = createEventDispatcher<{ submit: undefined }>();
+	const dispatch = createEventDispatcher<{ close: undefined }>();
 
 	if (!apikeys) {
 		ApiKey.list().then(({ data }) => {
@@ -34,7 +34,7 @@
 			if (error) throw error;
 
 			successToast(`Expired API key "${key.prefix}..."`);
-			dispatch('submit');
+			dispatch('close');
 		} catch (err) {
 			console.error(err);
 			errorToast(formatError(err));

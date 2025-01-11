@@ -11,9 +11,6 @@ export async function load({ data, fetch }) {
 		Acl.load(headscale)
 	]);
 
-	console.debug(acl.data.stringify());
-	console.debug(stringify(acl.data.acls));
-
 	return {
 		...(data || {}),
 		acl: acl.data,

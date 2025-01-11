@@ -2,7 +2,7 @@
 	import { defaults, superForm } from 'sveltekit-superforms';
 	import { zod } from 'sveltekit-superforms/adapters';
 	import { createEventDispatcher } from 'svelte';
-	import { get, writable } from 'svelte/store';
+	import { writable } from 'svelte/store';
 	import { z } from 'zod';
 
 	import * as Select from '$lib/components/ui/select/index.js';
@@ -20,7 +20,6 @@
 
 	export let acl: Acl;
 	export let users: User[] | undefined;
-	export let rule: AclData['acls'][0];
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
@@ -28,14 +27,14 @@
 
 	const schema: z.ZodType<Omit<AclData['acls'][0], 'id'>> = z.object({
 		action: z.literal('accept'),
-		src: z.array(z.string()),
-		dst: z.array(z.object({ host: z.string(), port: z.string() })),
+		src: z.array(z.string()).min(1),
+		dst: z.array(z.object({ host: z.string(), port: z.string() })).min(1),
 		comments: z.array(z.string()).default([])
 	});
 
 	const formDefaults = defaults(zod(schema));
 	const form = superForm(
-		{ ...formDefaults, data: rule },
+		{ ...formDefaults, data: { ...formDefaults.data, action: 'accept' } },
 		{
 			SPA: true,
 			dataType: 'json',
@@ -44,14 +43,15 @@
 			async onUpdate({ form }) {
 				if (form.valid) {
 					try {
-						acl.acls = acl.acls.map((acl) =>
-							acl.id === rule.id ? { ...rule, ...form.data } : rule
-						);
+						acl.acls.push({
+							...form.data,
+							id: '0'
+						});
 
 						const { error } = await acl.save();
 						if (error) throw error;
 
-						successToast(`Saved rule ${rule.id}`);
+						successToast('Created new rule');
 						dispatch('submit');
 						mainSheet.close();
 					} catch (err) {
@@ -65,10 +65,10 @@
 
 	const { form: formData } = form;
 
-	const description = writable<string>(rule.comments?.join('\n\n') || '');
+	const description = writable<string>('');
 
 	description.subscribe((desc) => {
-		formData.update((data) => ({ ...data, comments: desc.split(/\n{1,}/gm) }));
+		formData.update((data) => ({ ...data, comments: desc.split(/\n{1,}/gm).map((i) => i.trim()) }));
 	});
 </script>
 
@@ -79,10 +79,10 @@
 
 	<Sheet.Content side="left">
 		<Sheet.Header>
-			<Sheet.Title>Edit rule</Sheet.Title>
+			<Sheet.Title>Create rule</Sheet.Title>
 		</Sheet.Header>
 
-		<Form.Root {form} submitText="Save">
+		<Form.Root {form} submitText="Create">
 			<Form.Field {form} name="action" let:constraints>
 				<Form.Control let:attrs>
 					<Form.Label>Action</Form.Label>
