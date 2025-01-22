@@ -23,10 +23,28 @@
 </script>
 
 <div class="space-y-3 border-b pb-5 last:border-b-0 [&>div]:space-y-2">
-	<div>
-		<div class="flex items-center justify-between gap-2">
+	<div class="grid gap-x-2 gap-y-6 !space-y-0 sm:grid-cols-[1fr,1fr,auto]">
+		<div class="space-y-2">
+			<!-- <div class="flex items-center justify-between gap-2"></div> -->
 			<Label>Source</Label>
-			<div class="flex items-center gap-1.5">
+			<div class="flex flex-wrap items-center gap-1.5">
+				{#each rule.src as src}
+					<Badge>{src}</Badge>
+				{/each}
+			</div>
+		</div>
+
+		<div class="space-y-2">
+			<Label>Destination</Label>
+			<div class="flex flex-wrap items-center gap-1.5">
+				{#each rule.dst as dst}
+					<Badge>{`${dst.host}:${dst.port}`}</Badge>
+				{/each}
+			</div>
+		</div>
+
+		<div>
+			<div class="mt-1 flex items-center gap-1.5">
 				<EditRule {rule} {acl} {users} on:submit={() => dispatch('close')}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button
@@ -46,59 +64,35 @@
 				</button>
 			</div>
 		</div>
-		<div class="flex items-center gap-1.5">
-			{#each rule.src as src}
-				<Badge>{src}</Badge>
-			{/each}
-		</div>
-	</div>
 
-	<div>
-		<Label>Destination</Label>
-		<div class="flex items-center gap-1.5">
-			{#each rule.dst as dst}
-				<Badge>{`${dst.host}:${dst.port}`}</Badge>
-			{/each}
-		</div>
-	</div>
+		{#if prefixes}
+			<div class="space-y-2">
+				<Label class="gap11 flex items-center">Routes in</Label>
 
-	{#if prefixes}
-		<div class="!mt-4">
-			<Label class="flex items-center gap-1.5">
-				Routes
-				<Tooltip.Root>
-					<Tooltip.Trigger tabindex={-1}>
-						<Info class="h-3.5 w-3.5" />
-					</Tooltip.Trigger>
-
-					<Tooltip.Content side="right">
-						<div class="grid grid-cols-2 items-center gap-x-1 gap-y-0.5">
+				<ul class="space-y-0.5">
+					{#each prefixes.in as prefix}
+						<li class="flex items-center gap-1.5">
 							<ArrowLeft class="h-4 w-4" />
-							<p>In</p>
+							{prefix}
+						</li>
+					{/each}
+				</ul>
+			</div>
 
-							<ArrowRight class="h-4 w-4" />
-							<p>Out</p>
-						</div>
-					</Tooltip.Content>
-				</Tooltip.Root>
-			</Label>
+			<div class="space-y-2">
+				<Label class="flex items-center gap-1">Routes out</Label>
 
-			<ul class="space-y-0.5">
-				{#each [...prefixes.in]
-					.map((prefix) => ({ prefix, direction: 'in' }))
-					.concat([...prefixes.out].map((prefix) => ({ prefix, direction: 'out' }))) as prefix}
-					<li class="flex items-center gap-1.5">
-						{#if prefix.direction === 'in'}
-							<ArrowLeft class="h-4 w-4" />
-						{:else if prefix.direction === 'out'}
+				<ul class="space-y-0.5">
+					{#each prefixes.out as prefix}
+						<li class="flex items-center gap-1.5">
 							<ArrowRight class="h-4 w-4" />
-						{/if}
-						{prefix.prefix}
-					</li>
-				{/each}
-			</ul>
-		</div>
-	{/if}
+							{prefix}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+	</div>
 
 	{#if rule.comments?.length}
 		<div>
@@ -111,7 +105,18 @@
 		</div>
 	{/if}
 
-	<div class="text-[10px] text-muted-foreground">
+	<div class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
 		#{rule.id}
+
+		<Tooltip.Root>
+			<Tooltip.Trigger tabindex={-1}>
+				<Info class="h-2.5 w-2.5" />
+			</Tooltip.Trigger>
+
+			<Tooltip.Content side="top">
+				Randomly generated ID used internally. Does <span class="font-semibold">not persist</span>
+				and could change after every page reload.
+			</Tooltip.Content>
+		</Tooltip.Root>
 	</div>
 </div>

@@ -25,6 +25,10 @@
 	const sel = writable<string[]>(selected);
 	const newItem = writable<string>('');
 
+	sel.subscribe((s) => {
+		selected = s;
+	});
+
 	function handleAdd() {
 		if (!get(newItem).length) return;
 
@@ -47,9 +51,9 @@
 </script>
 
 <div class="space-y-2">
-	{#each $sel || [] as item}
+	{#each $sel || [] as item, i}
 		<div class="grid gap-1.5" style="grid-template-columns: 1fr auto;">
-			<SelectItem {items} bind:selected={item}></SelectItem>
+			<SelectItem {items} bind:selected={$sel[i]}></SelectItem>
 
 			<Button
 				class="hover:bg-destructive hover:text-destructive-foreground"

@@ -20,13 +20,17 @@
 		Groups: getNames(acl.groups),
 		Hosts: getNames(acl.hosts),
 		Tags: getNames(acl.tagOwners),
-		General: ['*'],
-		Autogroup: ['autogroup:internet']
+		Autogroup: ['autogroup:internet'],
+		General: ['*']
 	};
 
 	const sel = writable<RuleTarget[]>(selected);
 	const newItemTarget = writable<string>('');
 	const newItemPorts = writable<string>('');
+
+	sel.subscribe((s) => {
+		selected = s;
+	});
 
 	function handleAdd() {
 		const host = get(newItemTarget);
@@ -59,11 +63,11 @@
 </script>
 
 <div class="space-y-2">
-	{#each $sel || [] as item}
+	{#each $sel || [] as item, i}
 		<div class="grid gap-1.5" style="grid-template-columns: 3fr 1fr auto;">
-			<SelectItem {items} bind:selected={item.host}></SelectItem>
+			<SelectItem {items} bind:selected={$sel[i].host}></SelectItem>
 
-			<Input placeholder="Ports" required bind:value={item.port} />
+			<Input placeholder="Ports" required bind:value={$sel[i].port} />
 
 			<Button
 				class="hover:bg-destructive hover:text-destructive-foreground"

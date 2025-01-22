@@ -96,7 +96,7 @@
 
 			<Form.Field {form} name="members">
 				<Form.Control>
-					<Label for="user.groups">Groups</Label>
+					<Label for="user.groups">Members</Label>
 					<SelectUsers {users} bind:selected={$formData.members} />
 				</Form.Control>
 			</Form.Field>
