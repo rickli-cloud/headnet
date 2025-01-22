@@ -7,7 +7,9 @@ import { createDatabase } from './store';
 
 faker.seed();
 
-const database = await createDatabase();
+let database: IDBDatabase;
+
+createDatabase().then((db) => (database = db));
 
 export const handlers: ReturnType<typeof handler>[] = [
 	// Users
