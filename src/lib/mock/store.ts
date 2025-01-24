@@ -28,7 +28,8 @@ export async function createDatabase(): Promise<IDBDatabase> {
 
 async function initDatabase(db: IDBDatabase): Promise<IDBDatabase> {
 	const seed = mockSeed();
-	console.debug({ seed });
+	console.debug('Mock database seed:', seed);
+
 	for (const key in seed) {
 		if (!db.objectStoreNames.contains(key)) {
 			const store = db.createObjectStore(key, mockStoreOpt[key]);

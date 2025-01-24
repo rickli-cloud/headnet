@@ -31,7 +31,7 @@
 					<svelte:fragment slot="trigger" let:builder>
 						<button {...builder} use:builder.action>
 							<Plus />
-							<span> Create </span>
+							<span> Tag </span>
 						</button>
 					</svelte:fragment>
 				</CreateTag>

@@ -23,7 +23,7 @@
 </script>
 
 <div class="space-y-3 border-b pb-5 last:border-b-0 [&>div]:space-y-2">
-	<div class="grid gap-x-2 gap-y-6 !space-y-0 sm:grid-cols-[1fr,1fr,auto]">
+	<div class="grid gap-x-6 gap-y-6 !space-y-0 sm:grid-cols-[1fr,1fr,auto]">
 		<div class="space-y-2">
 			<!-- <div class="flex items-center justify-between gap-2"></div> -->
 			<Label>Source</Label>
@@ -67,20 +67,40 @@
 
 		{#if prefixes}
 			<div class="space-y-2">
-				<Label class="gap11 flex items-center">Routes in</Label>
+				<div>
+					<Label>Routes</Label>
+
+					<Tooltip.Root>
+						<Tooltip.Trigger tabindex={-1}>
+							<Info class="h-2.5 w-2.5" />
+						</Tooltip.Trigger>
+
+						<Tooltip.Content side="top" class="space-y-1">
+							<div class="flex items-center gap-1.5">
+								<ArrowLeft class="h-4 w-4" />
+								<span> Incomming </span>
+							</div>
+
+							<div class="flex items-center gap-1.5">
+								<ArrowRight class="h-4 w-4" />
+								<span> Outgoing </span>
+							</div>
+						</Tooltip.Content>
+					</Tooltip.Root>
+				</div>
 
 				<ul class="space-y-0.5">
 					{#each prefixes.in as prefix}
-						<li class="flex items-center gap-1.5">
-							<ArrowLeft class="h-4 w-4" />
+						<li class="flex items-center justify-end gap-1.5">
 							{prefix}
+							<ArrowLeft class="h-4 w-4" />
 						</li>
 					{/each}
 				</ul>
 			</div>
 
-			<div class="space-y-2">
-				<Label class="flex items-center gap-1">Routes out</Label>
+			<div class="space-y-2 pt-8">
+				<!-- <Label>Routes out</Label> -->
 
 				<ul class="space-y-0.5">
 					{#each prefixes.out as prefix}

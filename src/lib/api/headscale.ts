@@ -713,7 +713,7 @@ export class Acl {
 	}
 
 	protected static parsePolicy(policy: string) {
-		const p: V1Policy = policy?.length ? parse(stripJsonTrailingCommas(policy)) : undefined;
+		const p: V1Policy = policy?.length ? parse(stripJsonTrailingCommas(policy)) : {};
 		const comments = p as unknown as V1PolicyComments;
 
 		return {
@@ -729,7 +729,7 @@ export class Acl {
 			groups: Object.entries(p?.groups || {})
 				.filter(([key]) => key !== '$$comments')
 				.map(([name, members]) => ({
-					name,
+					name: name.replace(groupRegex, ''),
 					members,
 					comments: comments.groups?.$$comments?.[name]?.[0].map(parseComment)
 				})),
@@ -815,7 +815,7 @@ export class Acl {
 			groups: Object.fromEntries(
 				this.groups.map((group, i) => {
 					comments.groups.$$comments[i] = [group.comments?.map(stringifyComment) || []];
-					return [group.name, group.members];
+					return [groupRegex.test(group.name) ? group.name : 'group:' + group.name, group.members];
 				})
 			),
 			tagOwners: Object.fromEntries(

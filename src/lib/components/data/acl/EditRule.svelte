@@ -44,9 +44,7 @@
 			async onUpdate({ form }) {
 				if (form.valid) {
 					try {
-						acl.acls = acl.acls.map((acl) =>
-							acl.id === rule.id ? { ...rule, ...form.data } : rule
-						);
+						acl.acls = acl.acls.map((r) => (r.id === rule.id ? { ...r, ...form.data } : r));
 
 						const { error } = await acl.save();
 						if (error) throw error;

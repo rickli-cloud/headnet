@@ -3,6 +3,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import Plus from 'lucide-svelte/icons/plus';
+	import CreateHost from './CreateHost.svelte';
 
 	export let acl: Acl;
 	export let machines: Machine[] | undefined;
@@ -20,10 +21,14 @@
 
 		<ul class="menu">
 			<li>
-				<button disabled>
-					<Plus />
-					<span> Host </span>
-				</button>
+				<CreateHost {acl}>
+					<svelte:fragment slot="trigger" let:builder>
+						<button {...builder} use:builder.action>
+							<Plus />
+							<span> Host </span>
+						</button>
+					</svelte:fragment>
+				</CreateHost>
 			</li>
 		</ul>
 
@@ -46,6 +51,12 @@
 							{host.cidr}
 						</Table.Cell>
 					</Table.Row>
+
+					<div>
+						{#each host.comments || [] as comment}
+							<p>{comment}</p>
+						{/each}
+					</div>
 				{/each}
 			</Table.Body>
 		</Table.Root>
