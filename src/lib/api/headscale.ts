@@ -729,7 +729,7 @@ export class Acl {
 			groups: Object.entries(p?.groups || {})
 				.filter(([key]) => key !== '$$comments')
 				.map(([name, members]) => ({
-					name: name.replace(groupRegex, ''),
+					name,
 					members,
 					comments: comments.groups?.$$comments?.[name]?.[0].map(parseComment)
 				})),
