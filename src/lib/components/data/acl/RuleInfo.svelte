@@ -72,7 +72,7 @@
 
 					<Tooltip.Root>
 						<Tooltip.Trigger tabindex={-1}>
-							<Info class="h-2.5 w-2.5" />
+							<Info class="h-3 w-3" />
 						</Tooltip.Trigger>
 
 						<Tooltip.Content side="top" class="space-y-1">

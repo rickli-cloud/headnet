@@ -51,13 +51,13 @@
 				{#each acl?.tagOwners || [] as tag}
 					<Table.Row>
 						<Table.Cell class="pr-0.5">
-							<div class="flex h-6 items-center">
+							<div class="flex h-6 items-center gap-x-2">
 								<EditTag {tag} {acl}>
 									<svelte:fragment slot="trigger" let:builder>
 										<button
 											{...builder}
 											use:builder.action
-											class="link mr-1.5 text-muted-foreground hover:text-current"
+											class="link text-muted-foreground hover:text-current"
 										>
 											<Settings class="h-4 w-4" />
 										</button>

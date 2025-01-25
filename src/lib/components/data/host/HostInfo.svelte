@@ -1,8 +1,15 @@
 <script lang="ts">
-	import type { Acl, Machine } from '$lib/api';
+	import Settings from 'lucide-svelte/icons/settings-2';
+	import Trash from 'lucide-svelte/icons/trash-2';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Info from 'lucide-svelte/icons/info';
+
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
-	import Plus from 'lucide-svelte/icons/plus';
+
+	import type { Acl, Machine } from '$lib/api';
+
 	import CreateHost from './CreateHost.svelte';
 
 	export let acl: Acl;
@@ -35,14 +42,45 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
+					<Table.Head class="w-10"></Table.Head>
 					<Table.Head>Name</Table.Head>
 					<Table.Head>CIDR</Table.Head>
+					<Table.Head>Description</Table.Head>
 				</Table.Row>
 			</Table.Header>
 
 			<Table.Body>
 				{#each acl.hosts || [] as host}
 					<Table.Row>
+						<Table.Cell class="pr-0">
+							<div class="flex h-6 items-center gap-x-2">
+								<!-- {#if host.comments?.length}
+									<Tooltip.Root>
+										<Tooltip.Trigger
+											class="link text-muted-foreground hover:text-current"
+											tabindex={-1}
+										>
+											<Info class="h-4 w-4" />
+										</Tooltip.Trigger>
+
+										<Tooltip.Content side="top">
+											{#each host.comments as comment}
+												<p>{comment}</p>
+											{/each}
+										</Tooltip.Content>
+									</Tooltip.Root>
+								{/if} -->
+
+								<button class="link text-muted-foreground hover:text-current">
+									<Settings class="h-4 w-4" />
+								</button>
+
+								<button class="link text-muted-foreground hover:text-red-600">
+									<Trash class="h-4 w-4" />
+								</button>
+							</div>
+						</Table.Cell>
+
 						<Table.Cell>
 							{host.name}
 						</Table.Cell>
@@ -50,13 +88,13 @@
 						<Table.Cell>
 							{host.cidr}
 						</Table.Cell>
-					</Table.Row>
 
-					<div>
-						{#each host.comments || [] as comment}
-							<p>{comment}</p>
-						{/each}
-					</div>
+						<Table.Cell>
+							{#each host.comments || [] as comment}
+								<p>{comment}</p>
+							{/each}
+						</Table.Cell>
+					</Table.Row>
 				{/each}
 			</Table.Body>
 		</Table.Root>

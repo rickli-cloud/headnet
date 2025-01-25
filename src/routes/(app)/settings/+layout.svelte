@@ -35,19 +35,20 @@
 
 	<hr class="my-6" />
 
-	<div class="flex h-full flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
-		<aside class="-mx-4 overflow-x-scroll pb-4 lg:w-1/5">
-			<nav class="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
+	<!-- <div class="flex h-full flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0"> -->
+	<div
+		class="flex h-full flex-col gap-y-6 lg:grid lg:grid-cols-[256px,1fr] lg:grid-rows-[100] lg:gap-x-6"
+		style="grid-template-areas: nav content;"
+	>
+		<aside>
+			<nav class="grid gap-y-1.5">
 				{#each navItems as item}
 					{@const isActive = $page.url.pathname === item.href}
 
 					<Button
 						href={item.href}
 						variant="ghost"
-						class={cn(
-							!isActive && 'hover:underline',
-							'relative justify-start hover:bg-transparent'
-						)}
+						class="relative justify-start"
 						data-sveltekit-noscroll
 					>
 						{#if isActive}
@@ -72,7 +73,7 @@
 					<svelte:fragment slot="trigger" let:builder>
 						<Button
 							variant="ghost"
-							class="relative justify-start hover:bg-transparent hover:underline"
+							class="relative justify-start"
 							data-sveltekit-noscroll
 							builders={[builder]}
 						>
@@ -87,8 +88,8 @@
 			</nav>
 		</aside>
 
-		<div class="flex-1 space-y-6">
-			<slot />
-		</div>
+		<!-- <div class="flex-1 space-y-6"></div> -->
+
+		<slot />
 	</div>
 </div>
