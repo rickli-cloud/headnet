@@ -1,5 +1,4 @@
 import {
-	Acl,
 	type V1ApiKey,
 	type V1Node,
 	type V1Policy,
@@ -109,76 +108,77 @@ function seedApiKey(): V1ApiKey[] {
 }
 
 function seedPolicy(users: V1User[]): [{ id: number; policy: string; updatedAt?: string }] {
-	const policy = new Acl({
-		policy: JSON.stringify({
-			hosts: {
-				demo: '172.20.10.1/32'
-			},
-			tagOwners: {
-				'tag:demo': ['group:demo']
-			},
-			groups: {
-				'group:internet': randomSizedArray(
-					() =>
-						users.find((usr) => usr.id === String(faker.number.int({ min: 1, max: users.length })))
-							?.name
-				).filter((i) => i?.length)
-			},
-			acls: []
-		} as V1Policy),
-		updatedAt: faker.date.recent().toISOString()
-	});
+	// const policy = new Acl({
+	// 	policy: JSON.stringify({
+	// 		hosts: {
+	// 			demo: '172.20.10.1/32'
+	// 		},
+	// 		tagOwners: {
+	// 			'tag:demo': ['group:demo']
+	// 		},
+	// 		groups: {
+	// 			'group:internet': randomSizedArray(
+	// 				() =>
+	// 					users.find((usr) => usr.id === String(faker.number.int({ min: 1, max: users.length })))
+	// 						?.name
+	// 			).filter((i) => i?.length)
+	// 		},
+	// 		acls: []
+	// 	} as V1Policy),
+	// 	updatedAt: faker.date.recent().toISOString()
+	// });
 
-	policy.acls = [
-		// ...randomSizedArray(
-		// 	() => ({
-		// 		id: '',
-		// 		action: 'accept',
-		// 		src: [
-		// 			// Object.keys(groups)[faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })]
-		// 		],
-		// 		dst: [
-		// 			{
-		// 				host: Object.keys(groups)[
-		// 					faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })
-		// 				],
-		// 				port: '*'
-		// 			}
-		// 		],
-		// 		comments: ['// Demo groups \n']
-		// 	}),
-		// 	faker.number.int({ min: 2, max: Object.keys(groups).length })
-		// ),
-		...users
-			.map((usr) =>
-				usr.name
-					? {
-							id: '',
-							action: 'accept',
-							src: [usr.name],
-							dst: [{ host: usr.name, port: '*' }],
-							comments: ["// Allow communication between user's owned devices \n"]
-						}
-					: undefined
-			)
-			.filter((i) => !!i),
-		{
-			id: '',
-			action: 'accept',
-			src: ['group:internet'],
-			dst: [{ host: 'autogroup:internet', port: '*' }],
-			comments: ['// Allow access to all exit nodes \n']
-		},
-		{
-			id: '',
-			action: 'accept',
-			src: ['*'],
-			dst: [{ host: 'demo', port: '*' }],
-			comments: ['// Demo host \n']
-		}
-	];
+	// policy.acls = [
+	// 	// ...randomSizedArray(
+	// 	// 	() => ({
+	// 	// 		id: '',
+	// 	// 		action: 'accept',
+	// 	// 		src: [
+	// 	// 			// Object.keys(groups)[faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })]
+	// 	// 		],
+	// 	// 		dst: [
+	// 	// 			{
+	// 	// 				host: Object.keys(groups)[
+	// 	// 					faker.number.int({ min: 0, max: Object.keys(groups).length - 1 })
+	// 	// 				],
+	// 	// 				port: '*'
+	// 	// 			}
+	// 	// 		],
+	// 	// 		comments: ['// Demo groups \n']
+	// 	// 	}),
+	// 	// 	faker.number.int({ min: 2, max: Object.keys(groups).length })
+	// 	// ),
+	// 	...users
+	// 		.map((usr) =>
+	// 			usr.name
+	// 				? {
+	// 						id: '',
+	// 						action: 'accept',
+	// 						src: [usr.name],
+	// 						dst: [{ host: usr.name, port: '*' }],
+	// 						comments: ["// Allow communication between user's owned devices \n"]
+	// 					}
+	// 				: undefined
+	// 		)
+	// 		.filter((i) => !!i),
+	// 	{
+	// 		id: '',
+	// 		action: 'accept',
+	// 		src: ['group:internet'],
+	// 		dst: [{ host: 'autogroup:internet', port: '*' }],
+	// 		comments: ['// Allow access to all exit nodes \n']
+	// 	},
+	// 	{
+	// 		id: '',
+	// 		action: 'accept',
+	// 		src: ['*'],
+	// 		dst: [{ host: 'demo', port: '*' }],
+	// 		comments: ['// Demo host \n']
+	// 	}
+	// ];
 
-	return [{ id: 1, policy: policy.stringify(), updatedAt: policy.updatedAt }];
+	// return [{ id: 1, policy: policy.stringify(), updatedAt: policy.updatedAt }];
+	return [{ id: 1, policy: '', updatedAt: new Date().toISOString() }];
 }
 
 function seedRoutes(machines: V1Node[]): V1Route[] {

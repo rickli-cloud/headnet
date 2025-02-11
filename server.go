@@ -57,6 +57,13 @@ func main() {
 			return
 		}
 
+		if path == "/healthz" {
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+			return
+		}
+
 		if path == "/_app/env.js" {
 			w.Header().Set("Content-Type", "application/javascript")
 			w.WriteHeader(http.StatusOK)

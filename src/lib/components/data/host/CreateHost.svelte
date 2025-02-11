@@ -11,19 +11,20 @@
 
 	import * as Form from '$lib/components/form';
 
-	import type { Acl, AclData } from '$lib/api';
+	import type { Policy } from '$lib/api';
 
 	import { errorToast, successToast } from '$lib/utils/toast';
 	import { formatError } from '$lib/utils/error';
 	import Input from '$lib/components/ui/input/input.svelte';
+	import { HeadscaleClient } from '$lib/store/session';
 
-	export let acl: Acl;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
 	let mainSheet: InstanceType<typeof Sheet.Root>;
 
-	const schema: z.ZodType<Omit<AclData['hosts'][0], 'id'>> = z.object({
+	const schema = z.object({
 		name: z.string(),
 		cidr: z.string(),
 		comments: z.array(z.string()).default([])
@@ -34,15 +35,17 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		async onUpdate({ form }) {
-			if (form.valid) {
+		async onUpdate({ form: { valid, data } }) {
+			if (valid) {
 				try {
-					acl.hosts.push(form.data);
+					if (!policy.hosts) policy.hosts = {};
 
-					const { error } = await acl.save();
+					policy.hosts[data.name] = data.cidr;
+
+					const { error } = await policy.save($HeadscaleClient);
 					if (error) throw error;
 
-					successToast(`Created new host ${form.data.name}`);
+					successToast(`Created new host ${data.name}`);
 					dispatch('submit');
 					mainSheet.close();
 				} catch (err) {

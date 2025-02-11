@@ -4,9 +4,9 @@
 
 	import * as Select from '$lib/components/ui/select';
 
-	import type { AclData } from '$lib/api';
+	import type { Policy } from '$lib/api';
 
-	export let groups: AclData['groups'] | undefined;
+	export let groups: Policy['groups'] | undefined;
 	export let selected: string[] | undefined;
 
 	const sel = writable<Selected<string>[]>(
@@ -23,13 +23,13 @@
 
 	<Select.Content class="!mt-0">
 		<Select.Group>
-			{#each groups || [] as group}
-				<Select.Item value={group.name}>{group.name}</Select.Item>
+			{#each Object.keys(groups || {}) as group}
+				<Select.Item value={group}>{group}</Select.Item>
 			{/each}
 		</Select.Group>
 
 		<Select.Group>
-			{#each selected?.filter((s) => !groups?.find((g) => g.name === s)) || [] as invalid}
+			{#each selected?.filter((s) => !Object.keys(groups || {}).find((g) => g === s)) || [] as invalid}
 				<Select.Item value={invalid} class="!text-red-600">{invalid}</Select.Item>
 			{/each}
 		</Select.Group>

@@ -7,11 +7,11 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 
-	import { tagRegex, type Acl } from '$lib/api';
+	import { Policy, tagRegex } from '$lib/api';
 	import EditTag from './EditTag.svelte';
 	import CreateTag from './CreateTag.svelte';
 
-	export let acl: Acl | undefined;
+	export let policy: Policy;
 </script>
 
 <Sheet.Root>
@@ -27,7 +27,7 @@
 
 		<ul class="menu">
 			<li>
-				<CreateTag {acl}>
+				<CreateTag {policy}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button {...builder} use:builder.action>
 							<Plus />
@@ -48,11 +48,11 @@
 			</Table.Header>
 
 			<Table.Body>
-				{#each acl?.tagOwners || [] as tag}
+				{#each Object.keys(policy.tagOwners || {}) as tag}
 					<Table.Row>
 						<Table.Cell class="pr-0.5">
 							<div class="flex h-6 items-center gap-x-2">
-								<EditTag {tag} {acl}>
+								<EditTag {tag} {policy}>
 									<svelte:fragment slot="trigger" let:builder>
 										<button
 											{...builder}
@@ -72,13 +72,13 @@
 
 						<Table.Cell>
 							<p class="h-6 whitespace-nowrap font-semibold" style="line-height: 24px;">
-								{tag.name?.replace(tagRegex, '')}
+								{tag?.replace(tagRegex, '')}
 							</p>
 						</Table.Cell>
 
 						<Table.Cell>
 							<div class="flex flex-wrap gap-1.5 py-[1px]">
-								{#each tag.members || [] as member}
+								{#each policy.tagOwners?.[tag] || [] as member}
 									<Badge>
 										{member}
 									</Badge>

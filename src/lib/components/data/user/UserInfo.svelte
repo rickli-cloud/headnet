@@ -14,7 +14,7 @@
 	import Secret from '$lib/components/utils/Secret.svelte';
 
 	import { formatDuration, isExpired } from '$lib/utils/time';
-	import type { Acl, PreAuthKey, User } from '$lib/api';
+	import type { Policy, PreAuthKey, User } from '$lib/api';
 
 	import ExpirePreAuthKey from '../preAuthKey/ExpirePreAuthKey.svelte';
 	import UserActions from './UserActions.svelte';
@@ -22,15 +22,17 @@
 	// import EditUser from './EditUser.svelte';
 
 	export let user: User;
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let acl: Acl | undefined;
 	export let preAuthKeys: PreAuthKey[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 
-	$: groups = acl?.groups
-		.filter((i) => user.name && i.members.includes(user.name))
-		.map((group) => group.name);
+	$: groups = policy.groups
+		? Object.entries(policy.groups)
+				.filter(([name, members]) => members.includes(user.name as string))
+				.map(([name]) => name)
+		: [];
 
 	$: keys = preAuthKeys?.filter((key) => key.user === user.name) || [];
 
@@ -101,7 +103,7 @@
 </Sheet.Header>
 
 <ul class="menu">
-	<UserActions {users} {user} {acl} on:close={close} on:focus={() => dispatch('focus')} />
+	<UserActions {users} {user} {policy} on:close={close} on:focus={() => dispatch('focus')} />
 </ul>
 
 <Sheet.Header>

@@ -17,18 +17,18 @@
 	import AccessControlInfo from '$lib/components/data/acl/AccessControlInfo.svelte';
 	import ApikeyInfo from '$lib/components/data/apikey/ApikeyInfo.svelte';
 	import CreateUser from '$lib/components/data/user/CreateUser.svelte';
+	import GroupInfo from '$lib/components/data/group/GroupInfo.svelte';
 	import TagInfo from '$lib/components/data/tag/TagInfo.svelte';
 
-	import type { Acl, Machine, User } from '$lib/api';
+	import type { Policy, Node, User } from '$lib/api';
 	import { base } from '$app/paths';
 
 	import MachineAndHostInfo from '../host/HostInfo.svelte';
-	import UserAndGroupInfo from './UserAndGroupInfo.svelte';
 	import EndSession from './EndSession.svelte';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let machines: Machine[] | undefined;
+	export let machines: Node[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
 </script>
@@ -45,7 +45,7 @@
 <hr />
 
 <li>
-	<CreateUser {acl} on:submit={() => dispatch('close')}>
+	<CreateUser {policy} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Plus />
@@ -65,7 +65,7 @@
 <hr />
 
 <li>
-	<AccessControlInfo {acl} {users} on:close>
+	<AccessControlInfo {policy} {users} on:close>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Lock />
@@ -76,18 +76,18 @@
 </li>
 
 <li>
-	<UserAndGroupInfo {acl} {users} on:close>
+	<GroupInfo {policy} {users} on:close>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Users />
-				<span>Users, Groups</span>
+				<span>Groups</span>
 			</button>
 		</svelte:fragment>
-	</UserAndGroupInfo>
+	</GroupInfo>
 </li>
 
 <li>
-	<MachineAndHostInfo {machines} {acl}>
+	<MachineAndHostInfo {machines} {policy}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Network />
@@ -98,7 +98,7 @@
 </li>
 
 <li>
-	<TagInfo {acl}>
+	<TagInfo {policy}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Tag />

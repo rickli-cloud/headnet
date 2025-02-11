@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
 	import ForceGraph3D from '3d-force-graph';
+	import { writable } from 'svelte/store';
 	import { onMount } from 'svelte';
 
 	import X from 'lucide-svelte/icons/x';
@@ -18,19 +18,20 @@
 
 	import { NetworkGraph, NetworkGraphActions } from '$lib/components/networkGraph';
 
-	import { Machine, PreAuthKey, User } from '$lib/api/headscale.js';
-	import { errorToast } from '$lib/utils/toast.js';
-	import { formatError } from '$lib/utils/error.js';
+	import { Node, PreAuthKey, User } from '$lib/api';
+	import { errorToast } from '$lib/utils/toast';
+	import { formatError } from '$lib/utils/error';
 	import {
 		focusOnNode,
 		formatGraphData,
 		GraphDataLink,
 		GraphMachine,
+		GraphUser,
 		type GraphData
-	} from '$lib/utils/networkGraph.js';
+	} from '$lib/utils/networkGraph';
 	import { page } from '$app/stores';
 
-	import type { PageData } from './$types.js';
+	import type { PageData } from './$types';
 
 	export let data;
 
@@ -53,7 +54,8 @@
 	page.subscribe(async ({ data }) => {
 		for (const err of data.errors || []) errorToast(formatError(err));
 		graphData.set(formatGraphData(data as PageData));
-		preAuthKeys.set(await PreAuthKey.list(data.users || []));
+		// preAuthKeys.set(await PreAuthKey.find(data.users || []));
+		preAuthKeys.set([]);
 	});
 
 	const selectedNode = writable<object | undefined>(undefined);
@@ -104,7 +106,8 @@
 	graph.onLinkRightClick(closeEveryPopup); // TODO: some actions
 
 	onMount(async () => {
-		preAuthKeys.set(await PreAuthKey.list(data.users || []));
+		// preAuthKeys.set(await PreAuthKey.list(data.users || []));
+		preAuthKeys.set([]);
 		for (const err of data.errors || []) errorToast(formatError(err));
 	});
 </script>
@@ -115,11 +118,10 @@
 
 <Sheet.Root bind:this={nodeInfo} let:close>
 	<Sheet.Content>
-		{#if $selectedNode instanceof User}
+		{#if $selectedNode instanceof GraphUser}
 			<UserInfo
-				users={data.users}
+				{...data}
 				user={$selectedNode}
-				acl={data.acl}
 				preAuthKeys={$preAuthKeys}
 				on:close={close}
 				on:focus={() => {
@@ -131,10 +133,8 @@
 			{#key $graphData.links}
 				<MachineInfo
 					machine={$selectedNode}
-					routes={data.routes}
 					links={$graphData.links}
-					users={data.users || []}
-					acl={data.acl}
+					{...data}
 					on:close={close}
 					on:focus={() => {
 						focusOnNode(graph, $selectedNode);
@@ -156,8 +156,8 @@
 	{#if $selectedNode instanceof User}
 		<div class="grid items-center gap-2" style="grid-template-columns: 1fr auto;">
 			<div>
-				<span>{$selectedNode.name}</span>
-				<span class="text-muted-foreground">#{$selectedNode.id}</span>
+				<span>{$selectedNode?.name}</span>
+				<span class="text-muted-foreground">#{$selectedNode?.id}</span>
 			</div>
 
 			<button class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted" on:click={nodeActions.close}>
@@ -168,9 +168,8 @@
 
 		{#key $selectedNode}
 			<UserActions
-				users={data.users}
+				{...data}
 				user={$selectedNode}
-				acl={data.acl}
 				on:close={nodeActions.close}
 				on:focus={() => {
 					focusOnNode(graph, $selectedNode);
@@ -178,13 +177,13 @@
 				}}
 			/>
 		{/key}
-	{:else if $selectedNode instanceof Machine}
+	{:else if $selectedNode instanceof Node}
 		<div class="grid items-center gap-2" style="grid-template-columns: auto 1fr auto;">
-			<MachineStatus online={$selectedNode.online} lastSeen={$selectedNode.lastSeen} />
+			<MachineStatus online={$selectedNode?.online} lastSeen={$selectedNode?.lastSeen} />
 
 			<div>
-				<span>{$selectedNode.givenName}</span>
-				<span class="text-muted-foreground">#{$selectedNode.id}</span>
+				<span>{$selectedNode?.givenName}</span>
+				<span class="text-muted-foreground">#{$selectedNode?.id}</span>
 			</div>
 
 			<button class="-my-1.5 -mr-2 h-8 w-8 rounded p-2 hover:bg-muted" on:click={nodeActions.close}>
@@ -220,16 +219,11 @@
 </NetworkGraphActions>
 
 <NetworkGraphActions bind:this={pageActions}>
-	<PageActions
-		on:close={pageActions.close}
-		acl={data.acl}
-		users={data.users}
-		machines={data.machines}
-	/>
+	<PageActions on:close={pageActions.close} {...data} />
 </NetworkGraphActions>
 
 <Sheet.Root bind:this={linkInfo} let:close>
 	<Sheet.Content>
-		<LinkInfo link={$selectedLink} {graph} {close} users={data.users || []} acl={data.acl} />
+		<LinkInfo {...data} link={$selectedLink} {graph} {close} />
 	</Sheet.Content>
 </Sheet.Root>

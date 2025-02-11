@@ -15,13 +15,14 @@
 	import { cn } from '$lib/utils/shadcn';
 	import { ApiKey } from '$lib/api';
 	import Plus from 'lucide-svelte/icons/plus';
+	import { HeadscaleClient } from '$lib/store/session';
 
 	export let apikeys: ApiKey[] | undefined = undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
 
 	if (!apikeys) {
-		ApiKey.list().then(({ data }) => {
+		ApiKey.list($HeadscaleClient).then(({ data }) => {
 			apikeys = data;
 		});
 	}
@@ -30,7 +31,7 @@
 		try {
 			if (!key.expiration || isExpired(key.expiration)) return;
 
-			const { error } = await key.expire();
+			const { error } = await key.expire($HeadscaleClient);
 			if (error) throw error;
 
 			successToast(`Expired API key "${key.prefix}..."`);

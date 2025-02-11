@@ -15,15 +15,17 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { PreAuthKey, type Acl, type components, type User } from '$lib/api';
+	import { PreAuthKey, type Policy, type components, type User } from '$lib/api';
 	import { formatDuration } from '$lib/utils/time';
 	import { formatError } from '$lib/utils/error';
-	import { errorToast } from '$lib/utils/toast';
+	import { errorToast, successToast } from '$lib/utils/toast';
+	import { HeadscaleClient } from '$lib/store/session';
+	import type { Full } from '$lib/utils/misc';
 
 	type v1CreatePreAuthKeyRequest = components['schemas']['v1CreatePreAuthKeyRequest'];
 
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let acl: Acl | undefined;
 	export let initData: Partial<v1CreatePreAuthKeyRequest> | undefined = undefined;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
@@ -32,7 +34,7 @@
 	const resultDialogOpen = writable<boolean>(false);
 	let mainSheet: InstanceType<typeof Sheet.Root>;
 
-	const schema: z.ZodType<v1CreatePreAuthKeyRequest> = z.object({
+	const schema: z.ZodType<Full<v1CreatePreAuthKeyRequest>> = z.object({
 		user: z.string(),
 		expiration: z
 			.string()
@@ -40,9 +42,9 @@
 			.refine((arg) => new Date(arg).getTime() > Date.now(), {
 				message: 'Date must be in the future'
 			}),
-		reusable: z.boolean().optional(),
-		ephemeral: z.boolean().optional(),
-		aclTags: z.array(z.string()).optional()
+		reusable: z.boolean(),
+		ephemeral: z.boolean(),
+		aclTags: z.array(z.string())
 	});
 
 	const form = superForm(defaults(zod(schema)), {
@@ -50,16 +52,17 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		async onUpdate(ev) {
-			if (ev.form.valid) {
+		async onUpdate({ form: { valid, data } }) {
+			if (valid) {
 				try {
-					const { data, error } = await PreAuthKey.create(ev.form.data);
-					if (error) throw error;
-					if (data) {
-						result.set(data);
-						mainSheet.close();
-						resultDialogOpen.set(true);
-					}
+					const res = await PreAuthKey.create($HeadscaleClient, { data });
+					if (res.error) throw res.error;
+
+					result.set(res.data);
+					mainSheet.close();
+					resultDialogOpen.set(true);
+
+					successToast('Created new auth key');
 				} catch (err) {
 					console.error(err);
 					errorToast(formatError(err));
@@ -80,11 +83,11 @@
 
 	function reset() {
 		formData.set({
-			user: undefined,
-			expiration: undefined,
-			reusable: undefined,
-			ephemeral: undefined,
-			aclTags: undefined,
+			user: '',
+			expiration: '',
+			reusable: false,
+			ephemeral: false,
+			aclTags: [],
 			...(initData || {})
 		});
 	}
@@ -99,7 +102,7 @@
 
 	<Sheet.Content side="left">
 		<Sheet.Header>
-			<Sheet.Title>Create auth key</Sheet.Title>
+			<Sheet.Title>Create Auth Key</Sheet.Title>
 		</Sheet.Header>
 
 		<Form.Root {form} hasRequired submitText="Create">
@@ -124,7 +127,7 @@
 			<Form.Field {form} name="aclTags">
 				<Form.Control let:attrs>
 					<Form.Label>Tags</Form.Label>
-					<SelectTags tags={acl?.tagOwners} bind:selected={$formData.aclTags} />
+					<SelectTags tags={policy?.tagOwners} bind:selected={$formData.aclTags} />
 				</Form.Control>
 				<Form.Description />
 				<Form.FieldErrors />

@@ -12,12 +12,13 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { Acl, groupRegex, type User } from '$lib/api';
+	import { groupRegex, Policy, type User } from '$lib/api';
 	import { errorToast, successToast } from '$lib/utils/toast';
 	import { formatError } from '$lib/utils/error';
+	import { HeadscaleClient } from '$lib/store/session';
 
 	export let user: User;
-	export let acl: Acl | undefined;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
@@ -33,62 +34,64 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		async onUpdate(ev) {
-			if (ev.form.valid) {
-				try {
-					// If name changed
-					if (user.name && ev.form.data.name !== user.name) {
-						const res = await user.rename(ev.form.data.name);
-						if (res.error) throw res.error;
+		async onUpdate({ form: { data, valid } }) {
+			if (!valid) return;
 
-						if (acl) {
-							acl.groups = acl.groups.map((group) => {
-								if (user.name && group.members.includes(user.name)) {
-									return {
-										...group,
-										members: group.members
-											.map((member) => (member === group.name ? undefined : member))
-											.filter((member) => typeof member !== 'undefined')
-											.concat(ev.form.data.name)
-									};
-								}
-								return group;
-							});
+			try {
+				let policyChangesMade: boolean = false;
+
+				// If name changed
+				if (user.name && data.name !== user.name) {
+					const res = await user.rename($HeadscaleClient, { data: { newName: data.name } });
+					if (res.error) throw res.error;
+
+					// Group memberships
+					if (policy?.groups) {
+						for (const key of Object.keys(policy.groups)) {
+							if (policy.groups[key].includes(user.name)) {
+								policy.groups[key] = policy.groups[key].map((member) =>
+									member === user.name ? data.name : member
+								);
+								policyChangesMade = true;
+							}
+						}
+					}
+				}
+
+				// If groups changed
+				if (JSON.stringify(data.groups) !== JSON.stringify(getGroups())) {
+					// Add to missing groups
+					for (const group of data.groups || []) {
+						if (typeof policy.groups === 'undefined') {
+							policy.groups = {};
+						}
+						if (typeof policy.groups[group] === 'undefined') {
+							policy.groups[group] = [data.name];
+						}
+						if (!policy.groups[group].includes(data.name)) {
+							policy.groups[group].push(data.name);
 						}
 					}
 
-					// If groups changed
-					if (acl && JSON.stringify(ev.form.data.groups) !== JSON.stringify(getGroups())) {
-						acl.groups = acl.groups.map((group) => {
-							const isInGroup: boolean = group.members.includes(ev.form.data.name);
-							const shouldBeInGroup: boolean = ev.form.data.groups?.includes(group.name) || false;
-
-							if (isInGroup && !shouldBeInGroup) {
-								return {
-									...group,
-									members: group.members.filter((member) => member !== ev.form.data.name)
-								};
-							} else if (shouldBeInGroup && !isInGroup) {
-								return {
-									...group,
-									members: group.members.concat([ev.form.data.name])
-								};
-							}
-
-							return group;
-						});
-
-						const res = await acl.save();
-						if (res.error) throw res.error;
+					// Remove the unset groups
+					for (const key of Object.keys(policy.groups || {})) {
+						if (!data.groups?.includes(key) && policy.groups?.[key].includes(data.name)) {
+							policy.groups?.[key].filter((i) => i !== data.name);
+						}
 					}
-
-					successToast(`Saved user "${ev.form.data.name}"`);
-					dispatch('submit');
-					mainSheet.close();
-				} catch (err) {
-					console.error(err);
-					errorToast(formatError(err));
 				}
+
+				if (policyChangesMade) {
+					const res = await policy.save($HeadscaleClient);
+					if (res.error) throw res.error;
+				}
+
+				successToast(`Saved user "${data.name}"`);
+				dispatch('submit');
+				mainSheet.close();
+			} catch (err) {
+				console.error(err);
+				errorToast(formatError(err));
 			}
 		}
 	});
@@ -97,22 +100,22 @@
 
 	formData.set({ name: user.name || '' });
 
-	function getGroups() {
-		return (
-			acl?.groups
-				.filter((i) => user.name && i.members.includes(user.name))
-				.map((group) => ({ value: group.name, label: group.name.replace(groupRegex, '') })) || []
-		);
+	function getGroups(): string[] {
+		return Object.entries(policy.groups || {})
+			.map(([name, members]) => (user.name && members.includes(user.name) ? name : undefined))
+			.filter((i) => typeof i !== 'undefined');
 	}
 
-	const selectedGroups = writable<{ value: string; label: string }[]>(getGroups());
+	const selectedGroups = writable<{ value: string; label: string }[]>(
+		getGroups().map((i) => ({ value: i, label: i }))
+	);
 	selectedGroups.subscribe((selected) => {
 		formData.update((data) => ({ ...data, groups: selected.map((i) => i.value) }));
 	});
 
 	function reset() {
 		form.reset({ data: { name: user.name, groups: [] } });
-		selectedGroups.set(getGroups());
+		selectedGroups.set(getGroups().map((i) => ({ value: i, label: i })));
 	}
 </script>
 
@@ -143,9 +146,9 @@
 
 					<Select.Content>
 						<Select.Group>
-							{#each acl?.groups || [] as group}
-								<Select.Item value={group.name} label={group.name.replace(groupRegex, '')}>
-									{group.name.replace(groupRegex, '')}
+							{#each Object.keys(policy?.groups || {}) as group}
+								<Select.Item value={group} label={group.replace(groupRegex, '')}>
+									{group.replace(groupRegex, '')}
 								</Select.Item>
 							{/each}
 						</Select.Group>

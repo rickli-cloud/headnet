@@ -6,19 +6,19 @@
 
 	import { Button } from '$lib/components/ui/button';
 
-	import { Acl, User } from '$lib/api';
+	import { Policy, User } from '$lib/api';
 
 	import SelectItem from './SelectItem.svelte';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let selected: string[];
 	export let users: User[] | undefined;
 
 	const items: { [group: string]: string[] } = {
 		Users: getNames(users),
-		Groups: getNames(acl.groups),
-		Hosts: getNames(acl.hosts),
-		Tags: getNames(acl.tagOwners),
+		Groups: getNames(policy.groups),
+		Hosts: getNames(policy.hosts),
+		Tags: getNames(policy.tagOwners),
 		General: ['*']
 	};
 
@@ -45,8 +45,12 @@
 		selected = selected.filter((i) => i !== item);
 	}
 
-	function getNames(items: Partial<{ name: string }>[] | undefined): string[] {
-		return items?.map((i) => i.name).filter((i) => typeof i !== 'undefined') || [];
+	function getNames(items: Partial<{ name: string }>[] | object | undefined): string[] {
+		return Array.isArray(items)
+			? items?.map((i) => i.name).filter((i) => typeof i !== 'undefined') || []
+			: typeof items === 'object'
+				? Object.keys(items)
+				: [];
 	}
 </script>
 

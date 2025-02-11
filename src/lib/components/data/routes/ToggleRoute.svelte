@@ -6,6 +6,7 @@
 	import type { Route } from '$lib/api';
 	import { errorToast, successToast } from '$lib/utils/toast';
 	import { formatError } from '$lib/utils/error';
+	import { HeadscaleClient } from '$lib/store/session';
 
 	export let route: Route;
 
@@ -15,7 +16,7 @@
 		try {
 			const action = route.enabled ? route.enable : route.disable;
 
-			const { error } = await action();
+			const { error } = await action($HeadscaleClient);
 			if (error) throw error;
 
 			successToast(`${route.enabled ? 'Disabled' : 'Enabled'} route "${route.prefix}"`);

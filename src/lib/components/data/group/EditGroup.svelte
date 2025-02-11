@@ -22,6 +22,7 @@
 
 	export let policy: Policy;
 	export let users: User[] | undefined;
+	export let group: string;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
@@ -40,15 +41,17 @@
 		validators: zod(schema),
 		async onUpdate({ form: { valid, data } }) {
 			if (!valid) return;
-
 			try {
 				if (!policy.groups) policy.groups = {};
+
+				// Name changed
+				if (group !== data.name) delete policy.groups[group];
 
 				policy.groups[data.name] = data.members;
 
 				await policy.save($HeadscaleClient);
 
-				successToast(`Created group "${data.name}"`);
+				successToast(`Saved group "${data.name}"`);
 				dispatch('submit');
 				mainSheet.close();
 			} catch (err) {
@@ -73,12 +76,10 @@
 	function reset() {
 		ownedTags.set([]);
 		rawComments.set('');
-		formData.set({
-			name: '',
-			members: []
-			// comments: []
-		});
+		formData.set({ name: group, members: policy.groups?.[group] || [] });
 	}
+
+	reset();
 </script>
 
 <Sheet.Root bind:this={mainSheet}>
@@ -88,7 +89,7 @@
 
 	<Sheet.Content side="left">
 		<Sheet.Header>
-			<Sheet.Title>Create Group</Sheet.Title>
+			<Sheet.Title>Edit Group</Sheet.Title>
 		</Sheet.Header>
 
 		<Form.Root {form} submitText="Create" hasRequired>
@@ -108,7 +109,7 @@
 
 			<div>
 				<Label for="user.groups">Owned tags</Label>
-				<SelectTags tags={policy?.tagOwners} selected={$ownedTags} />
+				<SelectTags tags={policy.tagOwners} selected={$ownedTags} />
 			</div>
 
 			<!-- <Form.Field {form} name="comments" let:constraints>

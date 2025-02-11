@@ -8,12 +8,12 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 
-	import type { Acl, Machine } from '$lib/api';
+	import type { Policy, Node } from '$lib/api';
 
 	import CreateHost from './CreateHost.svelte';
 
-	export let acl: Acl;
-	export let machines: Machine[] | undefined;
+	export let policy: Policy;
+	export let machines: Node[] | undefined;
 </script>
 
 <Sheet.Root>
@@ -28,7 +28,7 @@
 
 		<ul class="menu">
 			<li>
-				<CreateHost {acl}>
+				<CreateHost {policy}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button {...builder} use:builder.action>
 							<Plus />
@@ -50,7 +50,7 @@
 			</Table.Header>
 
 			<Table.Body>
-				{#each acl.hosts || [] as host}
+				{#each Object.keys(policy.hosts || {}) as host}
 					<Table.Row>
 						<Table.Cell class="pr-0">
 							<div class="flex h-6 items-center gap-x-2">
@@ -82,17 +82,17 @@
 						</Table.Cell>
 
 						<Table.Cell>
-							{host.name}
+							{host}
 						</Table.Cell>
 
 						<Table.Cell>
-							{host.cidr}
+							{policy.hosts?.[host]}
 						</Table.Cell>
 
 						<Table.Cell>
-							{#each host.comments || [] as comment}
+							<!-- {#each host.comments || [] as comment}
 								<p>{comment}</p>
-							{/each}
+							{/each} -->
 						</Table.Cell>
 					</Table.Row>
 				{/each}

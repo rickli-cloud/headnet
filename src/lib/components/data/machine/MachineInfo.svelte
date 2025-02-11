@@ -18,7 +18,7 @@
 
 	import { GraphMachine, isLinkNode, type GraphDataLink } from '$lib/utils/networkGraph';
 	import { formatDuration, isExpired, neverExpires } from '$lib/utils/time';
-	import { Acl, User, type AclData, type Route } from '$lib/api';
+	import { Policy, User, type Route, type V1Policy } from '$lib/api';
 
 	import MachineActions from './MachineActions.svelte';
 	import MachineStatus from './MachineStatus.svelte';
@@ -26,18 +26,18 @@
 	export let machine: GraphMachine;
 	export let routes: Route[] | undefined;
 	export let links: GraphDataLink[];
-	export let users: User[];
-	export let acl: Acl;
+	export let users: User[] | undefined;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 
-	const rawAclRules = new Set<AclData['acls'][0]>();
+	const rawAclRules = new Set<V1Policy['acls'][0]>();
 	const rulePrefixes: { [id: string]: { in: Set<string>; out: Set<string> } } = {};
 
 	for (const link of links) {
 		if (isLinkNode(link.target, machine.nodeId)) {
 			for (const route of link.routes) {
-				if (route.rule) {
+				if (route.rule?.id) {
 					rawAclRules.add(route.rule);
 
 					if (typeof rulePrefixes[route.rule.id] !== 'object') {
@@ -51,7 +51,7 @@
 
 		if (isLinkNode(link.source, machine.nodeId)) {
 			for (const route of link.routes) {
-				if (route.rule) {
+				if (route.rule?.id) {
 					rawAclRules.add(route.rule);
 
 					if (typeof rulePrefixes[route.rule.id] !== 'object') {
@@ -66,7 +66,7 @@
 
 	const aclRules = [...rawAclRules].map((rule) => ({
 		...rule,
-		prefixes: rulePrefixes[rule.id] || []
+		prefixes: rule.id ? rulePrefixes[rule.id] || [] : []
 	}));
 </script>
 
@@ -251,7 +251,12 @@
 {#if aclRules.length}
 	<div class="space-y-4">
 		{#each aclRules as rule}
-			<RuleInfo {rule} {users} {acl} prefixes={rulePrefixes[rule.id]} />
+			<RuleInfo
+				{rule}
+				{users}
+				{policy}
+				prefixes={rule.id ? rulePrefixes[rule.id] : { in: new Set(), out: new Set() }}
+			/>
 		{/each}
 	</div>
 {:else}

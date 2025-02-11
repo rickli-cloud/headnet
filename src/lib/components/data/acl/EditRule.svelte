@@ -11,26 +11,28 @@
 
 	import * as Form from '$lib/components/form';
 
-	import type { Acl, AclData, User } from '$lib/api';
+	import type { Policy, User, V1Policy } from '$lib/api';
+
+	import { errorToast, successToast } from '$lib/utils/toast';
+	import { HeadscaleClient } from '$lib/store/session';
+	import { formatError } from '$lib/utils/error';
 
 	import SelectRuleSource from './SelectRuleSource.svelte';
 	import SelectRuleTarget from './SelectRuleTarget.svelte';
-	import { errorToast, successToast } from '$lib/utils/toast';
-	import { formatError } from '$lib/utils/error';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let rule: AclData['acls'][0];
+	export let rule: V1Policy['acls'][0];
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
 	let mainSheet: InstanceType<typeof Sheet.Root>;
 
-	const schema: z.ZodType<Omit<AclData['acls'][0], 'id'>> = z.object({
+	const schema: z.ZodType<Omit<V1Policy['acls'][0], 'id'>> = z.object({
 		action: z.literal('accept'),
 		src: z.array(z.string()),
-		dst: z.array(z.object({ host: z.string(), port: z.string() })),
-		comments: z.array(z.string()).default([])
+		dst: z.array(z.string())
+		// comments: z.array(z.string()).default([])
 	});
 
 	const formDefaults = defaults(zod(schema));
@@ -44,9 +46,9 @@
 			async onUpdate({ form }) {
 				if (form.valid) {
 					try {
-						acl.acls = acl.acls.map((r) => (r.id === rule.id ? { ...r, ...form.data } : r));
+						policy.acls = policy.acls?.map((r) => (r.id === rule.id ? { ...r, ...form.data } : r));
 
-						const { error } = await acl.save();
+						const { error } = await policy.save($HeadscaleClient);
 						if (error) throw error;
 
 						successToast(`Saved rule ${rule.id}`);
@@ -63,11 +65,11 @@
 
 	const { form: formData } = form;
 
-	const description = writable<string>(rule.comments?.join('\n\n') || '');
+	// const description = writable<string>(policy.comments?.$$comments.$acls.join('\n\n') || '');
 
-	description.subscribe((desc) => {
-		formData.update((data) => ({ ...data, comments: desc.split(/\n{1,}/gm) }));
-	});
+	// description.subscribe((desc) => {
+	// 	formData.update((data) => ({ ...data, comments: desc.split(/\n{1,}/gm) }));
+	// });
 </script>
 
 <Sheet.Root bind:this={mainSheet}>
@@ -104,7 +106,7 @@
 					<SelectRuleSource
 						{...attrs}
 						{...constraints}
-						{acl}
+						{policy}
 						{users}
 						bind:selected={$formData.src}
 					/>
@@ -118,7 +120,7 @@
 					<SelectRuleTarget
 						{...attrs}
 						{...constraints}
-						{acl}
+						{policy}
 						{users}
 						bind:selected={$formData.dst}
 					/>
@@ -126,12 +128,12 @@
 				</Form.Control>
 			</Form.Field>
 
-			<Form.Field {form} name="comments" let:constraints>
+			<!-- <Form.Field {form} name="comments" let:constraints>
 				<Form.Control let:attrs>
 					<Form.Label for={attrs.id}>Description</Form.Label>
 					<Textarea {...attrs} {...constraints} bind:value={$description} />
 				</Form.Control>
-			</Form.Field>
+			</Form.Field> -->
 		</Form.Root>
 	</Sheet.Content>
 </Sheet.Root>

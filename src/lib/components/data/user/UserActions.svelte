@@ -6,15 +6,15 @@
 	import Telescope from 'lucide-svelte/icons/telescope';
 	import Trash from 'lucide-svelte/icons/trash-2';
 
-	import type { Acl, User } from '$lib/api';
+	import type { Policy, User } from '$lib/api';
 	import EditUser from './EditUser.svelte';
 	import DeleteUser from './DeleteUser.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import CreatePreAuthKey from '../preAuthKey/CreatePreAuthKey.svelte';
 
 	export let user: User;
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let acl: Acl | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();
 </script>
@@ -40,7 +40,7 @@
 <li>
 	<CreatePreAuthKey
 		{users}
-		{acl}
+		{policy}
 		initData={{ user: user.name }}
 		on:submit={() => dispatch('close')}
 	>
@@ -56,7 +56,7 @@
 </li>
 
 <li>
-	<EditUser {user} {acl} on:submit={() => dispatch('close')}>
+	<EditUser {user} {policy} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<UserRoundPen />
@@ -67,7 +67,7 @@
 </li>
 
 <li class="destructive">
-	<DeleteUser {user} {acl} on:submit={() => dispatch('close')}>
+	<DeleteUser {user} {policy} on:submit={() => dispatch('close')}>
 		<svelte:fragment slot="trigger" let:builder>
 			<button {...builder} use:builder.action>
 				<Trash />

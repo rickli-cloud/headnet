@@ -1,13 +1,13 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet';
 
-	import type { Acl, User } from '$lib/api';
+	import type { Policy, User } from '$lib/api';
 	import RuleInfo from './RuleInfo.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import CreateRule from './CreateRule.svelte';
 	import { createEventDispatcher } from 'svelte';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let users: User[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
@@ -25,7 +25,7 @@
 
 		<ul class="menu">
 			<li>
-				<CreateRule {acl} {users} on:submit={() => dispatch('close')}>
+				<CreateRule {policy} {users} on:submit={() => dispatch('close')}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button {...builder} use:builder.action>
 							<Plus />
@@ -37,8 +37,8 @@
 		</ul>
 
 		<div class="!mt-8 space-y-4">
-			{#each acl?.acls || [] as rule}
-				<RuleInfo {acl} {users} {rule} on:close />
+			{#each policy?.acls || [] as rule}
+				<RuleInfo {policy} {users} {rule} on:close />
 			{/each}
 		</div>
 

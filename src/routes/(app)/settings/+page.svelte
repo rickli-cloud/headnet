@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { z } from 'zod';
-	import { superForm } from 'sveltekit-superforms';
 	import { zod } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms';
+	import { mode, setMode } from 'mode-watcher';
+	import { get } from 'svelte/store';
+	import { z } from 'zod';
 
 	export const schema = z.object({
 		theme: z.enum(['dark', 'light'], {
@@ -9,11 +11,10 @@
 		})
 	});
 
+	import { version as apiVersion } from '$lib/api/gen/headscale';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { mode, setMode } from 'mode-watcher';
-	import { get } from 'svelte/store';
 	import { dev, version } from '$app/environment';
 	import { formatVersion } from '$lib/utils/misc';
 	import { Session } from '$lib/store/session';
@@ -125,7 +126,9 @@
 			<h4 class="text-sm font-medium">API version</h4>
 		</div>
 
-		<div class="text-sm">v1</div>
+		<div class="text-sm">
+			v1-{apiVersion}
+		</div>
 
 		<div>
 			<h4 class="text-sm font-medium">API host</h4>

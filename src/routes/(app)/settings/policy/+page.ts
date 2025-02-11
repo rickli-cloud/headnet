@@ -1,13 +1,16 @@
-import { Acl, Headscale } from '$lib/api/headscale.js';
-import { ApiError, formatApiErrors } from '$lib/api/index.js';
+import { get } from 'svelte/store';
+
+import { HeadscaleClient } from '$lib/store/session';
+import { isTauri } from '$lib/utils/tauri';
+import { Policy } from '$lib/api';
 
 export async function load({ fetch }) {
-	const headscale = new Headscale({ fetch });
+	fetch = isTauri() ? (await import('@tauri-apps/plugin-http')).fetch : fetch;
 
-	const acl = await Acl.load(headscale);
+	const policy = await Policy.load(get(HeadscaleClient), { fetch });
 
 	return {
-		acl: acl.data,
-		errors: formatApiErrors(acl.error instanceof ApiError ? [acl.error] : [])
+		policy: policy.data,
+		errors: [policy.error].filter((i) => !!i)
 	};
 }

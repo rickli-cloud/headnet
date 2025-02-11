@@ -1,33 +1,26 @@
-import { Acl, ApiError, formatApiErrors, Headscale, Machine, Route, User } from '$lib/api/index.js';
-import { stringify } from 'yaml';
+import { createHeadscaleClient, HeadscaleClient, Session } from '$lib/store/session.js';
+import { isTauri } from '$lib/utils/tauri.js';
+import { get } from 'svelte/store';
 
 export async function load({ data, fetch }) {
-	const headscale = new Headscale({ fetch });
+	const headscale = createHeadscaleClient({ baseUrl: get(Session)?.baseUrl });
+	HeadscaleClient.set(headscale);
 
-	const [machines, routes, users, acl] = await Promise.all([
-		Machine.list(undefined, headscale),
-		Route.list(headscale),
-		User.list(headscale),
-		Acl.load(headscale)
+	fetch = isTauri() ? (await import('@tauri-apps/plugin-http')).fetch : fetch;
+
+	const [machines, routes, users, policy] = await Promise.all([
+		headscale.Node.list(headscale, { fetch }),
+		headscale.Route.list(headscale, { fetch }),
+		headscale.User.list(headscale, { fetch }),
+		headscale.Policy.load(headscale, { fetch })
 	]);
 
 	return {
 		...(data || {}),
-		acl: acl.data,
+		policy: policy.data,
 		users: users.data,
 		routes: routes.data,
 		machines: machines.data,
-		errors: (
-			formatApiErrors([
-				machines.error,
-				routes.error,
-				users.error,
-				acl.error instanceof ApiError ? acl.error : undefined
-			]) as unknown[]
-		).concat(
-			acl.error !== null && typeof acl.error !== 'undefined' && !(acl.error instanceof ApiError)
-				? [acl.error]
-				: []
-		)
+		errors: [machines.error, routes.error, users.error, policy.error].filter((e) => !!e)
 	};
 }

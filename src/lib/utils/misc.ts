@@ -25,3 +25,15 @@ export function formatVersion(version: string): string {
 			? version
 			: 'v' + version;
 }
+
+export function splitAclDestination(destination: string): { host: string; port: string } {
+	const lastIndex = destination.lastIndexOf(':');
+	return {
+		host: destination.slice(0, lastIndex),
+		port: destination.slice(lastIndex + 1, destination.length + 1)
+	};
+}
+
+export type Full<T> = {
+	[P in keyof T]-?: T[P];
+};

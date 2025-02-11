@@ -16,7 +16,7 @@
 	export let err: any = undefined;
 	export let toast: boolean = false;
 
-	console.error(err);
+	console.error(err, Object.getPrototypeOf(err), err?.toString());
 </script>
 
 {#if toast}
@@ -25,7 +25,7 @@
 			<span class="font-semibold">{err.name}:</span>
 		{:else if err instanceof Error}
 			<span class="font-semibold">{err.name}:</span>
-			{err.message}
+			{err.message || 'Unknown error'}
 		{:else}
 			<span class="font-semibold">Internal error</span>
 		{/if}
@@ -45,9 +45,8 @@
 		<Alert.Title>
 			{#if err instanceof ApiError}
 				<span class="font-semibold">{err.name}:</span>
-				{#if err.cause?.method && err.cause?.path}
-					{err.cause.method}
-					{err.cause.path}:
+				{#if err.cause}
+					{err.cause.statusText}: {err.cause.url}
 				{/if}
 				{err.message}
 			{:else if err instanceof Error}

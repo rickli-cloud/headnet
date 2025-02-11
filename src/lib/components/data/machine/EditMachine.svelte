@@ -8,10 +8,10 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { User, type Machine } from '$lib/api';
+	import { User, type Node } from '$lib/api';
 	import SelectUser from '../user/SelectUser.svelte';
 
-	export let machine: Machine;
+	export let machine: Node;
 	export let users: User[] | undefined;
 
 	const schema = z.object({

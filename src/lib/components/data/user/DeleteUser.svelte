@@ -4,26 +4,34 @@
 	import ConfirmAction from '$lib/components/utils/ConfirmAction.svelte';
 
 	import { errorToast, successToast } from '$lib/utils/toast';
+	import { HeadscaleClient } from '$lib/store/session';
 	import { formatError } from '$lib/utils/error';
-	import type { Acl, User } from '$lib/api';
+	import type { Policy, User } from '$lib/api';
 
 	export let user: User;
-	export let acl: Acl | undefined;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
 	async function deleteUser() {
 		try {
-			const res = await user.delete();
+			const res = await user.delete($HeadscaleClient);
 			if (res.error) throw res.error;
 
-			if (acl?.groups.find((group) => group.members.includes(user.name as string))) {
-				acl.groups = acl.groups.map((group) => ({
-					...group,
-					members: group.members.filter((member) => member !== user.name)
-				}));
-				const res = await acl.save();
-				if (res.error) throw res.error;
+			if (policy.groups) {
+				let changesMade = false;
+
+				for (const [name, members] of Object.entries(policy.groups || {})) {
+					if (members.includes(user.name as string)) {
+						changesMade = true;
+						policy.groups[name] = members.filter((i) => i !== user.name);
+					}
+				}
+
+				if (changesMade) {
+					const res = await policy.save($HeadscaleClient);
+					if (res.error) throw res.error;
+				}
 			}
 
 			successToast(`Deleted user "${user.name}"`);

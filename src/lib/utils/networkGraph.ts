@@ -16,18 +16,19 @@ import { Address4, Address6 } from 'ip-address';
 
 import {
 	groupRegex,
-	Machine,
+	Node,
 	tagRegex,
 	User,
+	Policy,
 	type Route,
-	type Acl,
 	type V1User,
-	type V1Node
+	type V1Node,
+	type V1Policy
 } from '$lib/api';
 
-const exitRoutes = ['0.0.0.0/0', '::/0'];
+import { splitAclDestination } from './misc';
 
-type AclRule = Acl['acls'][0];
+const exitRoutes = ['0.0.0.0/0', '::/0'];
 
 // ID's:
 // 1 Internet
@@ -38,6 +39,8 @@ export const userGraphId = (id: string | number): number => steppedId(Number(id)
 export const machineGraphId = (id: string | number): number => steppedId(Number(id), 2);
 
 type BaseGraphData = Parameters<ForceGraph3DGenericInstance<any>['graphData']>[0]['nodes'][0];
+
+type AclRule = V1Policy['acls'][0];
 
 export interface GraphDataNodeAttributes extends BaseGraphData {
 	/** Node ID inside of network graph */
@@ -70,7 +73,7 @@ export class GraphUser extends User implements GraphDataNodeAttributes {
 	}
 }
 
-export class GraphMachine extends Machine implements GraphDataNodeAttributes {
+export class GraphMachine extends Node implements GraphDataNodeAttributes {
 	public nodeId: number;
 	public nodeName: string;
 	public color: string = ''; // auto color
@@ -151,15 +154,15 @@ export interface FormatGraphDataOptions {
 }
 
 export interface FormatGraphDataResult extends GraphData {
-	exitNodes: Machine[];
+	exitNodes: Node[];
 }
 
 export function formatGraphData(
 	data: {
 		users: User[] | undefined;
-		machines: Machine[] | undefined;
+		machines: Node[] | undefined;
 		routes: Route[] | undefined;
-		acl: Acl | undefined;
+		policy: Policy | undefined;
 	},
 	opt: FormatGraphDataOptions = {}
 ): FormatGraphDataResult {
@@ -168,7 +171,7 @@ export function formatGraphData(
 	try {
 		const nodes = new Set<GraphDataNode>();
 		const links = new Set<GraphDataLink>();
-		const exitNodes = new Set<Machine>();
+		const exitNodes = new Set<Node>();
 
 		// Internet node (Exit nodes link to it)
 		nodes.add(new GraphInternet());
@@ -216,11 +219,13 @@ export function formatGraphData(
 			}
 		}
 
-		if (data.acl) {
+		if (data.policy?.acls) {
 			// Main ACL rules
-			for (const rule of data.acl.acls) {
+			for (const rule of data.policy.acls) {
 				for (const dst of rule.dst || []) {
-					if (dst.host === `autogroup:internet`) {
+					const { host, port } = splitAclDestination(dst);
+
+					if (host === `autogroup:internet`) {
 						// Exit nodes (autogroup:internet)
 						for (const src of rule.src) {
 							for (const target of getSrc(src, data, opt)) {
@@ -231,11 +236,9 @@ export function formatGraphData(
 											target: machineGraphId(exitNode.id as string),
 											routes: ([] as GraphDataLink['routes'])
 												.concat(
-													exitNode.supportsIpV4 ? [{ host: '0.0.0.0/0', port: dst.port, rule }] : []
+													exitNode.supportsIpV4 ? [{ host: '0.0.0.0/0', port: port, rule }] : []
 												)
-												.concat(
-													exitNode.supportsIpV6 ? [{ host: '::/0', port: dst.port, rule }] : []
-												)
+												.concat(exitNode.supportsIpV6 ? [{ host: '::/0', port: port, rule }] : [])
 										})
 									);
 								}
@@ -243,7 +246,7 @@ export function formatGraphData(
 						}
 					} else {
 						// Basic targets
-						const targets = getTarget(dst, data, rule, opt);
+						const targets = getTarget({ host, port }, data, rule, opt);
 
 						for (const src of rule.src) {
 							for (const source of getSrc(src, data, opt)) {
@@ -266,7 +269,7 @@ export function formatGraphData(
 
 		return {
 			nodes: [...nodes],
-			links: formatLinks([...links], data.acl?.acls),
+			links: formatLinks([...links], data.policy?.acls),
 			exitNodes: [...exitNodes]
 		};
 	} finally {
@@ -291,9 +294,10 @@ function getSrc(
 
 	// Groups
 	if (groupRegex.test(src)) {
-		const group = data.acl?.groups.find((group) => group.name === src);
-		if (group?.members.length) {
-			for (const member of group.members) {
+		const group = data.policy?.groups?.[src];
+
+		if (group?.length) {
+			for (const member of group) {
 				for (const target of getSrc(member, data, opt)) ids.add(target);
 			}
 		}
@@ -321,9 +325,9 @@ function getSrc(
 	}
 
 	// Hosts
-	const host = data.acl?.hosts.find((host) => host.name === src);
+	const host = data.policy?.hosts?.[src];
 	if (host) {
-		const addr = parseAddress(host.cidr);
+		const addr = parseAddress(host);
 		if (addr) for (const id of getRouteTargets(addr, data.routes, opt)) ids.add(id);
 	}
 
@@ -368,9 +372,9 @@ function getTarget(
 
 	// Groups
 	if (groupRegex.test(target.host)) {
-		const group = data.acl?.groups.find((group) => group.name === target.host);
-		if (group?.members.length) {
-			for (const member of group.members) {
+		const group = data.policy?.groups?.[target.host];
+		if (group?.length) {
+			for (const member of group) {
 				for (const subTarget of getTarget({ host: member, port: target.port }, data, rule, opt)) {
 					result.add({
 						...subTarget,
@@ -414,14 +418,14 @@ function getTarget(
 	}
 
 	// Hosts
-	const host = data.acl?.hosts.find((host) => host.name === target.host);
+	const host = data.policy?.hosts?.[target.host];
 	if (host) {
-		const addr = parseAddress(host.cidr);
+		const addr = parseAddress(host);
 		if (addr)
 			for (const id of getRouteTargets(addr, data.routes, opt)) {
 				result.add({
 					id,
-					routes: [{ host: host.cidr, port: target.port, rule }]
+					routes: [{ host, port: target.port, rule }]
 				});
 			}
 	}
@@ -467,7 +471,7 @@ function parseAddress(addr: string): Address4 | Address6 | undefined {
 }
 
 /** Eliminates duplicates & ensures only one link gets a label to prevent overlap */
-function formatLinks(links: GraphDataLink[], acls: Acl['acls'] | undefined): GraphDataLink[] {
+function formatLinks(links: GraphDataLink[], acls: Policy['acls'] | undefined): GraphDataLink[] {
 	const aclRules = Object.fromEntries(acls?.map((acl) => [acl.id, acl]) || []);
 	const temp: {
 		[sourceId: number]: {
@@ -493,7 +497,7 @@ function formatLinks(links: GraphDataLink[], acls: Acl['acls'] | undefined): Gra
 				temp[Number(link.source)][Number(link.target)] = {};
 			}
 			for (const route of link.routes) {
-				if (route.rule) {
+				if (typeof route.rule?.id !== 'undefined') {
 					if (!Array.isArray(temp[Number(link.source)][Number(link.target)][route.rule?.id])) {
 						temp[Number(link.source)][Number(link.target)][route.rule?.id] = [];
 					}

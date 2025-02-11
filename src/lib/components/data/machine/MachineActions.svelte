@@ -7,14 +7,14 @@
 	import Telescope from 'lucide-svelte/icons/telescope';
 	import Trash from 'lucide-svelte/icons/trash-2';
 
-	import type { Machine, User } from '$lib/api';
+	import type { Node, User } from '$lib/api';
 
 	import DeleteMachine from './DeleteMachine.svelte';
 	import EditMachine from './EditMachine.svelte';
 	import ExpireSession from './ExpireSession.svelte';
 	import { isExpired } from '$lib/utils/time';
 
-	export let machine: Machine;
+	export let machine: Node;
 	export let users: User[] | undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined; focus: undefined }>();

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Acl, AclData, User } from '$lib/api';
+	import type { Policy, User, V1Policy } from '$lib/api';
 
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
@@ -13,10 +13,11 @@
 
 	import EditRule from './EditRule.svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { splitAclDestination } from '$lib/utils/misc';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let users: User[] | undefined;
-	export let rule: AclData['acls'][0];
+	export let rule: V1Policy['acls'][0];
 	export let prefixes: { in: Set<string>; out: Set<string> } | undefined = undefined;
 
 	const dispatch = createEventDispatcher<{ close: undefined }>();
@@ -38,14 +39,15 @@
 			<Label>Destination</Label>
 			<div class="flex flex-wrap items-center gap-1.5">
 				{#each rule.dst as dst}
-					<Badge>{`${dst.host}:${dst.port}`}</Badge>
+					{@const { host, port } = splitAclDestination(dst)}
+					<Badge>{`${host}:${port}`}</Badge>
 				{/each}
 			</div>
 		</div>
 
 		<div>
 			<div class="mt-1 flex items-center gap-1.5">
-				<EditRule {rule} {acl} {users} on:submit={() => dispatch('close')}>
+				<EditRule {rule} {policy} {users} on:submit={() => dispatch('close')}>
 					<svelte:fragment slot="trigger" let:builder>
 						<button
 							{...builder}
@@ -114,7 +116,7 @@
 		{/if}
 	</div>
 
-	{#if rule.comments?.length}
+	<!-- {#if rule.comments?.length}
 		<div>
 			<Label>Description</Label>
 			<div class="space-y-1.5">
@@ -123,7 +125,7 @@
 				{/each}
 			</div>
 		</div>
-	{/if}
+	{/if} -->
 
 	<div class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
 		#{rule.id}

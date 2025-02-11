@@ -7,29 +7,30 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Acl, User } from '$lib/api';
+	import { Policy, User } from '$lib/api';
 
 	import SelectItem from './SelectItem.svelte';
+	import { splitAclDestination } from '$lib/utils/misc';
 
-	export let acl: Acl;
-	export let selected: RuleTarget[];
+	export let policy: Policy;
+	export let selected: string[];
 	export let users: User[] | undefined;
 
 	const items: { [group: string]: string[] } = {
 		Users: getNames(users),
-		Groups: getNames(acl.groups),
-		Hosts: getNames(acl.hosts),
-		Tags: getNames(acl.tagOwners),
+		Groups: getNames(policy.groups),
+		Hosts: getNames(policy.hosts),
+		Tags: getNames(policy.tagOwners),
 		Autogroup: ['autogroup:internet'],
 		General: ['*']
 	};
 
-	const sel = writable<RuleTarget[]>(selected);
+	const sel = writable<RuleTarget[]>(selected.map((sel) => splitAclDestination(sel)));
 	const newItemTarget = writable<string>('');
 	const newItemPorts = writable<string>('');
 
-	sel.subscribe((s) => {
-		selected = s;
+	sel.subscribe((sel) => {
+		selected = sel.map(({ host, port }) => `${host}:${port}`);
 	});
 
 	function handleAdd() {
@@ -39,7 +40,7 @@
 		if (!host.length || !port.length) return;
 
 		sel.update((s) => [...s, { host, port }]);
-		selected = [...selected, { host, port }];
+		selected = [...selected, `${host}:${port}`];
 
 		newItemTarget.set('');
 		newItemPorts.set('');
@@ -49,11 +50,15 @@
 		if (!item.host.length || !item.port.length) return;
 
 		sel.update((sel) => sel.filter((i) => i.host !== item.host && item.port !== item.port));
-		selected = selected.filter((i) => i.host !== item.host && item.port !== item.port);
+		selected = selected.filter((i) => i !== `${item.host}:${item.port}`);
 	}
 
-	function getNames(items: Partial<{ name: string }>[] | undefined): string[] {
-		return items?.map((i) => i.name).filter((i) => typeof i !== 'undefined') || [];
+	function getNames(items: Partial<{ name: string }>[] | object | undefined): string[] {
+		return Array.isArray(items)
+			? items?.map((i) => i.name).filter((i) => typeof i !== 'undefined') || []
+			: typeof items === 'object'
+				? Object.keys(items)
+				: [];
 	}
 
 	interface RuleTarget {

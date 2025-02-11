@@ -7,7 +7,7 @@
 
 	import RuleInfo from '$lib/components/data/acl/RuleInfo.svelte';
 
-	import type { Acl, User } from '$lib/api';
+	import type { Policy, User } from '$lib/api';
 	import {
 		focusOnNode,
 		GraphMachine,
@@ -15,22 +15,23 @@
 		type GraphDataLink
 	} from '$lib/utils/networkGraph';
 
+	export let policy: Policy;
+	export let users: User[] | undefined;
 	export let graph: ForceGraph3DGenericInstance<any>;
 	export let link: GraphDataLink | undefined;
 	export let close: () => void;
-	export let users: User[];
-	export let acl: Acl;
 
-	const rules = new Set<Acl['acls'][0]>();
+	const rules = new Set<NonNullable<Policy['acls']>[0]>();
 	const rulePrefixes: { [x: string]: Set<string> } = {};
 
 	for (const route of link?.routes || []) {
 		if (route.rule) {
 			rules.add(route.rule);
-			if (!(rulePrefixes[route.rule.id] instanceof Set)) {
-				rulePrefixes[route.rule.id] = new Set();
+
+			if (typeof route.rule.id === 'number') {
+				if (!(rulePrefixes[route.rule.id] instanceof Set)) rulePrefixes[route.rule.id] = new Set();
+				rulePrefixes[route.rule.id].add(`${route.host}:${route.port}`);
 			}
-			rulePrefixes[route.rule.id].add(`${route.host}:${route.port}`);
 		}
 	}
 </script>
@@ -122,9 +123,9 @@
 		{#each rules as rule}
 			<RuleInfo
 				{rule}
-				prefixes={{ out: rulePrefixes[rule.id] || new Set(), in: new Set() }}
+				prefixes={{ out: rule.id ? rulePrefixes[rule.id] || new Set() : new Set(), in: new Set() }}
 				{users}
-				{acl}
+				{policy}
 			/>
 		{/each}
 	</div>

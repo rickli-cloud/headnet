@@ -55,13 +55,13 @@ export const handlers: ReturnType<typeof handler>[] = [
 		}
 	}),
 	handler({
-		path: '/api/v1/user/:name' as '/api/v1/user/{name}',
+		path: '/api/v1/user/:id' as '/api/v1/user/{id}',
 		method: 'delete',
 		response: function ({ params }) {
 			return new Promise(async (resolve, reject) => {
 				try {
 					const store = database.transaction('users', 'readwrite').objectStore('users');
-					const query = store.delete(String(params.name));
+					const query = store.delete(String(params.id));
 
 					query.onerror = () => reject(query.error);
 					query.onsuccess = () => resolve({});

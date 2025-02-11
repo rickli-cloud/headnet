@@ -15,16 +15,17 @@
 	import SelectGroups from '$lib/components/data/group/SelectGroups.svelte';
 
 	import { errorToast, successToast } from '$lib/utils/toast';
-	import { type Acl, type AclData } from '$lib/api';
+	import { tagRegex, type Policy } from '$lib/api';
 	import { formatError } from '$lib/utils/error';
+	import { HeadscaleClient } from '$lib/store/session';
 
-	export let acl: Acl | undefined;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
 	let mainSheet: InstanceType<typeof Sheet.Root>;
 
-	const schema: z.ZodType<AclData['tagOwners'][0]> = z.object({
+	const schema = z.object({
 		name: z.string(),
 		members: z.array(z.string()),
 		comments: z.array(z.string())
@@ -35,20 +36,22 @@
 		dataType: 'json',
 		invalidateAll: true,
 		validators: zod(schema),
-		async onUpdate(ev) {
-			if (ev.form.valid && acl) {
-				acl.tagOwners.push(ev.form.data);
-				try {
-					const { error } = await acl.save();
-					if (error) throw error;
+		async onUpdate({ form: { valid, data } }) {
+			if (!valid) return;
+			try {
+				if (!policy.tagOwners) policy.tagOwners = {};
 
-					successToast(`Created tag "${ev.form.data.name}"`);
-					dispatch('submit');
-					mainSheet.close();
-				} catch (err) {
-					console.error(err);
-					errorToast(formatError(err));
-				}
+				policy.tagOwners[tagRegex.test(data.name) ? data.name : 'tag:' + data.name] = data.members;
+
+				const { error } = await policy.save($HeadscaleClient);
+				if (error) throw error;
+
+				successToast(`Created tag "${data.name}"`);
+				dispatch('submit');
+				mainSheet.close();
+			} catch (err) {
+				console.error(err);
+				errorToast(formatError(err));
 			}
 		}
 	});
@@ -95,7 +98,7 @@
 			<Form.Field {form} name="members">
 				<Form.Control>
 					<Label for="user.groups">Owners</Label>
-					<SelectGroups groups={acl?.groups} bind:selected={$formData.members} />
+					<SelectGroups groups={policy.groups} bind:selected={$formData.members} />
 				</Form.Control>
 			</Form.Field>
 

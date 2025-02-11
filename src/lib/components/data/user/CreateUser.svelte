@@ -12,11 +12,12 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { groupRegex, User, Acl } from '$lib/api';
+	import { groupRegex, Policy, User } from '$lib/api';
 	import { errorToast, successToast } from '$lib/utils/toast';
 	import { formatError } from '$lib/utils/error';
+	import { HeadscaleClient } from '$lib/store/session';
 
-	export let acl: Acl | undefined;
+	export let policy: Policy;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
@@ -35,16 +36,16 @@
 		async onUpdate(ev) {
 			if (ev.form.valid) {
 				try {
-					const res = await User.create(ev.form.data.name);
+					const res = await User.create($HeadscaleClient, { data: { name: $formData.name } });
 					if (res.error) throw res.error;
 
-					if (ev.form.data.groups?.length && acl?.groups) {
-						acl.groups = acl.groups.map((g) =>
-							ev.form.data.groups?.includes(g.name)
-								? { ...g, members: g.members.concat([ev.form.data.name]) }
-								: g
-						);
-						const aclRes = await acl.save();
+					if (ev.form.data.groups?.length && policy?.groups) {
+						// acl.groups = acl.groups.map((g) =>
+						// 	ev.form.data.groups?.includes(g.name)
+						// 		? { ...g, members: g.members.concat([ev.form.data.name]) }
+						// 		: g
+						// );
+						const aclRes = await policy.save($HeadscaleClient);
 						if (aclRes.error) throw aclRes.error;
 					}
 
@@ -102,9 +103,9 @@
 
 					<Select.Content>
 						<Select.Group>
-							{#each acl?.groups || [] as group}
-								<Select.Item value={group.name} label={group.name.replace(groupRegex, '')}>
-									{group.name.replace(groupRegex, '')}
+							{#each Object.keys(policy.groups || {}) as name}
+								<Select.Item value={name} label={name.replace(groupRegex, '')}>
+									{name.replace(groupRegex, '')}
 								</Select.Item>
 							{/each}
 						</Select.Group>

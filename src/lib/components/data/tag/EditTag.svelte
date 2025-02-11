@@ -7,20 +7,19 @@
 
 	import * as Form from '$lib/components/form';
 
-	import { tagRegex, type Acl, type AclData } from '$lib/api';
+	import { tagRegex, type Policy } from '$lib/api';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import SelectGroups from '../group/SelectGroups.svelte';
 	import { writable } from 'svelte/store';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 
-	export let acl: Acl | undefined;
-	export let tag: Acl['tagOwners'][0] | undefined;
-	export let type: 'Edit' | 'delete' = 'Edit';
+	export let policy: Policy;
+	export let tag: string | undefined;
 
-	const schema: z.ZodType<Acl['tagOwners'][0]> = z.object({
+	const schema = z.object({
 		name: z.string(),
-		members: z.array(z.string()),
-		comments: z.array(z.string()).optional()
+		members: z.array(z.string())
+		// comments: z.array(z.string()).optional()
 	});
 
 	const form = superForm(defaults(zod(schema)), {
@@ -47,12 +46,12 @@
 
 	function reset() {
 		formData.set({
-			name: tag?.name.replace(tagRegex, '') || '',
-			members: tag?.members || [],
-			comments: tag?.comments || []
+			name: tag?.replace(tagRegex, '') || '',
+			members: tag ? policy.tagOwners?.[tag] || [] : []
+			// comments: tag?.comments || []
 		});
 
-		description.set(tag?.comments?.join('\n\n'));
+		// description.set(tag?.comments?.join('\n\n'));
 	}
 
 	if (tag) reset();
@@ -65,7 +64,7 @@
 
 	<Sheet.Content side="left">
 		<Sheet.Header>
-			<Sheet.Title>{type} tag</Sheet.Title>
+			<Sheet.Title>Edit tag</Sheet.Title>
 		</Sheet.Header>
 
 		<Form.Root {form} {reset} submitText="Save" hasRequired>
@@ -84,19 +83,19 @@
 					<SelectGroups
 						{...attrs}
 						{...$constraints.members}
-						groups={acl?.groups}
+						groups={policy.groups}
 						bind:selected={$formData.members}
 					/>
 				</Form.Control>
 			</Form.Field>
 
-			<Form.Field {form} name="comments">
+			<!-- <Form.Field {form} name="comments">
 				<Form.Control let:attrs>
 					<Form.Label>Description</Form.Label>
 
 					<Textarea {...attrs} {...$constraints.comments} bind:value={$description} />
 				</Form.Control>
-			</Form.Field>
+			</Form.Field> -->
 		</Form.Root>
 
 		<slot />

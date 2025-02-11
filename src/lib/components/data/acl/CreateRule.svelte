@@ -11,25 +11,26 @@
 
 	import * as Form from '$lib/components/form';
 
-	import type { Acl, AclData, User } from '$lib/api';
+	import type { Policy, User } from '$lib/api';
 
 	import SelectRuleSource from './SelectRuleSource.svelte';
 	import SelectRuleTarget from './SelectRuleTarget.svelte';
 	import { errorToast, successToast } from '$lib/utils/toast';
 	import { formatError } from '$lib/utils/error';
+	import { HeadscaleClient } from '$lib/store/session';
 
-	export let acl: Acl;
+	export let policy: Policy;
 	export let users: User[] | undefined;
 
 	const dispatch = createEventDispatcher<{ submit: undefined }>();
 
 	let mainSheet: InstanceType<typeof Sheet.Root>;
 
-	const schema: z.ZodType<Omit<AclData['acls'][0], 'id'>> = z.object({
+	const schema: z.ZodType<Omit<NonNullable<Policy['acls']>[0], 'id'>> = z.object({
 		action: z.literal('accept'),
 		src: z.array(z.string()).min(1),
-		dst: z.array(z.object({ host: z.string(), port: z.string() })).min(1),
-		comments: z.array(z.string()).default([])
+		dst: z.array(z.string()).min(1)
+		// comments: z.array(z.string()).default([])
 	});
 
 	const formDefaults = defaults(zod(schema));
@@ -43,12 +44,14 @@
 			async onUpdate({ form }) {
 				if (form.valid) {
 					try {
-						acl.acls.push({
+						if (!policy.acls) policy.acls = [];
+
+						policy.acls.push({
 							...form.data,
 							id: '0'
 						});
 
-						const { error } = await acl.save();
+						const { error } = await policy.save($HeadscaleClient);
 						if (error) throw error;
 
 						successToast('Created new rule');
@@ -106,7 +109,7 @@
 					<SelectRuleSource
 						{...attrs}
 						{...constraints}
-						{acl}
+						{policy}
 						{users}
 						bind:selected={$formData.src}
 					/>
@@ -120,7 +123,7 @@
 					<SelectRuleTarget
 						{...attrs}
 						{...constraints}
-						{acl}
+						{policy}
 						{users}
 						bind:selected={$formData.dst}
 					/>
@@ -128,12 +131,12 @@
 				</Form.Control>
 			</Form.Field>
 
-			<Form.Field {form} name="comments" let:constraints>
+			<!-- <Form.Field {form} name="comments" let:constraints>
 				<Form.Control let:attrs>
 					<Form.Label for={attrs.id}>Description</Form.Label>
 					<Textarea {...attrs} {...constraints} bind:value={$description} />
 				</Form.Control>
-			</Form.Field>
+			</Form.Field> -->
 		</Form.Root>
 	</Sheet.Content>
 </Sheet.Root>

@@ -1,4 +1,3 @@
-import type { Machine, User } from '$lib/api';
 import type { ForceGraph3DInstance } from '3d-force-graph';
 
 export { default as NetworkGraph } from './network-graph.svelte';

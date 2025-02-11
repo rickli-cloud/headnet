@@ -13,19 +13,20 @@
 	import MonacoEditor from '$lib/components/utils/MonacoEditor.svelte';
 	import { errorToast, successToast } from '$lib/utils/toast.js';
 	import { formatError } from '$lib/utils/error.js';
+	import { HeadscaleClient } from '$lib/store/session.js';
 
 	export let data;
 
 	let editor: ComponentProps<MonacoEditor>['editor'];
 
-	const model = monaco.editor.createModel(data.acl.stringify(), 'json');
-	const policy = writable<string>(data.acl.stringify());
+	const model = monaco.editor.createModel(data.policy.stringify(), 'json');
+	const policy = writable<string>(data.policy.stringify());
 
 	model.onDidChangeContent(() => policy.set(model.getValue()));
 
 	async function save() {
 		try {
-			const { error } = await data.acl.save(get(policy));
+			const { error } = await data.policy.save($HeadscaleClient, { data: { policy: $policy } });
 			if (error) throw error;
 
 			successToast('Policy saved');
