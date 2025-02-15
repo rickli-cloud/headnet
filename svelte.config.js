@@ -39,6 +39,9 @@ const config = {
 		},
 		version: {
 			name: pkg.version
+		},
+		env: {
+			publicPrefix: 'HEADNET_'
 		}
 	}
 };

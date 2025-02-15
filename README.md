@@ -4,6 +4,8 @@
 
 Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) with a focus on easy ACL management thru 3D network visualization
 
+**[Demo](https://rickli-cloud.github.io/headnet/)**
+
 - [Features](#features)
 - [Deployment options](#deployment-options)
   - [Docker](#docker)
@@ -11,9 +13,7 @@ Admin web-ui for [@juanfont/headscale](https://github.com/juanfont/headscale) wi
   - [Desktop application](#desktop-application)
 - [Configuration](#configuration)
   - [Passing environment variables](#passing-environment-variables)
-  - [Base path](#base-path)
-  - [Development proxy](#development-proxy)
-  - [Mocking](#mocking)
+  - [Full configuration options](https://github.com/rickli-cloud/headnet/blob/main/docs/configuration.md)
 - [Development](#development)
 - [Building](#building)
 - [Technology Stack](#technology-stack)
@@ -59,7 +59,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      PUBLIC_MOCK_ENABLED: 'true' # Enable demo mode (requires a build with MSW included!)
+      HEADNET_MOCK_ENABLED: 'true' # Enable demo mode (requires a build with MSW included!)
 ```
 
 Start the service:
@@ -86,64 +86,25 @@ Environment variables can be configured in different ways depending on the deplo
 
 > Some variables might only be affective during development or at buildtime!
 
-#### Docker / Go server
+### Docker / Go server
 
-Reads environment variables starting with `PUBLIC_` and serves them automatically on `/admin/_app/env.js`.
+Reads environment variables starting with `HEADNET_` and serves them automatically on `/admin/_app/env.js`.
 
-#### Static files
+### Static files
 
 Configure environment at buildtime or modify the `/_app/env.js` file. Example to Enable Mocking:
 
 ```js
-export const env = { PUBLIC_MOCK_ENABLED: 'true' };
+export const env = { HEADNET_MOCK_ENABLED: 'true' };
 ```
 
-#### Desktop application (tauri)
+### Desktop application (tauri)
 
-Unfortunately you **can not** configure anything after buildtime.
+Unfortunately you can not configure anything after buildtime.
 
-### Mocking
+### Full configuration options
 
-Mock the whole API with the help of a service worker. This enables "demo mode"
-
-```sh
-# Linux
-export PUBLIC_MOCK_ENABLED="false"
-
-# Windows
-$env:PUBLIC_MOCK_ENABLED="false"
-```
-
-> [!IMPORTANT]  
-> This only works if the build includes the required service worker.
-> To keep the size down it is **not included** in the production releases.  
-> Create the service worker with: `deno task msw:init`
-
-### Base Path
-
-> Only affective during development & buildtime
-
-```sh
-# Linux
-export BASE_PATH="/admin"
-
-# Windows
-$env:BASE_PATH="/admin"
-```
-
-### Development Proxy
-
-> Only affective during development
-
-To circumvent CORS issues vite provides a dev proxy leading to your headscale instance.
-
-```sh
-# Linux
-export HEADSCALE_HOST="https://headscale.example.com"
-
-# Windows
-$env:HEADSCALE_HOST="https://headscale.example.com"
-```
+For full configuration options see [the docs](https://github.com/rickli-cloud/headnet/blob/main/docs/configuration.md)
 
 ## Development
 

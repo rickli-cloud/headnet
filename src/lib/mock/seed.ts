@@ -1,4 +1,5 @@
 import {
+	type components,
 	type V1ApiKey,
 	type V1Node,
 	type V1Policy,
@@ -59,15 +60,22 @@ function seedMachines(users: V1User[]): V1Node[] {
 		(i) => {
 			const userId = faker.number.int({ min: 1, max: users.length });
 
+			const createdAt = faker.date.recent({ days: faker.number.int({ min: 1, max: 500 }) });
+			const expiry = faker.date.between({
+				from: createdAt,
+				to: faker.date.soon({ days: faker.number.int({ min: 1, max: 500 }) })
+			});
+			const lastSeen = faker.date.between({ from: createdAt, to: expiry });
+
 			return {
 				id: String(i + 1),
 				name: faker.person.lastName(),
 				givenName: faker.person.lastName(),
-				createdAt: faker.date.recent().toISOString(),
-				expiry: faker.date.soon().toISOString(),
-				lastSeen: faker.date.recent().toISOString(),
-				registerMethod: 'REGISTER_METHOD_UNSPECIFIED',
-				online: faker.datatype.boolean(),
+				createdAt: createdAt.toISOString(),
+				expiry: expiry.toISOString(),
+				lastSeen: lastSeen.toISOString(),
+				registerMethod: seedRegisterMethod(),
+				online: !(expiry.getTime() < new Date(Date.now()).getTime() || faker.datatype.boolean()),
 				discoKey: `discokey:${btoa(window.crypto.getRandomValues(new Uint8Array(10)).toString()).replace(/=+$/, '')}`,
 				nodeKey: `nodekey:${btoa(window.crypto.getRandomValues(new Uint8Array(10)).toString()).replace(/=+$/, '')}`,
 				machineKey: `mkey:${btoa(window.crypto.getRandomValues(new Uint8Array(10)).toString()).replace(/=+$/, '')}`,
@@ -213,4 +221,15 @@ function seedRoutes(machines: V1Node[]): V1Route[] {
 
 function seedPreauthkeys(): V1PreAuthKey[] {
 	return [];
+}
+
+function seedRegisterMethod(): components['schemas']['v1RegisterMethod'] {
+	const methods: components['schemas']['v1RegisterMethod'][] = [
+		'REGISTER_METHOD_UNSPECIFIED',
+		'REGISTER_METHOD_AUTH_KEY',
+		'REGISTER_METHOD_CLI',
+		'REGISTER_METHOD_OIDC'
+	];
+
+	return methods[faker.number.int({ min: 0, max: methods.length - 1 })];
 }

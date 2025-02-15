@@ -10,13 +10,7 @@ import { Route } from './models/route';
 import { User } from './models/user';
 import { ApiError } from './utils';
 
-export interface HeadscaleConstructorParameters extends ClientOptions {
-	/**
-	 * Timeout in ms. Not effective when signal is provided
-	 * @default 5000
-	 */
-	timeout?: number;
-}
+export interface HeadscaleConstructorParameters extends ClientOptions {}
 
 export class Headscale<paths extends object = HeadscaleTypes.paths> {
 	/** Current Headscale version */
@@ -37,11 +31,8 @@ export class Headscale<paths extends object = HeadscaleTypes.paths> {
 	public readonly User = User;
 
 	constructor(opt: HeadscaleConstructorParameters = {}) {
-		const { timeout = 5000, ...params } = opt;
+		const { ...params } = opt;
 
-		this.client = createClient<paths, `${string}/${string}`>({
-			...params,
-			signal: params.signal ?? AbortSignal.timeout(timeout)
-		});
+		this.client = createClient<paths, `${string}/${string}`>(params);
 	}
 }

@@ -104,7 +104,12 @@ export interface V1PolicyComments {
 export class Policy implements V1GetPolicyResponse, Partial<V1Policy> {
 	protected parse(policy: string): Partial<V1Policy> {
 		const parsed = parse(stripJsonTrailingCommas(policy));
-		parsed.acls = parsed?.acls?.map((acl: object) => ({ id: uuidv4(), ...acl }));
+
+		for (let i = 0; i < parsed.acls.length; i++) {
+			parsed.acls[i] = { ...parsed.acls[i], id: i };
+		}
+		// parsed.acls = parsed?.acls?.map((acl: object) => ({ id: uuidv4(), ...acl }));
+
 		return parsed;
 	}
 

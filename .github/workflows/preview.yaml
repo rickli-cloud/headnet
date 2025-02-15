@@ -51,7 +51,7 @@ jobs:
         env:
           BASE_PATH: /headnet
           BUILD_TARGET: static
-          PUBLIC_MOCK_ENABLED: true
+          HEADNET_MOCK_ENABLED: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2

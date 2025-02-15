@@ -8,9 +8,9 @@ import pkg from './package.json';
 config();
 const {
 	HEADSCALE_HOST = 'http://localhost:8080',
-	PUBLIC_MOCK_ENABLED,
+	HEADNET_MOCK_ENABLED,
 	BASE_PATH = '/admin',
-	BUILD_TARGET = 'node',
+	BUILD_TARGET = 'static',
 	HMR_ENABLED = 'true',
 	TAURI_ENV_PLATFORM,
 	TAURI_ENV_ARCH,
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
 
 	if (mode === 'production') {
 		console.debug(
-			`[build]:\n${stringify({ target: BUILD_TARGET, base: BASE_PATH, mock: PUBLIC_MOCK_ENABLED === 'true', tauri: TAURI_ENV_PLATFORM !== undefined })}`
+			`[build]:\n${stringify({ target: BUILD_TARGET, base: BASE_PATH, mock: HEADNET_MOCK_ENABLED === 'true', tauri: TAURI_ENV_PLATFORM !== undefined })}`
 		);
 	}
 
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
 	}
 
 	if (mode === 'development') {
-		if (PUBLIC_MOCK_ENABLED === 'true') {
+		if (HEADNET_MOCK_ENABLED === 'true') {
 			console.debug(`[Mock]: ^/api`);
 		} else if (typeof HEADSCALE_HOST === 'string') {
 			console.debug(`[Proxy]: ^/api => ${HEADSCALE_HOST}`);

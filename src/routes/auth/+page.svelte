@@ -64,7 +64,7 @@
 		}
 	});
 
-	if (env.PUBLIC_MOCK_ENABLED === 'true') {
+	if (env.HEADNET_MOCK_ENABLED === 'true') {
 		tokenVisible = true;
 		formData.set({ token: 'demo-key' });
 	}
@@ -92,7 +92,7 @@
 					</Alert.Root>
 				{/if}
 
-				{#if env.PUBLIC_MOCK_ENABLED === 'true'}
+				{#if env.HEADNET_MOCK_ENABLED === 'true'}
 					<Alert.Root class="mb-6">
 						<Info class="h-4 w-4" />
 						<Alert.Title>Demo mode</Alert.Title>
@@ -141,7 +141,7 @@
 							{...$constraints.baseUrl || {}}
 							bind:value={$formData.baseUrl}
 							placeholder={isTauri() ? '' : `${location.protocol}//${location.host}`}
-							disabled={env.PUBLIC_MOCK_ENABLED === 'true'}
+							disabled={env.HEADNET_MOCK_ENABLED === 'true'}
 						/>
 						<Form.FieldErrors />
 					</Form.Control>

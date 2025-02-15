@@ -135,7 +135,7 @@
 		</div>
 
 		<div class="text-sm">
-			{#if env.PUBLIC_MOCK_ENABLED}
+			{#if env.HEADNET_MOCK_ENABLED}
 				msw
 			{:else}
 				{$Session?.baseUrl || `${window.location.protocol}//${window.location.host}`}

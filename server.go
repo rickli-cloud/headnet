@@ -19,7 +19,7 @@ var (
 	prefix          string = "/admin"
 	indexPath       string = "index.html"
 	listenAddr      string = ":3000"
-	publicEnvPrefix string = "PUBLIC_"
+	publicEnvPrefix string = "HEADNET_"
 )
 
 func main() {

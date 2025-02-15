@@ -2,7 +2,7 @@ import { worker } from '$lib/mock/browser';
 import { env } from '$env/dynamic/public';
 import { base } from '$app/paths';
 
-if (env.PUBLIC_MOCK_ENABLED === 'true') {
+if (env.HEADNET_MOCK_ENABLED === 'true') {
 	worker.start({
 		onUnhandledRequest(request, print) {
 			if (/^\/api/.test(request.url)) {

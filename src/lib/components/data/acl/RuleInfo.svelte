@@ -127,7 +127,7 @@
 		</div>
 	{/if} -->
 
-	<div class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+	<!-- <div class="flex items-center gap-1.5 text-[12px] text-muted-foreground">
 		#{rule.id}
 
 		<Tooltip.Root>
@@ -136,9 +136,8 @@
 			</Tooltip.Trigger>
 
 			<Tooltip.Content side="top">
-				Randomly generated ID used internally. Does <span class="font-semibold">not persist</span>
-				and could change after every page reload.
+				Could change over time. Only helpful to differentiate duplicate rules
 			</Tooltip.Content>
 		</Tooltip.Root>
-	</div>
+	</div> -->
 </div>
